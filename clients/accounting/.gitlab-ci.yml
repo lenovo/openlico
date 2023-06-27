@@ -1,0 +1,22 @@
+trigger.clients.accounting:
+  variables:
+    TOX_WORKSPACE: clients/accounting
+    OBS_PACKAGE: lico-accounting-client
+  stage: trigger
+  trigger:
+    include: clients/.gitlab-ci-template.yml 
+    strategy: depend
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - .gitlab-ci.yml
+        - clients/.gitlab-ci*.yml
+        - $TOX_WORKSPACE/*
+        - $TOX_WORKSPACE/**/*
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_TAG =~ /^\d+(\.\d+)+(rc)?$/
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - $TOX_WORKSPACE/*
+        - $TOX_WORKSPACE/**/*
+    - if: $CI_PIPELINE_SOURCE == "web" && $LICO_RUN_SSRB
+    - if: $CI_PIPELINE_SOURCE == "web" && $LICO_UPLOAD_PACKAGE

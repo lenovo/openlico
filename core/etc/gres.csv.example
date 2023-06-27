@@ -1,0 +1,11 @@
+"# This file is using to define the generic resource information used by the job."
+"# It is recommended that you edit this file by using Excel or other table editing software."
+"# Notes:"
+"# Lines beginning with the hash sign (#) are comment lines. Delete them if you do not need any comments."
+"# The following is an example. Replace the parameter values with actual data."
+"# Columns:"
+"# code - Code should align with the generic resource type defined in scheduler."
+"# display_name - Name of generic resource displayed in the LiCO system. A meaningful display name is recommended."
+"# unit - Unit of resource."
+code,display_name,unit
+gpu,GPU,card

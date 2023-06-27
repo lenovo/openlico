@@ -1,0 +1,25 @@
+{% include "scheduler/ai.sh.in" %}
+{% settings as settings %}
+echo job start time is `date`
+{% if distributed %}
+module purge
+module try-load gnu
+module try-load openmpi4
+{% if not gpu_per_node %}export CUDA_VISIBLE_DEVICES=''{% endif %}
+{% include "runtime.sh.in" %}
+module try-load singularity
+{% if not exclusive %}{% if not gpu_per_node %}export OMP_NUM_THREADS={{cores_per_node|default:1}}{% endif %}{% endif %}
+mpirun --bind-to none --npernode {% if gpu_per_node %}{{ gpu_per_node }}{% if settings.LICO.SCHEDULER == "pbs" and gpu_per_node > 1 %} --oversubscribe{% endif %}{% else %}1{% endif %} singularity exec -B {{ lico.user.workspace }} {% bind_user_share_folder %} \
+	{% if gpu_per_node %}--nv{% endif %} \
+	{{ image_path }} python {{ prog }} \
+	{{ args|default:"" }}
+{% else %}
+{% if not gpu_per_node %}export CUDA_VISIBLE_DEVICES=''{% endif %}
+{% include "runtime.sh.in" %}
+module try-load singularity
+singularity exec -B {{ lico.user.workspace }} {% bind_user_share_folder %} \
+	{% if gpu_per_node %}--nv{% endif %} \
+	{{ image_path }} python {{ prog }} \
+	{{ args|default:"" }}
+{% endif %}
+echo job end time is `date`

@@ -1,0 +1,7 @@
+graft lico
+
+include VERSION
+include tox.ini
+
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]

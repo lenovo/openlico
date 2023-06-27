@@ -1,0 +1,159 @@
+{% include "scheduler/ai.sh.in" %}
+{% include "runtime.sh.in" %}
+conda activate $CONDA_ENV
+{% bind_user_share_folder as job_user_share_folder %}
+{% settings as settings %}
+{% get_exec_node settings.LICO.SCHEDULER 1 %}
+echo "{% get_exec_node settings.LICO.SCHEDULER 1 %} "
+echo job start time is `date`
+function get_worker_hosts(){
+    num={{nodes}}
+    ret=''
+    while(( $num>0 ))
+    do
+        for exec_node in ${exec_nodes[*]}
+        do
+            pu_num={{gpu_per_node}}
+
+            if [ $num == 0 ]
+            then
+                break
+            fi
+            if [ ${#ret} -gt 0 ]
+            then
+                ret="${ret},${exec_node}:${pu_num}"
+            else
+                ret="${exec_node}:${pu_num}"
+            fi
+            let "port_index++"
+            let "num--"
+        done
+    done
+}
+
+
+function get_ps_worker_hosts(){
+    num=$1
+    ret=''
+    while(( $num>0 ))
+    do
+        for exec_node in ${exec_nodes[*]}
+        do
+            if [ $num == 0 ]
+            then
+                break
+            fi
+            if [ ${#ret} -gt 0 ]
+            then
+                ret="${ret},${exec_node}:${lico_ports_array[$port_index]}"
+            else
+                ret="${exec_node}:${lico_ports_array[$port_index]}"
+            fi
+            let "port_index++"
+            let "num--"
+        done
+    done
+}
+
+
+function run_ps_worker(){
+    num=$1
+    flag=$2
+    i=0
+    while(( $num>0 ))
+    do
+        for exec_node in ${exec_nodes[*]}
+        do
+            if [ $num == 0 ]
+            then
+                break
+            fi
+            if [ $flag == "ps" ]
+            then
+                set -x
+                {% scheduler_exec settings.LICO.SCHEDULER 0 0 1 %}$exec_node bash -c "{% program_exec prog %} {%if ps_worker|get_item:"psNumber"%} --ps_hosts=$ps_hosts{%endif%} --worker_hosts=$worker_hosts --job_name=ps --task_index=$i {{ args|default:""|addslashes }}" &
+                set +x
+            else
+                set -x
+                {% scheduler_exec settings.LICO.SCHEDULER 0 0 1 %}$exec_node bash -c "{% program_exec prog %} {%if ps_worker|get_item:"psNumber"%} --ps_hosts=$ps_hosts{%endif%} --worker_hosts=$worker_hosts --job_name=worker --task_index=$i {{ args|default:""|addslashes }}" &
+                set +x
+            fi
+            let "num--"
+            let "i++"
+        done
+    done
+}
+
+
+
+{% if distributed %}
+    if [ {{gpu_per_node}} -gt 0 ]
+    then
+        np=$(({{gpu_per_node}}*{{ nodes }}))
+        get_worker_hosts
+        worker_hosts=$ret
+        set -x
+        horovodrun --verbose --start-timeout 1000 -np $np -H $worker_hosts {% program_exec prog %} {{ args|default:""|addslashes }}
+        set +x
+
+    else
+        export LICO_AVAILABLE_PORTS=@@{lico_port1_{% sum_items ps_worker|get_item:"psNumber"|default_if_none:2 ps_worker|get_item:"workerNumber"|default:2 %}}
+        ps_num={{ ps_worker|get_item:"psNumber"|default_if_none:2 }}
+        worker_num={{ ps_worker|get_item:"workerNumber"|default:2 }}
+        lico_ports_array=(`echo $LICO_AVAILABLE_PORTS | tr ','  ' '`)
+        {% get_exec_node settings.LICO.SCHEDULER 1 %}
+        port_index=0
+
+        get_ps_worker_hosts $ps_num
+        ps_hosts=$ret
+
+        get_ps_worker_hosts $worker_num
+        worker_hosts=$ret
+        echo "ps:$ps_hosts  worker:$worker_hosts"
+
+
+        run_ps_worker $ps_num 'ps'
+        run_ps_worker $worker_num 'worker'
+
+
+        {% if ps_worker|get_item:"psNumber"|default_if_none:2 %}
+            # Wait for worker execution to complete
+            while true
+            do
+                worker_num=`ps -ef | grep "ps_hosts=$ps_hosts --worker_hosts=$worker_hosts --job_name=worker" | wc -l`
+                if [ $worker_num -eq 1 ]
+                then
+                    break
+                else
+                    sleep 1
+                fi
+            done
+
+            {% if settings.LICO.SCHEDULER == "lsf" %}
+                for exec_node in ${exec_nodes[*]}
+                do
+                    bash -c "ps -ef | grep $ps_hosts | grep -v grep | awk '{print \$2}' | xargs kill -9"
+                done
+            {% endif %}
+        {% else %}
+            wait
+        {% endif %}
+    fi
+
+{% else %}
+    if [ {{gpu_per_node}} -gt 1 ]
+    then
+        {% get_exec_node settings.LICO.SCHEDULER 0 %}
+        set -x
+        horovodrun --verbose --start-timeout 1000 -np {{gpu_per_node}} -H ${exec_node}:{{gpu_per_node}} {% program_exec prog %} {{ args|default:""|addslashes }}
+        set +x
+    else
+        {% get_exec_node settings.LICO.SCHEDULER 0 %}
+        set -x
+        {% scheduler_exec settings.LICO.SCHEDULER gpu_per_node gpu_per_node|default:0 1 %}${exec_node} {% if settings.LICO.SCHEDULER == "slurm" %} --cpus-per-task=${cpu_curr_node} {% endif %} bash -c "{% program_exec prog %} {{ args|default:""|addslashes }}"
+        set +x
+    fi
+{% endif %}
+
+
+echo job end time is `date`

@@ -1,0 +1,26 @@
+{% load i18n %}
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <style>{% include "report/style_deposit.css" %}</style>
+    <style>
+    {% block style %}{% endblock %}
+    </style>
+</head>
+<body>
+<h2>{{ title }}</h2>
+<h2>{% block subtitle %}{% endblock %}</h2>
+<h3>
+    <span>{{ creator_info }}</span>
+</h3>
+
+{% block datacycle %}
+<h3>
+    <span>{{ date_cycle }}</span>
+</h3>
+{% endblock %}
+{% block content %}
+{% endblock %}
+</body>
+</html>

@@ -1,0 +1,11 @@
+{% include "scheduler/ai.sh.in" %}
+{% include "runtime.sh.in" %}
+conda activate $CONDA_ENV
+{% bind_user_share_folder as job_user_share_folder %}
+{% settings as settings %}
+echo job start time is `date`
+{% get_exec_node settings.LICO.SCHEDULER 0 %}
+set -x
+{% scheduler_exec settings.LICO.SCHEDULER gpu_per_node gpu_per_node|default:0 1 %}${exec_node} {% if settings.LICO.SCHEDULER == "slurm" %} --cpus-per-task=${cpu_curr_node} {% endif %} bash -c "{% program_exec prog %} {{ args|default:""|addslashes }}"
+set +x
+echo job end time is `date`

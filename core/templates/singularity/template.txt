@@ -1,0 +1,13 @@
+{% include "scheduler/mpi.sh.in" %}
+echo job start time is `date`
+echo `hostname`
+file_path=tmp_{{ job_name }}_`uuidgen`.sh
+cat > ${file_path}<< EOF
+{{ run_script }}
+EOF
+module try-load singularity
+singularity exec -B {{ lico.user.workspace }} {% bind_user_share_folder %} \
+	{% if gpu_per_node %}--nv{% endif %} \
+	{{ image_path }} bash ${file_path}
+rm -f ${file_path}
+echo job end time is `date`

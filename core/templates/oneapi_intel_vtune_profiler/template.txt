@@ -1,0 +1,32 @@
+{% include "scheduler/mpi.sh.in" %}
+{%runtime_sh  lico.user runtime_id%}
+
+echo job start time is `date`
+echo `hostname`
+
+port={{ lico.port0 }}
+host_addr=`hostname -i`
+timestamp=$(date +%Y%m%d%H%M%s)
+url_suffix=`perl -e '
+    use Socket;
+    use MIME::Base64;
+    print(MIME::Base64::encode_base64url("'$host_addr'".":"."'$port'"))
+'`
+
+if [ -z $url_suffix ]
+then
+    echo url_suffix is empty, please check system environment
+    echo job end time is `date`
+    exit -1
+fi
+
+echo "You can open vtune-backend web interface through the link : https://<host:port>/dev/vtune/$url_suffix/"
+echo "Please read the log file in :  {{job_workspace}}/vtune_backend_$timestamp.log"
+
+{%if data_directory %}
+vtune-backend --allow-remote-ui --enable-server-profiling  --data-directory={{ data_directory }}  --web-port=$port --url-path-prefix=/dev/vtune/$url_suffix/  &> vtune_backend_$timestamp.log
+{%else%}
+vtune-backend --allow-remote-ui --enable-server-profiling  --data-directory={{ job_workspace }}  --web-port=$port --url-path-prefix=/dev/vtune/$url_suffix/  &> vtune_backend_$timestamp.log
+{%endif%}
+
+echo job end time is `date`

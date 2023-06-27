@@ -1,0 +1,273 @@
+{% include "scheduler/ai.sh.in" %}
+echo job start time is `date`
+echo `hostname`
+{% settings as settings %}
+oneAPI_BASE={{ settings.ONEAPI.INTEL_MODULE_PATH }}
+oneAPI_modelzoo_BASE=${oneAPI_BASE}/modelzoo/latest/models/
+echo "[INFO] Automatic downloading of dependent files requires wget and git tools support. If the dependent file cannot be downloaded, please download it manually and upload it to the specified directory."
+source ${oneAPI_BASE}/tensorflow/latest/env/vars.sh
+echo "[INFO] Check the running environment of the program:"
+pip install --user tensorflow-addons
+pip install --user opencv-python-headless
+pip install --user contextlib2
+pip install --user pycocotools
+
+{% if settings.LICO.SCHEDULER == "slurm" %}
+cpus=${SLURM_JOB_CPUS_PER_NODE}
+{% elif settings.LICO.SCHEDULER == "lsf" %}
+{% if exclusive %}
+cpus=$(lscpu | grep -w '^CPU(s):' | tr -cd "[0-9]")
+{% else %}
+cpus=${LSB_DJOB_NUMPROC}
+{% endif %}
+{% elif settings.LICO.SCHEDULER == "pbs" %}
+cpus=${NCPUS}
+{% endif %}
+threads_per_core=$(lscpu |grep -w 'Thread(s) per core'|tr -cd "[0-9]")
+{% if not exclusive %}
+physics_cores=$(({{ cores_per_node|default:1 }}/${threads_per_core}))
+physics_cores_rem=`expr {{ cores_per_node|default:1 }} % ${threads_per_core}`
+if [ ${physics_cores_rem} -ne 0 ]; then
+    physics_cores=$((${physics_cores}+1))
+fi
+export OMP_NUM_THREADS=${physics_cores}
+THREADS_NUM_COMMOND="-e ${threads_per_core} -a ${physics_cores}"
+{% else %}
+{% if socket %}
+THREADS_NUM_COMMOND="--socket-id 0"
+{% else %}
+physics_cores=$(($cpus/${threads_per_core}))
+export OMP_NUM_THREADS=${physics_cores}
+THREADS_NUM_COMMOND="-e ${threads_per_core} -a ${physics_cores}"
+{% endif %}
+{% endif %}
+
+intel_model_zoo_dir=${HOME}/Intel_Model_Zoo/TensorFlow_object_detection/
+if [ ! -d $intel_model_zoo_dir ]; then
+    mkdir -p $intel_model_zoo_dir
+fi
+{% if dataset_dir %}
+DATASET_DIR={{ dataset_dir }}
+{% endif %}
+cd $intel_model_zoo_dir
+{% if model_name == "r_fcn_fp32" %}
+model_name=rfcn
+precision_value=fp32
+if [ ! -f ${intel_model_zoo_dir}/rfcn_resnet101_coco_2018_01_28/frozen_inference_graph.pb ]; then
+    echo "[INFO] DOWNLOAD PRETRAINED MODEL ... If the download fails, manually download it from https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/rfcn_resnet101_fp32_coco_pretrained_model.tar.gz unzip it and upload it to ${intel_model_zoo_dir}"
+    wget https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/rfcn_resnet101_fp32_coco_pretrained_model.tar.gz
+    tar -xzvf rfcn_resnet101_fp32_coco_pretrained_model.tar.gz
+    chmod -R 775 ${intel_model_zoo_dir}/rfcn_resnet101_coco_2018_01_28
+fi
+if [ ! -d ${intel_model_zoo_dir}/protoc ]; then
+    echo "[INFO] Download Google Protobuf version 3.3.0 ... If fails, manually download it from https://github.com/google/protobuf/releases/download/v3.3.0/protoc-3.3.0-linux-x86_64.zip unzip it and upload it to ${intel_model_zoo_dir}/protoc"
+    wget https://github.com/google/protobuf/releases/download/v3.3.0/protoc-3.3.0-linux-x86_64.zip
+    unzip protoc-3.3.0-linux-x86_64.zip -d ./protoc
+fi
+export PRETRAINED_MODEL=$(pwd)/rfcn_resnet101_coco_2018_01_28/frozen_inference_graph.pb
+if [ ! -d ${intel_model_zoo_dir}/tensorflow-models-rfcn ]; then
+    echo "[INFO] GIT CLONE TENSORFLOW MODELS GARDEN ... If LiCO can't download, Please install git on the LiCO command line and execute \"cd ${intel_model_zoo_dir} && git clone https://github.com/tensorflow/models tensorflow-models-rfcn && cd ./tensorflow-models-rfcn && git checkout 6c21084503b27a9ab118e1db25f79957d5ef540b && git apply --ignore-space-change --ignore-whitespace ${oneAPI_modelzoo_BASE}/models/object_detection/tensorflow/rfcn/inference/tf-2.0.patch\" ."
+    git clone https://github.com/tensorflow/models.git tensorflow-models-rfcn
+    cd ${intel_model_zoo_dir}/tensorflow-models-rfcn
+    git checkout 6c21084503b27a9ab118e1db25f79957d5ef540b
+    git apply --ignore-space-change --ignore-whitespace ${oneAPI_modelzoo_BASE}/models/object_detection/tensorflow/rfcn/inference/tf-2.0.patch
+fi
+# Set the TF_MODELS_DIR env var
+cd ${intel_model_zoo_dir}/tensorflow-models-rfcn/research
+${intel_model_zoo_dir}/protoc/bin/protoc object_detection/protos/*.proto --python_out=.
+export TF_MODELS_DIR=${intel_model_zoo_dir}/tensorflow-models-rfcn
+cd ${TF_MODELS_DIR}
+TF_MODELS_DIR_COMMOND="--model-source-dir ${TF_MODELS_DIR}"
+{% if measurement_type == "accuracy" %}
+CUSTOM_COMMOND="--accuracy-only $@ -- split='accuracy_message'"
+DATASET_DIR_COMMOND="--data-location ${DATASET_DIR}/coco_val.record"
+{% else %}
+CUSTOM_COMMOND=" $@ -- number_of_steps=500"
+DATASET_DIR_COMMOND="--data-location ${DATASET_DIR}/val2017"
+{% endif %}
+{% elif model_name == "r_fcn_int8" %}
+model_name=rfcn
+precision_value=int8
+if [ ! -d ${intel_model_zoo_dir}/protoc ]; then
+    echo "[INFO] Download Google Protobuf version 3.3.0 ... If fails, manually download it from https://github.com/google/protobuf/releases/download/v3.3.0/protoc-3.3.0-linux-x86_64.zip unzip it and upload it to ${intel_model_zoo_dir}/protoc"
+    wget https://github.com/google/protobuf/releases/download/v3.3.0/protoc-3.3.0-linux-x86_64.zip
+    unzip protoc-3.3.0-linux-x86_64.zip -d ./protoc
+fi
+if [ ! -f $(pwd)/rfcn_resnet101_int8_coco_pretrained_model.pb ]; then
+    echo "[INFO] DOWNLOAD PRETRAINED MODEL ... If the download fails, manually download it from https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/rfcn_resnet101_int8_coco_pretrained_model.pb and upload it to ${intel_model_zoo_dir}"
+    wget https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/rfcn_resnet101_int8_coco_pretrained_model.pb
+fi
+export PRETRAINED_MODEL=$(pwd)/rfcn_resnet101_int8_coco_pretrained_model.pb
+if [ ! -d $(pwd)/tensorflow-models-rfcn ]; then
+    echo "[INFO] GIT CLONE TENSORFLOW MODELS GARDEN ... If LiCO can't download, Please install git on the LiCO command line and execute \"cd ${intel_model_zoo_dir} && git clone https://github.com/tensorflow/models tensorflow-models-rfcn && cd ./tensorflow-models-rfcn && git checkout 6c21084503b27a9ab118e1db25f79957d5ef540b && git apply --ignore-space-change --ignore-whitespace ${oneAPI_modelzoo_BASE}/models/object_detection/tensorflow/rfcn/inference/tf-2.0.patch\" ."
+    git clone https://github.com/tensorflow/models.git tensorflow-models-rfcn
+    cd ${intel_model_zoo_dir}/tensorflow-models-rfcn
+    git checkout 6c21084503b27a9ab118e1db25f79957d5ef540b
+    git apply --ignore-space-change --ignore-whitespace ${oneAPI_modelzoo_BASE}/models/object_detection/tensorflow/rfcn/inference/tf-2.0.patch
+fi
+cd ${intel_model_zoo_dir}/tensorflow-models-rfcn/research
+${intel_model_zoo_dir}/protoc/bin/protoc object_detection/protos/*.proto --python_out=.
+export TF_MODELS_DIR=${intel_model_zoo_dir}/tensorflow-models-rfcn
+cd ${TF_MODELS_DIR}
+TF_MODELS_DIR_COMMOND="--model-source-dir ${TF_MODELS_DIR}"
+{% if measurement_type == "accuracy" %}
+CUSTOM_COMMOND="--accuracy-only $@ -- split='accuracy_message'"
+DATASET_DIR_COMMOND="--data-location ${DATASET_DIR}/coco_val.record"
+{% else %}
+CUSTOM_COMMOND=" $@ -- number_of_steps=500"
+DATASET_DIR_COMMOND="--data-location ${DATASET_DIR}/val2017"
+{% endif %}
+{% elif model_name == "ssd_mobilenet_fp32" %}
+model_name=ssd-mobilenet
+precision_value=fp32
+if [ ! -f $(pwd)/ssdmobilenet_fp32_pretrained_model_combinedNMS.pb ]; then
+    echo "[INFO] DOWNLOAD PRETRAINED MODEL ... If the download fails, manually download it from https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/ssdmobilenet_fp32_pretrained_model_combinedNMS.pb and upload it to ${intel_model_zoo_dir}"
+    wget https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/ssdmobilenet_fp32_pretrained_model_combinedNMS.pb
+fi
+export PRETRAINED_MODEL=$(pwd)/ssdmobilenet_fp32_pretrained_model_combinedNMS.pb
+{% if measurement_type == "accuracy" %}
+CUSTOM_COMMOND="--accuracy-only $@"
+DATASET_DIR_COMMOND="--data-location ${DATASET_DIR}/coco_val.record"
+{% else %}
+CUSTOM_COMMOND="--benchmark-only $@"
+DATASET_DIR_COMMOND="--data-location ${DATASET_DIR}/coco_val.record"
+{% endif %}
+{% elif model_name == "ssd_mobilenet_bfloat16" %}
+export TF_AUTO_MIXED_PRECISION_GRAPH_REWRITE_ALLOWLIST_ADD=BiasAdd,Relu6,Mul,AddV2
+export TF_AUTO_MIXED_PRECISION_GRAPH_REWRITE_INFERLIST_REMOVE=BiasAdd,AddV2,Mul
+export TF_AUTO_MIXED_PRECISION_GRAPH_REWRITE_CLEARLIST_REMOVE=Relu6
+model_name=ssd-mobilenet
+precision_value=bfloat16
+if [ ! -f $(pwd)/ssdmobilenet_fp32_pretrained_model_combinedNMS.pb ]; then
+    echo "[INFO] DOWNLOAD PRETRAINED MODEL ... If the download fails, manually download it from https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/ssdmobilenet_fp32_pretrained_model_combinedNMS.pb and upload it to ${intel_model_zoo_dir}"
+    wget https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/ssdmobilenet_fp32_pretrained_model_combinedNMS.pb
+fi
+export PRETRAINED_MODEL=$(pwd)/ssdmobilenet_fp32_pretrained_model_combinedNMS.pb
+{% if measurement_type == "accuracy" %}
+CUSTOM_COMMOND="--accuracy-only $@"
+DATASET_DIR_COMMOND="--data-location ${DATASET_DIR}/coco_val.record"
+{% else %}
+CUSTOM_COMMOND="--benchmark-only $@"
+DATASET_DIR_COMMOND="--data-location ${DATASET_DIR}/coco_val.record"
+{% endif %}
+{% elif model_name == "ssd_mobilenet_int8" %}
+model_name=ssd-mobilenet
+precision_value=int8
+if [ ! -f $(pwd)/ssdmobilenet_int8_pretrained_model_combinedNMS_s8.pb ]; then
+    echo "[INFO] DOWNLOAD PRETRAINED MODEL ... If the download fails, manually download it from https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/ssdmobilenet_int8_pretrained_model_combinedNMS_s8.pb and upload it to ${intel_model_zoo_dir}"
+    wget https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/ssdmobilenet_int8_pretrained_model_combinedNMS_s8.pb
+fi
+export PRETRAINED_MODEL=$(pwd)/ssdmobilenet_int8_pretrained_model_combinedNMS_s8.pb
+{% if measurement_type == "accuracy" %}
+CUSTOM_COMMOND="--accuracy-only $@"
+DATASET_DIR_COMMOND="--data-location ${DATASET_DIR}/coco_val.record"
+{% else %}
+CUSTOM_COMMOND="--benchmark-only $@"
+DATASET_DIR_COMMOND="--data-location ${DATASET_DIR}/coco_val.record"
+{% endif %}
+{% elif model_name == "ssd_resnet34_fp32" %}
+model_name=ssd-resnet34
+precision_value=fp32
+if [ ! -f ${intel_model_zoo_dir}/ssd_resnet34_fp32_bs1_pretrained_model.pb ]; then
+    echo "[INFO] DOWNLOAD PRETRAINED MODEL ... If the download fails, manually download it from https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/ssd_resnet34_fp32_bs1_pretrained_model.pb and upload it to ${intel_model_zoo_dir}"
+    wget https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/ssd_resnet34_fp32_bs1_pretrained_model.pb
+fi
+export PRETRAINED_MODEL=${intel_model_zoo_dir}/ssd_resnet34_fp32_bs1_pretrained_model.pb
+if [ ! -d ${intel_model_zoo_dir}/tensorflow-models-ssd_resnet34 ]; then
+    echo "[INFO] GIT CLONE TENSORFLOW MODELS GARDEN ... If LiCO can't download, Please install git on the LiCO command line and execute \"cd ${intel_model_zoo_dir} && git clone https://github.com/tensorflow/models.git tensorflow-models-ssd_resnet34 && cd ./tensorflow-models-ssd_resnet34 && git checkout f505cecde2d8ebf6fe15f40fb8bc350b2b1ed5dc\" ."
+    git clone https://github.com/tensorflow/models.git tensorflow-models-ssd_resnet34
+    cd ${intel_model_zoo_dir}/tensorflow-models-ssd_resnet34
+    git checkout f505cecde2d8ebf6fe15f40fb8bc350b2b1ed5dc
+fi
+if [ ! -d ${intel_model_zoo_dir}/ssd-resnet-benchmarks ]; then
+    echo "[INFO] GIT CLONE TENSORFLOW MODELS GARDEN ... If LiCO can't download, Please install git on the LiCO command line and execute \"cd ${intel_model_zoo_dir} && git clone https://github.com/tensorflow/benchmarks.git ssd-resnet-benchmarks && cd ./ssd-resnet-benchmarks && git checkout 509b9d288937216ca7069f31cfb22aaa7db6a4a7\" ."
+    git clone https://github.com/tensorflow/benchmarks.git ssd-resnet-benchmarks
+    cd ${intel_model_zoo_dir}/ssd-resnet-benchmarks
+    git checkout 509b9d288937216ca7069f31cfb22aaa7db6a4a7
+fi
+export TF_MODELS_DIR=${intel_model_zoo_dir}/tensorflow-models-ssd_resnet34
+cd ${intel_model_zoo_dir}
+TF_MODELS_DIR_COMMOND="--model-source-dir ${TF_MODELS_DIR}"
+{% if measurement_type == "accuracy" %}
+CUSTOM_COMMOND="--accuracy-only $@"
+DATASET_DIR_COMMOND="--data-location ${DATASET_DIR}/"
+{% else %}
+CUSTOM_COMMOND="--benchmark-only -- input-size=300 warmup-steps=50 steps=200"
+DATASET_DIR_COMMOND="--data-location ${DATASET_DIR}/"
+{% endif %}
+{% elif model_name == "ssd_resnet34_bfloat16" %}
+model_name=ssd-resnet34
+precision_value=bfloat16
+if [ ! -f ${intel_model_zoo_dir}/ssd_resnet34_fp32_bs1_pretrained_model.pb ]; then
+    echo "[INFO] DOWNLOAD PRETRAINED MODEL ... If the download fails, manually download it from https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/ssd_resnet34_fp32_bs1_pretrained_model.pb and upload it to ${intel_model_zoo_dir}"
+    wget https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/ssd_resnet34_fp32_bs1_pretrained_model.pb
+fi
+export PRETRAINED_MODEL=${intel_model_zoo_dir}/ssd_resnet34_fp32_bs1_pretrained_model.pb
+if [ ! -d ${intel_model_zoo_dir}/tensorflow-models-ssd_resnet34 ]; then
+    echo "[INFO] GIT CLONE TENSORFLOW MODELS GARDEN ... If LiCO can't download, Please install git on the LiCO command line and execute \"cd ${intel_model_zoo_dir} && git clone https://github.com/tensorflow/models.git tensorflow-models-ssd_resnet34 && cd ${intel_model_zoo_dir}/tensorflow-models-ssd_resnet34 && git checkout f505cecde2d8ebf6fe15f40fb8bc350b2b1ed5dc\" ."
+    git clone https://github.com/tensorflow/models.git tensorflow-models-ssd_resnet34
+    cd ${intel_model_zoo_dir}/tensorflow-models-ssd_resnet34
+    git checkout f505cecde2d8ebf6fe15f40fb8bc350b2b1ed5dc
+fi
+if [ ! -d ${intel_model_zoo_dir}/ssd-resnet-benchmarks ]; then
+    echo "[INFO] GIT CLONE TENSORFLOW MODELS GARDEN ... If LiCO can't download, Please install git on the LiCO command line and execute \"cd ${intel_model_zoo_dir} && git clone https://github.com/tensorflow/benchmarks.git ssd-resnet-benchmarks && cd ${intel_model_zoo_dir}/ssd-resnet-benchmarks && git checkout 509b9d288937216ca7069f31cfb22aaa7db6a4a7\" ."
+    git clone https://github.com/tensorflow/benchmarks.git ssd-resnet-benchmarks
+    cd ${intel_model_zoo_dir}/ssd-resnet-benchmarks
+    git checkout 509b9d288937216ca7069f31cfb22aaa7db6a4a7
+fi
+export TF_MODELS_DIR=${intel_model_zoo_dir}/tensorflow-models-ssd_resnet34
+cd ${intel_model_zoo_dir}
+TF_MODELS_DIR_COMMOND="--model-source-dir ${TF_MODELS_DIR}"
+{% if measurement_type == "accuracy" %}
+CUSTOM_COMMOND="--accuracy-only -- input-size=300"
+DATASET_DIR_COMMOND="--data-location ${DATASET_DIR}/"
+{% else %}
+CUSTOM_COMMOND="--benchmark-only -- warmup-steps=50 steps=200"
+DATASET_DIR_COMMOND="--data-location ${DATASET_DIR}/"
+{% endif %}
+{% elif model_name == "ssd_resnet34_int8" %}
+model_name=ssd-resnet34
+precision_value=int8
+if [ ! -f ${intel_model_zoo_dir}/ssd_resnet34_int8_bs1_pretrained_model.pb ]; then
+    echo "[INFO] DOWNLOAD PRETRAINED MODEL ... If the download fails, manually download it from https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/ssd_resnet34_int8_bs1_pretrained_model.pb and upload it to ${intel_model_zoo_dir}"
+    wget https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/ssd_resnet34_int8_bs1_pretrained_model.pb
+fi
+export PRETRAINED_MODEL=${intel_model_zoo_dir}/ssd_resnet34_int8_bs1_pretrained_model.pb
+if [ ! -d ${intel_model_zoo_dir}/tensorflow-models-ssd_resnet34 ]; then
+    echo "[INFO] GIT CLONE TENSORFLOW MODELS GARDEN ... If LiCO can't download, Please install git on the LiCO command line and execute \"cd ${intel_model_zoo_dir} && git clone https://github.com/tensorflow/models.git tensorflow-models-ssd_resnet34 && cd ./tensorflow-models-ssd_resnet34 && git checkout f505cecde2d8ebf6fe15f40fb8bc350b2b1ed5dc\" ."
+    git clone https://github.com/tensorflow/models.git tensorflow-models-ssd_resnet34
+    cd ${intel_model_zoo_dir}/tensorflow-models-ssd_resnet34
+    git checkout f505cecde2d8ebf6fe15f40fb8bc350b2b1ed5dc
+fi
+if [ ! -d ${intel_model_zoo_dir}/ssd-resnet-benchmarks ]; then
+    echo "[INFO] GIT CLONE TENSORFLOW MODELS GARDEN ... If LiCO can't download, Please install git on the LiCO command line and execute \"cd ${intel_model_zoo_dir} && git clone https://github.com/tensorflow/benchmarks.git ssd-resnet-benchmarks && cd ./ssd-resnet-benchmarks && git checkout 509b9d288937216ca7069f31cfb22aaa7db6a4a7\" ."
+    git clone https://github.com/tensorflow/benchmarks.git ssd-resnet-benchmarks
+    cd ${intel_model_zoo_dir}/ssd-resnet-benchmarks
+    git checkout 509b9d288937216ca7069f31cfb22aaa7db6a4a7
+fi
+export TF_MODELS_DIR=${intel_model_zoo_dir}/tensorflow-models-ssd_resnet34
+cd ${intel_model_zoo_dir}
+TF_MODELS_DIR_COMMOND="--model-source-dir ${TF_MODELS_DIR}"
+{% if measurement_type == "accuracy" %}
+CUSTOM_COMMOND="--accuracy-only -- input-size=300"
+DATASET_DIR_COMMOND="--data-location ${DATASET_DIR}/"
+{% else %}
+CUSTOM_COMMOND="--benchmark-only -- warmup-steps=50 steps=200"
+DATASET_DIR_COMMOND="--data-location ${DATASET_DIR}/"
+{% endif %}
+{% endif %}
+
+cd $oneAPI_modelzoo_BASE
+python ${oneAPI_modelzoo_BASE}/benchmarks/launch_benchmark.py \
+    --model-name ${model_name} \
+    --mode inference \
+    --precision ${precision_value} \
+    --framework tensorflow \
+    $TF_MODELS_DIR_COMMOND \
+    $DATASET_DIR_COMMOND \
+    --in-graph ${PRETRAINED_MODEL} \
+    --output-dir {{ job_workspace }}/Intel_Model_Zoo_TensorFlow_log \
+    --batch-size 1 \
+    $THREADS_NUM_COMMOND $CUSTOM_COMMOND
+echo "Pre-trained model file and TensorFlow Model Garden code location: ${intel_model_zoo_dir}"
+echo job end time is `date`

@@ -1,0 +1,13 @@
+{% extends "report/single_report.html" %}
+{% load i18n %}
+{% block head %}
+<tr>
+  <th></th>
+  <th>{% trans 'job.Submit Date'%}</th>
+  <th>{% trans 'job.Job Num'%}</th>
+  <th>{% trans 'job.CPU Core Num'%}</th>
+  <th>{% trans 'job.CPU Core Time (Core*s)'%}</th>
+  <th>{% trans 'job.GPU Num'%}</th>
+  <th>{% trans 'job.GPU Time (Card*s)'%}</th>
+</tr>
+{% endblock %}

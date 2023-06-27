@@ -1,0 +1,220 @@
+{
+  "code": "ai_pytorch",
+  "index": 100,
+  "name": "PyTorch",
+  "featureCode": "ai",
+  "description": "PyTorch enables fast, flexible experimentation and efficient production through a user-friendly front-end, distributed training, and ecosystem of tools and libraries.",
+  "category": "AI",
+  "type": "system",
+  "display": true,
+  "params": [
+    {
+      "id": "job_name",
+      "name": {
+        "en": "Job Name",
+        "zh": "作业名称"
+      },
+      "class": "base",
+      "dataType": "string",
+      "must": true,
+      "type": "system",
+      "input": "input",
+      "maxLength": 64
+    },
+    {
+      "id": "job_workspace",
+      "name": {
+        "en": "Workspace",
+        "zh": "工作目录"
+      },
+      "class": "base",
+      "dataType": "folder",
+      "must": true,
+      "type": "system"
+    },
+    {
+      "id": "job_queue",
+      "name": {
+          "en": "Queue",
+          "zh": "队列"
+      },
+      "class": "resource",
+      "dataType": "queue",
+      "must": true,
+      "type": "system"
+    },
+    {
+      "id": "runtime_id",
+      "name": {
+        "en": "Runtime ENV",
+        "zh": "运行环境"
+      },
+      "class": "param",
+      "dataType": "runtime",
+      "must": false,
+      "defaultValue": null
+    },
+    {
+      "id": "image_path",
+      "name": {
+        "en": "Container Image",
+        "zh": "容器镜像"
+      },
+      "class": "param",
+      "dataType": "image",
+      "hypervisor": "singularity",
+      "framework": "pytorch",
+      "must": true
+    },
+    {
+      "id": "distributed",
+      "name": {
+        "en": "Distributed Training",
+        "zh": "分布式训练"
+      },
+      "class": "param",
+      "dataType": "boolean",
+      "defaultValue": false,
+      "must": false
+    },
+    {
+      "id": "torchrun_args",
+      "name": {
+        "en": "torchrun Args",
+        "zh": "torchrun 参数"
+      },
+      "class": "param",
+      "dataType": "string",
+      "input": "input",
+      "must": false,
+      "visible": "context.distributed"
+    },
+    {
+      "id": "prog",
+      "name": {
+        "en": "Program(.py or .sh)",
+        "zh": "运行程序(.py 或 .sh)"
+      },
+      "class": "param",
+      "dataType": "file",
+      "must": true
+    },
+    {
+      "id": "args",
+      "name": {
+        "en": "Program Args",
+        "zh": "运行参数"
+      },
+      "class": "param",
+      "dataType": "string",
+      "input": "input",
+      "must": false
+    },
+    {
+      "id": "nodes",
+      "name": {
+        "en": "Nodes",
+        "zh": "节点数量"
+      },
+      "class": "resource",
+      "dataType": "number",
+      "input": "input",
+      "minValue": "1",
+      "maxValue": "9999",
+      "floatLength": 0,
+      "valueTrigger": "context.distributed?2:1;",
+      "must": true,
+      "visible": "context.distributed"
+    },
+    {
+      "id": "exclusive",
+      "name": {
+        "en": "Exclusive",
+        "zh": "独占节点"
+      },
+      "class": "resource",
+      "dataType": "boolean",
+      "defaultValue": true,
+      "must": false
+    },
+    {
+      "id": "cores_per_node",
+      "name": {
+        "en": "CPU Cores Per Node",
+        "zh": "每节点的CPU核数"
+      },
+      "class": "resource",
+      "dataType": "number",
+      "input": "input",
+      "minValue": "1",
+      "maxValue": "999",
+      "floatLength": 0,
+      "defaultValue": "4",
+      "must": true,
+      "visible": "!context.exclusive"
+    },
+    {
+      "id": "gpu_per_node",
+      "name": {
+        "en": "GPU Per Node",
+        "zh": "每节点的GPU数"
+      },
+      "class": "resource",
+      "dataType": "number",
+      "input": "input",
+      "minValue": "0",
+      "maxValue": "99",
+      "floatLength": 0,
+      "defaultValue": "1",
+      "must": false
+    },
+    {
+      "id": "run_time",
+      "name": {
+        "en": "Wall Time",
+        "zh": "最大运行时间"
+      },
+      "class": "resource",
+      "dataType": "string",
+      "input": "input",
+      "tips": {
+          "type": "text",
+          "content": "eg.3d 4h 12m"
+      },
+      "help": {
+        "en": "Please input run time limit for the job,Format is 'Xd Xh Xm',which 'Xd' represents X days,'Xh' represents X hours and 'Xm' represents X minutes.",
+        "zh": "请输入job的运行时间限制，格式为“Xd Xh Xm”，“Xd”表示X天，“Xh”表示X小时，“Xm”表示X分钟。"
+      },
+      "defaultValue": "24h",
+      "must": false
+    },
+    {
+      "id": "job_notify",
+      "name": {
+        "en": "Notify Job Completion",
+        "zh": "作业完成通知"
+      },
+      "class": "notify",
+      "dataType": "string",
+      "input": "select",
+      "selectOption": [
+        {
+          "label": {
+            "en": "None",
+            "zh": "无"
+          },
+          "value": ""
+        },
+        {
+          "label": {
+            "en": "Email",
+            "zh": "邮件"
+          },
+          "value": "email"
+        }
+      ],
+      "defaultValue": "",
+      "must": false
+    }
+  ]
+}

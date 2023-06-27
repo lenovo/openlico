@@ -1,0 +1,111 @@
+{% include "scheduler/ai.sh.in" %}
+{% settings as settings %}
+
+echo job start time is `date`
+echo `hostname`
+source {{ settings.ONEAPI.INTEL_MODULE_PATH }}/pytorch/latest/env/vars.sh
+module load mkl/latest
+export DNNL_PRIMITIVE_CACHE_CAPACITY=1024
+export KMP_BLOCKTIME=1
+export KMP_AFFINITY=granularity=fine,verbose,compact,1,0
+export DATASET_DIR={{ dataset_dir }}
+export TORCH_HOME="${HOME}/Intel_Model_Zoo/PyTorch_image_recognition"
+export CHECKPOINT_DIR="${TORCH_HOME}/hub/checkpoints"
+
+{% if settings.LICO.SCHEDULER == "slurm" %}
+cpus=${SLURM_JOB_CPUS_PER_NODE}
+{% elif settings.LICO.SCHEDULER == "lsf" %}
+{% if exclusive %}
+cpus=$(lscpu | grep -w '^CPU(s):' | tr -cd "[0-9]")
+{% else %}
+cpus=${LSB_DJOB_NUMPROC}
+{% endif %}
+{% elif settings.LICO.SCHEDULER == "pbs" %}
+cpus=${NCPUS}
+{% endif %}
+
+threads_per_core=$(lscpu | grep -w 'Thread(s) per core'| tr -cd "[0-9]")
+physics_cores=$(expr ${cpus} / ${threads_per_core})
+physics_cores_rem=$(expr ${cpus} % ${threads_per_core})
+if [ ${physics_cores_rem} -ne 0 ];then
+    physics_cores=$((${physics_cores}+1))
+fi
+export NUMEXPR_MAX_THREADS=${physics_cores}
+export OMP_NUM_THREADS=${physics_cores}
+
+{% if measurement_type == "online_inference" %}
+BATCH_SIZE=1
+{% elif measurement_type == "batch_inference" %}
+BATCH_SIZE=100
+{% else %}
+BATCH_SIZE={{ batch_size }}
+{% endif %}
+
+model={{ model_name }}
+model_name=${model%_*}
+precision=${model##*_}
+models_path={{ settings.ONEAPI.INTEL_MODULE_PATH }}/modelzoo/latest/models
+time_suffix=$(date "+%Y%m%d_%H%M%S")
+log_path={{ job_workspace }}/Intel_Model_Zoo_PyTorch_log
+if [ ! -e ${log_path} ];then
+    mkdir -p ${log_path}
+fi
+
+echo "[INFO] If the model download fails, you can manually download the model according to the \"Downloading: 'https://...' to /.../.../xxx.pth\" information in the Log and upload it to the corresponding location in the \"${CHECKPOINT_DIR}\" directory."
+echo "[INFO] The \"Downloading: 'https://...' to /.../.../xxx.pth\" message will only appear if there is no corresponding model in the \"${CHECKPOINT_DIR}\" directory."
+echo "[INFO] If the model is not fully downloaded, then the job will run with an error. You can delete the corresponding model from the \"${CHECKPOINT_DIR}\" directory and rerun the job. This will download the model again."
+
+{% if model_name == 'resnext101_32x16d_wsl_fp32' or model_name == 'resnext101_32x16d_wsl_bf16' or model_name == 'resnext101_32x16d_wsl_int8' %}
+python -m intel_extension_for_pytorch.cpu.launch \
+    --disable_numactl \
+    ${models_path}/models/image_recognition/pytorch/common/main.py \
+    -e \
+    -a resnext101_32x16d_wsl\
+    --hub ${DATASET_DIR} \
+    --ipex \
+    -b ${BATCH_SIZE} \
+    --pretrained \
+    -j 0 {% if model_name == 'resnext101_32x16d_wsl_int8' %}\
+    --int8 \
+    --configure ${models_path}/models/image_recognition/pytorch/common/resnext101_configure_sym.json {% elif model_name == 'resnext101_32x16d_wsl_bf16' %}\
+    --bf16 \
+    --jit {% else %}\
+    --jit {% endif %}\
+    2>&1 | tee ${log_path}/pytorch_{{ model_name }}_${time_suffix}.log
+
+{% elif model_name == 'resnet50_fp32' or model_name == 'resnet50_bf16' or model_name == 'resnet50_int8' %}
+python -m intel_extension_for_pytorch.cpu.launch \
+    --disable_numactl \
+    ${models_path}/models/image_recognition/pytorch/common/main.py \
+    -e \
+    -a resnet50 \
+    ${DATASET_DIR} \
+    --ipex \
+    --pretrained \
+    -j 0 \
+    -b ${BATCH_SIZE} {% if model_name == 'resnet50_int8' %}\
+    --int8 \
+    --configure-dir ${models_path}/models/image_recognition/pytorch/common/resnet50_configure_sym.json {% elif model_name == 'resnet50_bf16' %}\
+    --bf16 \
+    --jit {% else %}\
+    --jit {% endif %}\
+    2>&1 | tee ${log_path}/pytorch_{{ model_name }}_${time_suffix}.log
+
+{% else %}
+python -m intel_extension_for_pytorch.cpu.launch \
+    --disable_numactl \
+    ${models_path}/models/image_recognition/pytorch/common/inference.py \
+    --arch ${model_name} \
+    --precision ${precision} \
+    --data_path ${DATASET_DIR} \
+    --batch_size ${BATCH_SIZE} \
+    --ipex \
+    --jit \
+    -j 0 \
+    2>&1 | tee ${log_path}/pytorch_{{ model_name }}_${time_suffix}.log
+{% endif %}
+
+echo "Operating model: {{ model_name }}"
+echo "Storage location of the pre-trained model: ${CHECKPOINT_DIR}"
+echo "Storage location of log file: ${log_path}/pytorch_{{ model_name }}_${time_suffix}.log"
+echo job end time is `date`

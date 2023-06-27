@@ -1,0 +1,3 @@
+{% autoescape off %}{% load bill_group %}username,role,first_name,last_name,bill_group_name,email,is_activate
+{% for user in users %}{{ user.username}},{{ user.role_name }},{{ user.first_name|default_if_none:'' }},{{ user.last_name|default_if_none:'' }},{{users_bill_group|user_bill_group_name:user.username}},{{ user.email|default_if_none:'' }},{{ user.is_activate }}
+{% endfor %}{% endautoescape %}

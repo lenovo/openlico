@@ -1,0 +1,16 @@
+{% include "scheduler/mpi.sh.in" %}
+{% include "runtime.sh.in" %}
+{% if env_file %}source {{ env_file }}{% endif %}
+echo job start time is `date`
+echo `hostname`
+{% if gui_mode %}
+session=`vncserver -query localhost -securitytypes=none 2>&1`
+sessionid=`echo "$session"|grep "^New"|awk -F ":" '{print $3}'`
+echo "vncsession $sessionid is created"
+export DISPLAY=:$sessionid.0
+{{ prog }}
+vncserver -kill :$sessionid
+{% else %}
+{{ prog }} {{ args|default:"" }} {% if input_file %}-inputfile {{ input_file }}{% endif %} {% if output_file %}-outputfile {{ output_file }}{% endif %}
+{% endif %}
+echo job end time is `date`

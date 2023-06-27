@@ -1,0 +1,14 @@
+{% include "scheduler/mpi.sh.in" %}
+module try-load charliecloud
+echo job start time is `date`
+echo `hostname`
+file_path=tmp_{{ job_name }}_`uuidgen`.sh
+cat > ${file_path}<< EOF
+{{ run_script }}
+EOF
+mkdir -p {{ image_path }}/{{ lico.user.workspace }}
+ch-run -b {{ lico.user.workspace }}:{{ lico.user.workspace }} -c {{ job_workspace }} \
+    {% bind_user_share_folder %} \
+	{{ image_path }} bash ${file_path}
+rm -f ${file_path}
+echo job end time is `date`

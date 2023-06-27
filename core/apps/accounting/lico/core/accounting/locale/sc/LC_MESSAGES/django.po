@@ -1,0 +1,181 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-06-11 09:20+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+# openHPC_web_project.antilles.accounting.tasks.user_daily_bill_report
+msgid "Django.accounting.bill.User_Daily_Bills"
+msgstr "用户日结算报表"
+
+msgid "Bill.User"
+msgstr "用户:"
+
+msgid "Bill.Billing_Group"
+msgstr "计费组:"
+
+msgid "Bill.Billing_Date"
+msgstr "结算日期:"
+
+msgid "Bill.Create_Time"
+msgstr "生成时间:"
+
+msgid "Bill.Total_Cost"
+msgstr "总费用:"
+
+msgid "Django.accounting.bill.Storage_Quota(GB)"
+msgstr "总容量(GB)"
+
+msgid "Django.accounting.bill.GB*Day"
+msgstr "GB*天"
+
+msgid "Django.accounting.bill.Cost"
+msgstr "费用"
+
+msgid "Django.accounting.bill.Sum_Total"
+msgstr "合计"
+
+msgid "Django.accounting.bill.Discount"
+msgstr "折扣"
+
+msgid "Django.accounting.bill.Discounted_Cost"
+msgstr "实际费用"
+
+msgid "Django.accounting.bill.Record_ID"
+msgstr "流水号"
+
+msgid "Django.accounting.bill.Job_ID_Name"
+msgstr "作业ID/名称"
+
+msgid "Django.accounting.bill.Job_ID"
+msgstr "作业ID"
+
+msgid "Django.accounting.bill.Job_Name"
+msgstr "作业名"
+
+msgid "Django.accounting.bill.Queue"
+msgstr "队列"
+
+msgid "Django.accounting.bill.Run_Time"
+msgstr "运行时长"
+
+msgid "Django.accounting.bill.Hour"
+msgstr "*小时"
+
+msgid "Django.accounting.bill.Storage"
+msgstr "存储"
+
+msgid "Django.accounting.bill.CPU"
+msgstr "CPU"
+
+msgid "Django.accounting.bill.Memory"
+msgstr "内存"
+
+msgid "Django.accounting.bill.GPU"
+msgstr "GPU"
+
+msgid "Django.accounting.bill.Used"
+msgstr "使用({unit})"
+
+msgid "Django.accounting.bill.Core"
+msgstr "核数"
+
+msgid "Django.accounting.bill.MB"
+msgstr "MB"
+
+msgid "Django.accounting.bill.GB"
+msgstr "GB"
+
+# openHPC_web_project.antilles.accounting.tasks.admin_daily_bill_report
+msgid "Django.accounting.bill.Daily_Summary_Bills"
+msgstr "日结算报表"
+
+msgid "Django.accounting.bill.Core*Hour"
+msgstr "核数*小时"
+
+msgid "Django.accounting.bill.MB*Hour"
+msgstr "MB*小时"
+
+msgid "Django.accounting.bill.User"
+msgstr "用户"
+
+msgid "Django.accounting.bill.Billing_Group"
+msgstr "计费组"
+
+msgid "Django.accounting.bill.Job_Number"
+msgstr "作业数量"
+
+# openHPC_web_project.antilles.accounting.tasks.user_monthly_bill_report
+msgid "Django.accounting.bill.User_Monthly_Bills"
+msgstr "用户月结算报表"
+
+msgid "Django.accounting.bill.Date"
+msgstr "日期"
+
+# openHPC_web_project.antilles.accounting.tasks.admin_monthly_bill_report
+msgid "Django.accounting.bill.Monthly_Summary_Bills"
+msgstr "月结算报表"
+
+msgid "Bill.Billing_Month"
+msgstr "结算日期:"
+
+msgid "Bill.Start_Time"
+msgstr "开始时间:"
+
+msgid "Bill.End_Time"
+msgstr "结束时间:"
+
+msgid "Deposit.Billing Group"
+msgstr "账户流水 - {billing_group}"
+
+msgid "Deposit.Created At"
+msgstr "创建于"
+
+msgid "Deposit.Data Cycle"
+msgstr "数据周期"
+
+msgid "Deposit.Record ID"
+msgstr "流水号"
+
+msgid "Deposit.Approved Time"
+msgstr "日期"
+
+msgid "Deposit.Billing Type"
+msgstr "类型"
+
+msgid "Deposit.Billing Description"
+msgstr "描述"
+
+msgid "Deposit.User"
+msgstr "用户"
+
+msgid "Deposit.Credits"
+msgstr "变动({unit})"
+
+msgid "Deposit.Balance"
+msgstr "余额({unit})"
+
+msgid "Deposit.Type.Job"
+msgstr "作业"
+
+msgid "Deposit.Type.Storage"
+msgstr "存储"
+
+msgid "Deposit.Type.Deposit"
+msgstr "存入"
+
+msgid "Deposit.Type.Withdraw"
+msgstr "取出"

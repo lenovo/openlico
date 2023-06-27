@@ -1,0 +1,17 @@
+trigger.core.configuration:
+  variables:
+    TOX_WORKSPACE: core/etc
+    OBS_PACKAGE: lico-core-configuration
+  stage: trigger
+  trigger:
+    include: $TOX_WORKSPACE/downstream.yml  
+    strategy: depend
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_TAG =~ /^\d+(\.\d+)+(rc)?$/
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - $TOX_WORKSPACE/lico.ini
+        - $TOX_WORKSPACE/lico.paste.ini
+        - $TOX_WORKSPACE/lico.supervisor.ini
+        - $TOX_WORKSPACE/lico.supervisor.d/base.ini
+        - $TOX_WORKSPACE/lico.logging.d/base.ini

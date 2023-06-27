@@ -1,0 +1,1 @@
+{% settings as settings %}{% if settings.LICO.SCHEDULER == "pbs" %}{% include "scheduler/pbs-hpl.sh.in" %}{% elif settings.LICO.SCHEDULER == "lsf" %}{% include "scheduler/lsf-hpl.sh.in" %}{% elif settings.LICO.SCHEDULER == "slurm" %}{% include "scheduler/slurm-hpl.sh.in" %}{% endif %}

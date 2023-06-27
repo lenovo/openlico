@@ -1,0 +1,71 @@
+{
+  "type": "object",
+  "properties": {
+    "job_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "job_workspace": {
+      "type": "string",
+      "minLength": 1
+    },
+    "job_queue": {
+      "type": "string",
+      "minLength": 1
+    },
+    "runtime_id": {
+      "type": ["integer", "null"],
+      "minimum": 1
+    },
+    "prog": {
+      "type": "string",
+      "minLength": 1
+    },
+    "args": {
+      "type": "string"
+    },
+    "distributed": {
+      "type": "boolean"
+    },
+    "nodes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9999
+    },
+    "exclusive": {
+      "type": "boolean"
+    },
+    "cores_per_node": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 999
+    },
+    "gpu_per_node": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 99
+    },
+    "ps_worker": {
+      "type": "object",
+      "properties": {
+        "psNumber": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "workerNumber": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "psNumber", "workerNumber"
+      ]
+    },
+    "run_time": {
+      "type": "string",
+      "pattern": "^([0-9]+[d])?(\\s)*([0-9]+[h])?(\\s)*([0-9]+[m])?(\\s)*$"
+    }
+  },
+  "required": ["job_name", "job_workspace", "job_queue", "prog"]
+}

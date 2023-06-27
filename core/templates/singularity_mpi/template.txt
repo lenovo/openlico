@@ -1,0 +1,10 @@
+{% include "scheduler/mpi.sh.in" %}
+{% include "runtime.sh.in" %}
+{% if env_file %}source {{ env_file }}{% endif %}
+echo job start time is `date`
+echo `hostname`
+module try-load singularity
+mpirun {{ args|default:"" }} singularity exec -B {{ lico.user.workspace }} \
+ {% bind_user_share_folder %} {% if gpu_per_node %}--nv{% endif %} \
+	{{ image_path }} {{ prog }}
+echo job end time is `date`

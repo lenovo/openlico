@@ -1,0 +1,154 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-06-29 09:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: lico/core/job/templates/report/base_report.html:15
+#: lico/core/job/views/reportbase.py:48
+msgid "job.created at"
+msgstr "创建于"
+
+#: lico/core/job/templates/report/base_report.html:20
+#: lico/core/job/views/reportbase.py:50
+msgid "job.data cycle"
+msgstr "数据周期"
+
+#: lico/core/job/templates/report/bill_details.html:6
+#: lico/core/job/templates/report/bill_statistics.html:6
+#: lico/core/job/templates/report/bill_statistics.html:12
+msgid "job.Billing Group Name"
+msgstr "计费组名称"
+
+#: lico/core/job/templates/report/bill_details.html:11
+#: lico/core/job/templates/report/jobs_details.html:6
+#: lico/core/job/templates/report/user_details.html:11
+msgid "job.Job ID"
+msgstr "作业ID"
+
+#: lico/core/job/templates/report/bill_details.html:12
+#: lico/core/job/templates/report/jobs_details.html:7
+#: lico/core/job/templates/report/user_details.html:12
+msgid "job.Job Name"
+msgstr "作业名"
+
+#: lico/core/job/templates/report/bill_details.html:13
+#: lico/core/job/templates/report/jobs_details.html:8
+#: lico/core/job/templates/report/user_details.html:13
+msgid "job.Status"
+msgstr "状态"
+
+#: lico/core/job/templates/report/bill_details.html:14
+#: lico/core/job/templates/report/jobs_details.html:9
+#: lico/core/job/templates/report/user_details.html:14
+msgid "job.Queue"
+msgstr "队列"
+
+#: lico/core/job/templates/report/bill_details.html:15
+#: lico/core/job/templates/report/jobs_details.html:10
+#: lico/core/job/templates/report/user_details.html:15
+msgid "job.Submit Time"
+msgstr "提交时间"
+
+#: lico/core/job/templates/report/bill_details.html:16
+#: lico/core/job/templates/report/jobs_details.html:11
+#: lico/core/job/templates/report/user_details.html:16
+msgid "job.Start Time"
+msgstr "开始时间"
+
+#: lico/core/job/templates/report/bill_details.html:17
+#: lico/core/job/templates/report/jobs_details.html:12
+#: lico/core/job/templates/report/user_details.html:17
+msgid "job.End Time"
+msgstr "结束时间"
+
+#: lico/core/job/templates/report/bill_details.html:18
+#: lico/core/job/templates/report/jobs_details.html:13
+#: lico/core/job/templates/report/user_details.html:18
+msgid "job.Submitter"
+msgstr "提交者"
+
+#: lico/core/job/templates/report/bill_details.html:19
+#: lico/core/job/templates/report/bill_statistics.html:14
+#: lico/core/job/templates/report/jobs_details.html:14
+#: lico/core/job/templates/report/jobs_statistics.html:8
+#: lico/core/job/templates/report/user_details.html:19
+#: lico/core/job/templates/report/user_statistics.html:14
+msgid "job.CPU Core Num"
+msgstr "CPU核数"
+
+#: lico/core/job/templates/report/bill_details.html:20
+#: lico/core/job/templates/report/bill_statistics.html:15
+#: lico/core/job/templates/report/jobs_details.html:15
+#: lico/core/job/templates/report/jobs_statistics.html:9
+#: lico/core/job/templates/report/user_details.html:20
+#: lico/core/job/templates/report/user_statistics.html:15
+msgid "job.CPU Core Time (Core*s)"
+msgstr "CPU运行时长(核秒)"
+
+#: lico/core/job/templates/report/bill_details.html:21
+#: lico/core/job/templates/report/bill_statistics.html:16
+#: lico/core/job/templates/report/jobs_details.html:16
+#: lico/core/job/templates/report/jobs_statistics.html:10
+#: lico/core/job/templates/report/user_details.html:21
+#: lico/core/job/templates/report/user_statistics.html:16
+msgid "job.GPU Num"
+msgstr "GPU数"
+
+#: lico/core/job/templates/report/bill_details.html:22
+#: lico/core/job/templates/report/bill_statistics.html:17
+#: lico/core/job/templates/report/jobs_details.html:17
+#: lico/core/job/templates/report/jobs_statistics.html:11
+#: lico/core/job/templates/report/user_details.html:22
+#: lico/core/job/templates/report/user_statistics.html:17
+msgid "job.GPU Time (Card*s)"
+msgstr "GPU运行时长(卡秒)"
+
+#: lico/core/job/templates/report/bill_statistics.html:11
+#: lico/core/job/templates/report/jobs_statistics.html:6
+#: lico/core/job/templates/report/user_statistics.html:11
+msgid "job.Submit Date"
+msgstr "提交日期"
+
+#: lico/core/job/templates/report/bill_statistics.html:13
+#: lico/core/job/templates/report/jobs_statistics.html:7
+#: lico/core/job/templates/report/user_statistics.html:13
+msgid "job.Job Num"
+msgstr "作业数量"
+
+#: lico/core/job/templates/report/user_details.html:6
+#: lico/core/job/templates/report/user_statistics.html:6
+#: lico/core/job/templates/report/user_statistics.html:12
+msgid "job.User Name"
+msgstr "用户名称"
+
+msgid "job.Job Detailed Report"
+msgstr "作业详表"
+
+msgid "job.Job Statistics Report"
+msgstr "作业统计报表"
+
+msgid "job.User Job Detailed Report"
+msgstr "用户作业详表"
+
+msgid "job.User Job Statistics Report"
+msgstr "用户作业统计报表"
+
+msgid "job.BillingGroup Job Detailed Report"
+msgstr "计费组作业详表"
+
+msgid "job.BillingGroup Job Statistics Report"
+msgstr "计费组作业统计报表"

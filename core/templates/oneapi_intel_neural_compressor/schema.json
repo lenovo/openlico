@@ -1,0 +1,40 @@
+{
+  "type": "object",
+  "properties": {
+    "job_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "job_workspace": {
+      "type": "string",
+      "minLength": 1
+    },
+    "job_queue": {
+      "type": "string",
+      "minLength": 1
+    },
+    "runtime_id": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1
+    },
+    "cores_per_node": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 999
+    },
+    "run_time": {
+      "type": "string",
+      "pattern": "^([0-9]+[d])?(\\s)*([0-9]+[h])?(\\s)*([0-9]+[m])?(\\s)*$"
+    }
+  },
+  "required": [
+    "job_name",
+    "job_workspace",
+    "job_queue",
+    "cores_per_node"
+  ]
+}

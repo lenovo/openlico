@@ -1,0 +1,25 @@
+#!/bin/bash
+#SBATCH --job-name='{{ job_name|addslashes }}'
+#SBATCH --chdir={{ job_workspace }}
+#SBATCH --partition={{ job_queue }}
+#SBATCH {% if exclusive|default_if_none:True %}--exclusive{% else %}--ntasks={{ cores_per_node|default:1 }}{% endif %}
+{% if run_time %}#SBATCH --time={{ run_time|timeformat }}{% endif %}
+{% if license_feature %}#SBATCH -L {% for lic, num in license_feature.items %}{% if forloop.first %}{{ lic }}:{{ num }}{% else %},{{ lic }}:{{ num }}{% endif %}{% endfor %}{% endif %}
+{% if ram_size %}#SBATCH --mem={{ ram_size }}M{% endif %}
+
+export FLUENT_AFFINITY=0
+export SLURM_ENABLED=1
+FL_SCHEDULER_HOST_FILE=slurm.${SLURM_JOB_ID}.hosts
+/bin/rm -rf ${FL_SCHEDULER_HOST_FILE}
+IFS=$'\n'
+for host in `srun hostname -s|sort -V|uniq -c`
+    do
+        echo ${host}|awk '{print $2":"$1}' >> $FL_SCHEDULER_HOST_FILE
+    done
+unset IFS
+export SCHEDULER_TIGHT_COUPLING=1
+
+port={{ lico.port0 }}
+DISPLAY=$(($port-5900))
+host=`hostname`
+JOBID=${SLURM_JOB_ID}

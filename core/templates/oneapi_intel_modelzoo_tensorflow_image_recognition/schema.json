@@ -1,0 +1,57 @@
+{
+  "type": "object",
+  "properties": {
+    "job_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "job_workspace": {
+      "type": "string",
+      "minLength": 1
+    },
+    "model_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "measurement_type": {
+      "type": "string",
+      "minLength": 1
+    },
+    "dataset_dir": {
+      "type": "string",
+      "minLength": 1
+    },
+    "batch_size": {
+      "type": ["integer", 100],
+      "minimum": 1,
+      "maximum": 999
+    },
+    "job_queue": {
+      "type": "string",
+      "minLength": 1
+    },
+    "exclusive": {
+      "type": "boolean"
+    },
+    "socket": {
+      "type": "boolean"
+    },
+    "run_time": {
+      "type": "string",
+      "pattern": "^([0-9]+[d])?(\\s)*([0-9]+[h])?(\\s)*([0-9]+[m])?(\\s)*$"
+    },
+    "cores_per_node": {
+      "type": ["integer", 4],
+      "minimum": 1,
+      "maximum": 999
+    }
+  },
+  "required": [
+    "job_name",
+    "job_workspace",
+    "model_name",
+    "job_queue",
+    "cores_per_node"
+  ]
+}

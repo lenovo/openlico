@@ -1,0 +1,41 @@
+{% include "scheduler/mpi.sh.in" %}
+{%runtime_sh  lico.user runtime_id %}
+echo job start time is `date`
+echo `hostname`
+
+{% settings as settings %}
+{% if settings.LICO.SCHEDULER == "slurm" %}
+ENV_JOB_ID=$SLURM_JOB_ID
+{% elif settings.LICO.SCHEDULER == "lsf" %}
+ENV_JOB_ID=$LSB_JOBID
+{% elif settings.LICO.SCHEDULER == "pbs" %}
+ENV_JOB_ID=$(echo $PBS_JOBID | cut -d "." -f1)
+{% endif %}
+
+results_dir="Intel_Analyzer_Results_$ENV_JOB_ID"
+{% if intel_analyzer == 'aps' %}
+mkdir -p {{ job_workspace }}/$results_dir/aps_{{ job_name }}_$ENV_JOB_ID &&
+aps -r {{ job_workspace }}/$results_dir/aps_{{ job_name }}_$ENV_JOB_ID \
+    python {{ prog }} {{ args|default:"" }} &&
+echo -e '\n' $_{1..90}'-' '\nStart generating HTML report:\n' &&
+aps-report -H {{ job_workspace }}/$results_dir/aps_{{ job_name }}_$ENV_JOB_ID.html \
+    {{ job_workspace }}/$results_dir/aps_{{ job_name }}_$ENV_JOB_ID
+{% elif intel_analyzer == 'vtune_profiler' %}
+{%add_vtune_group lico.user.username%}
+vtune -collect {{ vtune_analysis_type }} {% if vtune_analysis_type == 'system-overview' %}-knob enable-interrupt-collection=false -knob analyze-power-usage=false -knob sampling-interval=20 {% endif %}\
+    -r {{ job_workspace }}/$results_dir/vtune_{{ job_name }}_$ENV_JOB_ID/vtune_{{ job_name }}_$ENV_JOB_ID.$(hostname) \
+    -- python {{ prog }} {{ args|default:"" }} {% if vtune_analysis_type != 'platform-profiler' %} &&
+echo -e '\n' $_{1..90}'-' '\nStart generating HTML report:\n' &&
+vtune -report summary -r {{ job_workspace }}/$results_dir/vtune_{{ job_name }}_$ENV_JOB_ID/vtune_{{ job_name }}_$ENV_JOB_ID.$(hostname) \
+    -format html  -report-output  {{ job_workspace }}/$results_dir/vtune_{{ job_name }}_$ENV_JOB_ID.$(hostname).html{% endif %}
+{% elif intel_analyzer == 'advisor' %}
+advisor --collect=survey --project-dir={{ job_workspace }}/$results_dir/advisor_survey_{{ job_name }}_$ENV_JOB_ID \
+    -- python {{ prog }} {{ args|default:"" }} &&
+echo -e '\n' $_{1..90}'-' '\nStart generating text report:\n' &&
+advisor --report=survey --project-dir={{ job_workspace }}/$results_dir/advisor_survey_{{ job_name }}_$ENV_JOB_ID \
+    --format=text --report-output={{ job_workspace }}/$results_dir/advisor_survey_{{ job_name }}_$ENV_JOB_ID.txt
+echo ""
+{% else %}
+python {{ prog }} {{ args|default:"" }}
+{% endif %}
+echo job end time is `date`

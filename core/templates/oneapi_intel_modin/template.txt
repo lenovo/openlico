@@ -1,0 +1,28 @@
+{% include "scheduler/mpi.sh.in" %}
+
+export MODIN_ENGINE=ray
+export RAY_DISABLE_IMPORT_WARNING=1
+{% settings as settings %}
+{% if settings.LICO.SCHEDULER == "pbs" %}export NUMEXPR_MAX_THREADS=$NCPUS{% endif %}
+{% if not exclusive %}
+export MODIN_CPUS={{ cores_per_node|default:1 }}
+{% endif %}
+{% include "runtime.sh.in" %}
+conda activate $CONDA_ENV
+
+echo job start time is `date`
+echo `hostname`
+python {{ prog }} {{ args|default:"" }}
+
+{% if settings.LICO.SCHEDULER == "lsf" %}
+if [ $? != 0 ]; then
+    echo "Failure: " $?
+    exit $?
+else
+    echo "Done"
+    echo "Shutting down the Job"
+    bkill $LSB_JOBID
+fi
+{% endif %}
+
+echo job end time is `date`

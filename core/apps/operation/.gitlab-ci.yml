@@ -1,0 +1,23 @@
+trigger.core.apps.operation:
+  variables:
+    TOX_WORKSPACE: core/apps/operation
+    OBS_PACKAGE: lico-core-operation
+  stage: trigger
+  trigger:
+    include: core/apps/.gitlab-ci-template.yml
+    strategy: depend
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - .gitlab-ci.yml
+        - core/.gitlab-ci*.yml
+        - core/apps/.gitlab-ci*.yml
+        - $TOX_WORKSPACE/*
+        - $TOX_WORKSPACE/**/*
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_TAG =~ /^\d+(\.\d+)+(rc)?$/
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - core/etc/lico.ini.d/operation.ini
+        - $TOX_WORKSPACE/*
+        - $TOX_WORKSPACE/**/*
+    - if: $CI_PIPELINE_SOURCE == "web" && $LICO_RUN_SSRB

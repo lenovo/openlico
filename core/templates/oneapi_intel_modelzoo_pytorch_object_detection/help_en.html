@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>help</title>
+    <style>
+        *::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        *::-webkit-scrollbar-track {
+            background: #efefef;
+            border-radius: 2px;
+        }
+
+        *::-webkit-scrollbar-thumb {
+            background: #bfbfbf;
+            border-radius: 10px;
+        }
+
+        *::-webkit-scrollbar-thumb:hover {
+            background: #333;
+        }
+
+        .father_div {
+            width: 320px;
+            background: #f8fafc;
+            margin: 0 auto;
+            padding: 10px 25px;
+            border-radius: 4px;
+            color: #3f3f3f;
+            font-size: 12px;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .son_div {
+            background: #ffffff;
+            padding: 5px 25px;
+            border-radius: 4px;
+        }
+
+        .code_div {
+            background: #fafafa;
+            margin: 5px auto;
+            padding: 2px;
+            border-radius: 4px;
+        }
+
+        .break_all {
+            word-break: break-all;
+        }
+
+        .code_ol {
+            color: #888888;
+            padding-left: 30px;
+            margin: 5px auto;
+            line-height: 18px;
+        }
+
+        .code_ol li {
+            padding-left: 12px;
+        }
+
+        p {
+            margin: 10px auto;
+        }
+
+        .help_font {
+            font-size: 14px;
+            font-weight: 700;
+            color: #222222;
+            margin-bottom: 5px;
+        }
+
+        .body_text {
+            color: #777777;
+            line-height: 20px;
+            font-size: 12px;
+            margin: 2px auto;
+        }
+
+        .t1 {
+            font-size: 12px;
+            font-weight: 600;
+            margin: 5px auto;
+        }
+
+        .red_font {
+            color: #e16d71;
+        }
+
+        .learn_more_a {
+            margin: 10px;
+            color: #4aa2ff;
+            text-decoration: none;
+            font-size: 12px;
+        }
+
+        .body_a {
+            color: #4aa2ff;
+            text-decoration: none;
+        }
+
+        .code_div_text {
+            color: #777777;
+            line-height: 20px;
+            font-size: 12px;
+            margin: 2px auto;
+            padding-left: 12px;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div class="father_div">
+        <p class="help_font">Help</p>
+        <div class="son_div">
+            <p class="body_text">Please download the dataset before using the job template.</p>
+            <p class="t1">Datasets (COCO 2017)</p>
+            <p class="body_text">Download the 2017 COCO dataset using the
+                download_dataset.sh script. Operating as follows:</p>
+            <div class="code_div break_all">
+                <p class="code_div_text">
+                    cd &lt;path to your clone of the model zoo&gt;/quickstart/object_detection/pytorch/maskrcnn_resnet50_fpn/inference/cpu</br>
+                    export DATASET_DIR=&lt;directory where the dataset will be
+                    saved&gt; </br>
+                    bash download_dataset.sh
+                </p>
+            </div>
+            <p class="body_text break_all">Note: The &lt;intel_oneapi_path&gt;/modelzoo/latest/models
+                path holds a Model Zoo project.</p>
+            <p class="body_text">A after running the data prep script, your
+                folder structure should look something like this:</p>
+            <div class="code_div">
+                <p class="code_div_text">
+                    dataset_dir</br>
+                    └── coco</br>
+                    &emsp;├── annotations</br>
+                    &emsp;│ &emsp;├── captions_train2017.json</br>
+                    &emsp;│ &emsp;├── captions_val2017.json</br>
+                    &emsp;│ &emsp;├── instances_train2017.json</br>
+                    &emsp;│ &emsp;├── instances_val2017.json</br>
+                    &emsp;│ &emsp;├── person_keypoints_train2017.json</br>
+                    &emsp;│ &emsp;└── person_keypoints_val2017.json</br>
+                    &emsp;├── annotations_trainval2017.zip</br>
+                    &emsp;├── val2017</br>
+                    &emsp;│ &emsp;├── 000000000139.jpg</br>
+                    &emsp;│ &emsp;├── 000000000285.jpg</br>
+                    &emsp;│ &emsp;├── 000000000632.jpg</br>
+                    &emsp;│ &emsp;├── 000000000724.jpg</br>
+                    &emsp;│ &emsp;└── ...</br>
+                    &emsp;└── val2017.zip</br>
+
+                </p>
+            </div>
+        </div>
+        <p><a href="https://github.com/IntelAI/models" target="_blank"
+              class="learn_more_a">Learn More</a></p>
+    </div>
+</div>
+</body>
+</html>
+

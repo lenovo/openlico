@@ -1,0 +1,114 @@
+{% include "scheduler/mpi.sh.in" %}
+export MODIN_ENGINE=ray
+{% include "runtime.sh.in" %}
+conda activate $CONDA_ENV
+
+echo job start time is `date`
+echo `hostname`
+ray_file="/tmp/ray_current_cluster"
+if [[ ! -f "$ray_file" ]]; then
+    touch $ray_file
+    chmod 666 $ray_file
+fi
+port0={{ lico.port0 }}
+port1={{ lico.port1 }}
+{% settings as settings %}
+{% if settings.LICO.SCHEDULER == "pbs" %}
+export NUMEXPR_MAX_THREADS=$NCPUS
+nodes_array=($(cat ${PBS_NODEFILE}))
+command_prefix="pbsdsh -o -n "
+worker_num=$((${#nodes_array[@]} - 1))
+head_node=${nodes_array[0]}
+head_node_ip=$(hostname --ip-address)
+ip_head=${head_node_ip}:${port0}
+export RAY_ADDRESS="ray://${head_node_ip}:${port1}"
+timestamp=$(date +%s)
+
+echo "Starting HEAD at $head_node"
+echo -e "export NUMEXPR_MAX_THREADS=$NCPUS
+    {% include 'runtime.sh.in' %}
+    conda activate $CONDA_ENV
+    ray start --head --port ${port0} --ray-client-server-port ${port1} \
+    {% if not exclusive %}--num-cpus {{ cores_per_node|default:1 }}{% endif %} \
+    --block" > {{ job_workspace }}/.intel_modin_tmp_file_$timestamp
+${command_prefix} 0 -- \
+    bash {{ job_workspace }}/.intel_modin_tmp_file_$timestamp
+sleep 3
+for ((i = 1; i <= worker_num; i++)); do
+    node_i=${nodes_array[$i]}
+    echo "Starting WORKER $i at $node_i"
+    echo -e "export NUMEXPR_MAX_THREADS=$NCPUS
+        {% include 'runtime.sh.in' %}
+        conda activate $CONDA_ENV
+        ray start --address "$ip_head" \
+        {% if not exclusive %}--num-cpus {{ cores_per_node|default:1 }}{% endif %} \
+        --block" > {{ job_workspace }}/.intel_modin_tmp_file_$timestamp
+    ${command_prefix} "$i" -- \
+        bash {{ job_workspace }}/.intel_modin_tmp_file_$timestamp
+    sleep 3
+done
+sleep 3
+rm -rf {{ job_workspace }}/.intel_modin_tmp_file_$timestamp
+
+{% elif settings.LICO.SCHEDULER == "lsf" %}
+nodes_array=($(cat $LSB_DJOB_HOSTFILE | uniq))
+command_prefix="blaunch -z "
+worker_num=$((${#nodes_array[@]} - 1))
+head_node=${nodes_array[0]}
+head_node_ip=$(${command_prefix}"$head_node" hostname --ip-address)
+ip_head=${head_node_ip}:${port0}
+export RAY_ADDRESS="ray://${head_node_ip}:${port1}"
+echo "Starting HEAD at $head_node"
+${command_prefix} "$head_node" \
+    ray start --head --port ${port0} --ray-client-server-port ${port1} \
+    {% if not exclusive %}--num-cpus {{ cores_per_node|default:1 }} {% endif %}--block &
+    sleep 3
+for ((i = 1; i <= worker_num; i++)); do
+    node_i=${nodes_array[$i]}
+    echo "Starting WORKER $i at $node_i"
+    ${command_prefix} "$node_i" \
+        ray start --address "$ip_head" \
+        {% if not exclusive %}--num-cpus {{ cores_per_node|default:1 }} {% endif %}--block &
+    sleep 3
+done
+
+{% elif settings.LICO.SCHEDULER == "slurm" %}
+nodes=$(scontrol show hostnames "$SLURM_JOB_NODELIST")
+nodes_array=($nodes)
+command_prefix="srun --nodes=1 --ntasks=1 -w "
+worker_num=$((${#nodes_array[@]} - 1))
+head_node=${nodes_array[0]}
+head_node_ip=$(${command_prefix}"$head_node" hostname --ip-address)
+ip_head=${head_node_ip}:${port0}
+export RAY_ADDRESS="ray://${head_node_ip}:${port1}"
+
+echo "Starting HEAD at $head_node"
+${command_prefix} "$head_node" \
+    ray start --head --port ${port0} --ray-client-server-port ${port1} \
+    {% if not exclusive %}--num-cpus {{ cores_per_node|default:1 }} {% endif %}--block &
+    sleep 3
+
+for ((i = 1; i <= worker_num; i++)); do
+    node_i=${nodes_array[$i]}
+    echo "Starting WORKER $i at $node_i"
+    ${command_prefix} "$node_i" \
+        ray start --address "$ip_head" \
+        {% if not exclusive %}--num-cpus {{ cores_per_node|default:1 }} {% endif %}--block &
+    sleep 3
+done
+{% endif %}
+
+python {{ prog }} {{ args|default:"" }}
+
+{% if settings.LICO.SCHEDULER == "lsf" %}
+if [ $? != 0 ]; then
+    echo "Failure: " $?
+    exit $?
+else
+    echo "Done"
+    echo "Shutting down the Job"
+    bkill $LSB_JOBID
+fi
+{% endif %}
+
+echo job end time is `date`

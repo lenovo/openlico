@@ -1,0 +1,10 @@
+{% include "scheduler/mpi.sh.in" %}
+{% include "runtime.sh.in" %}
+module try-load charliecloud
+{% if env_file %}source {{ env_file }}{% endif %}
+echo job start time is `date`
+echo `hostname`
+mkdir -p {{ image_path }}/{{ lico.user.workspace }}
+mpirun {{ args|default:"" }} ch-run -b {{ lico.user.workspace }}:{{ lico.user.workspace }} \
+    -c {{ job_workspace }} {{ image_path }} -- {{ prog }}
+echo job end time is `date`

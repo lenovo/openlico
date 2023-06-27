@@ -1,0 +1,214 @@
+{
+  "code": "comsol",
+  "index": 3,
+  "name": "COMSOL",
+  "description": "COMSOL Multiphysics® is a general-purpose software platform, based on advanced numerical methods, for modeling and simulating physics-based problems. With COMSOL Multiphysics, you will be able to account for coupled or multiphysics phenomena.",
+  "category": "HPC",
+  "featureCode": "hpc",
+  "display": true,
+  "type": "system",
+  "params": [
+    {
+      "id": "job_name",
+      "name": {
+        "en": "Job Name",
+        "zh": "作业名称"
+      },
+      "class": "base",
+      "dataType": "string",
+      "must": true,
+      "type": "system",
+      "input": "input",
+      "maxLength": 64
+    },
+    {
+      "id": "job_workspace",
+      "name": {
+        "en": "Workspace",
+        "zh": "工作目录"
+      },
+      "class": "base",
+      "dataType": "folder",
+      "must": true,
+      "type": "system"
+    },
+    {
+      "id": "job_queue",
+      "name": {
+          "en": "Queue",
+          "zh": "队列"
+      },
+      "class": "resource",
+      "dataType": "queue",
+      "must": true,
+      "type": "system"
+    },
+    {
+      "id": "runtime_id",
+      "name": {
+        "en": "Runtime ENV",
+        "zh": "运行环境"
+      },
+      "class": "param",
+      "dataType": "runtime",
+      "must": false,
+      "defaultValue": null
+    },
+    {
+      "id": "gui_mode",
+      "name": {
+        "en": "GUI Mode",
+        "zh": "图形界面"
+      },
+      "class": "param",
+      "dataType": "boolean",
+      "defaultValue": false,
+      "must": false
+    },
+    {
+      "id": "prog",
+      "name": {
+        "en": "COMSOL Binary",
+        "zh": "COMSOL可执行文件"
+      },
+      "class": "param",
+      "dataType": "file",
+      "must": true
+    },
+    {
+      "id": "env_file",
+      "name": {
+        "en": "COMSOL Environment",
+        "zh": "COMSOL环境配置文件"
+      },
+      "class": "param",
+      "dataType": "file",
+      "must": false
+    },
+    {
+      "id": "args",
+      "name": {
+        "en": "COMSOL Run Arguments",
+        "zh": "COMSOL运行参数"
+      },
+      "class": "param",
+      "dataType": "string",
+      "input": "input",
+      "must": false
+    },
+    {
+      "id": "input_file",
+      "name": {
+        "en": "COMSOL Input",
+        "zh": "COMSOL输入文件"
+      },
+      "class": "param",
+      "dataType": "file",
+      "must": false
+    },
+    {
+      "id": "output_file",
+      "name": {
+        "en": "COMSOL Output",
+        "zh": "COMSOL输出文件"
+      },
+      "class": "param",
+      "dataType": "string",
+      "input": "input",
+      "must": false
+    },
+    {
+      "id": "nodes",
+      "name": {
+        "en": "Nodes",
+        "zh": "节点数量"
+      },
+      "class": "resource",
+      "dataType": "number",
+      "input": "input",
+      "minValue": "1",
+      "maxValue": "9999",
+      "floatLength": 0,
+      "defaultValue": "1",
+      "must": true
+    },
+    {
+      "id": "cores_per_node",
+      "name": {
+        "en": "CPU Cores Per Node",
+        "zh": "每节点的CPU核数"
+      },
+      "class": "resource",
+      "dataType": "number",
+      "input": "input",
+      "minValue": "1",
+      "maxValue": "999",
+      "floatLength": 0,
+      "defaultValue": "1",
+      "must": true
+    },
+    {
+      "id": "ram_size",
+      "name": {
+        "en": "Memory Used(MB)",
+        "zh": "内存使用(MB)"
+      },
+      "class": "resource",
+      "dataType": "number",
+      "input": "input",
+      "minValue": "1",
+      "maxValue": "999999",
+      "floatLength": 0,
+      "defaultValue": "",
+      "must": false
+    },
+    {
+      "id": "run_time",
+      "name": {
+        "en": "Wall Time",
+        "zh": "最大运行时间"
+      },
+      "class": "resource",
+      "dataType": "string",
+      "input": "input",
+      "tips": {
+          "type": "text",
+          "content": "eg.3d 4h 12m"
+      },
+      "help": {
+        "en": "Please input run time limit for the job,Format is 'Xd Xh Xm',which 'Xd' represents X days,'Xh' represents X hours and 'Xm' represents X minutes.",
+        "zh": "请输入job的运行时间限制，格式为“Xd Xh Xm”，“Xd”表示X天，“Xh”表示X小时，“Xm”表示X分钟。"
+      },
+      "defaultValue": "24h",
+      "must": false
+    },
+    {
+      "id": "job_notify",
+      "name": {
+        "en": "Notify Job Completion",
+        "zh": "作业完成通知"
+      },
+      "class": "notify",
+      "dataType": "string",
+      "input": "select",
+      "selectOption": [
+        {
+          "label": {
+            "en": "None",
+            "zh": "无"
+          },
+          "value": ""
+        },
+        {
+          "label": {
+            "en": "Email",
+            "zh": "邮件"
+          },
+          "value": "email"
+        }
+      ],
+      "defaultValue": "",
+      "must": false
+    }
+  ]
+}

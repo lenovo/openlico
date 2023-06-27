@@ -1,0 +1,27 @@
+{% include "scheduler/ai.sh.in" %}
+
+port={{ lico.port0 }}
+host_addr=`hostname -i`
+url_suffix=`perl -e '
+    use Socket;
+    use MIME::Base64;
+    print(MIME::Base64::encode_base64url("'$host_addr'".":"."'$port'"))
+'`
+
+if [ -z $url_suffix ]
+then
+    echo url_suffix is empty, please check system environment
+    echo job end time is `date`
+    exit -1
+fi
+
+module try-load singularity
+mkdir -p {{ lico.user.workspace }}/.tmp
+export TMPDIR={{ lico.user.workspace }}/.tmp
+singularity exec -B {{ lico.user.workspace }} {% bind_user_share_folder %} \
+	{{ image_path }} tensorboard \
+	--logdir "{{ log_dir|addslashes }}" \
+    --path_prefix "/tensorboard/$url_suffix/{{ job_uuid }}/" \
+    --port $port
+
+echo job end time is `date`

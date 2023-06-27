@@ -1,0 +1,165 @@
+{
+  "code": "common",
+  "index": 2,
+  "name": "Common Job",
+  "description": "Create a Lenovo LiCO common job",
+  "category": "General",
+  "featureCode": "hpc",
+  "display": true,
+  "type": "system",
+  "params": [
+    {
+      "id": "job_name",
+      "name": {
+        "en": "Job Name",
+        "zh": "作业名称"
+      },
+      "class": "base",
+      "dataType": "string",
+      "must": true,
+      "type": "system",
+      "input": "input",
+      "maxLength": 64
+    },
+    {
+      "id": "job_workspace",
+      "name": {
+        "en": "Workspace",
+        "zh": "工作目录"
+      },
+      "class": "base",
+      "dataType": "folder",
+      "must": true,
+      "type": "system"
+    },
+    {
+      "id": "job_queue",
+      "name": {
+          "en": "Queue",
+          "zh": "队列"
+      },
+      "class": "resource",
+      "dataType": "queue",
+      "must": true,
+      "type": "system"
+    },
+    {
+      "id": "run_script",
+      "name": {
+        "en": "Run Script",
+        "zh": "运行脚本"
+      },
+      "class": "param",
+      "dataType": "text",
+      "must": true
+    },
+    {
+      "id": "nodes",
+      "name": {
+        "en": "Nodes",
+        "zh": "节点数量"
+      },
+      "class": "resource",
+      "dataType": "number",
+      "input": "input",
+      "minValue": "1",
+      "maxValue": "9999",
+      "floatLength": 0,
+      "defaultValue": "1",
+      "must": true
+    },
+    {
+      "id": "cores_per_node",
+      "name": {
+        "en": "CPU Cores Per Node",
+        "zh": "每节点的CPU核数"
+      },
+      "class": "resource",
+      "dataType": "number",
+      "input": "input",
+      "minValue": "1",
+      "maxValue": "999",
+      "floatLength": 0,
+      "defaultValue": "1",
+      "must": true
+    },
+    {
+      "id": "gpu_per_node",
+      "name": {
+        "en": "GPU Per Node",
+        "zh": "每节点的GPU数"
+      },
+      "class": "resource",
+      "dataType": "number",
+      "input": "input",
+      "minValue": "0",
+      "maxValue": "99",
+      "floatLength": 0,
+      "defaultValue": "",
+      "must": false
+    },
+        {
+      "id": "ram_size",
+      "name": {
+        "en": "Memory Used(MB)",
+        "zh": "内存使用(MB)"
+      },
+      "class": "resource",
+      "dataType": "number",
+      "input": "input",
+      "minValue": "1",
+      "maxValue": "999999",
+      "floatLength": 0,
+      "defaultValue": "",
+      "must": false
+    },
+    {
+      "id": "run_time",
+      "name": {
+        "en": "Wall Time",
+        "zh": "最大运行时间"
+      },
+      "class": "resource",
+      "dataType": "string",
+      "input": "input",
+      "tips": {
+          "type": "text",
+          "content": "eg.3d 4h 12m"
+      },
+      "help": {
+        "en": "Please input run time limit for the job,Format is 'Xd Xh Xm',which 'Xd' represents X days,'Xh' represents X hours and 'Xm' represents X minutes.",
+        "zh": "请输入job的运行时间限制，格式为“Xd Xh Xm”，“Xd”表示X天，“Xh”表示X小时，“Xm”表示X分钟。"
+      },
+      "defaultValue": "24h",
+      "must": false
+    },
+    {
+      "id": "job_notify",
+      "name": {
+        "en": "Notify Job Completion",
+        "zh": "作业完成通知"
+      },
+      "class": "notify",
+      "dataType": "string",
+      "input": "select",
+      "selectOption": [
+        {
+          "label": {
+            "en": "None",
+            "zh": "无"
+          },
+          "value": ""
+        },
+        {
+          "label": {
+            "en": "Email",
+            "zh": "邮件"
+          },
+          "value": "email"
+        }
+      ],
+      "defaultValue": "",
+      "must": false
+    }
+  ]
+}

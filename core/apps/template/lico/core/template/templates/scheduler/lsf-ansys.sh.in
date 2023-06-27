@@ -1,0 +1,41 @@
+#!/bin/bash
+#BSUB -J {{ job_name }}
+#BSUB -q {{ job_queue }}
+#BSUB -cwd {{ job_workspace }}
+{% get_now as current %}#BSUB -o {{ job_name }}-{{ current }}.out
+#BSUB -e {{ job_name }}-{{ current }}.out
+#BSUB -n {{ nodes|default:1|multi:cores_per_node|default:1 }}
+
+{% if license_feature and ram_size %}
+#BSUB -R "rusage[{% for lic, num in license_feature.items %}{% if forloop.first %}{{lic}}={{num}}{% else %},{{lic}}={{num}}{% endif %}{% endfor %},mem={{ ram_size }}M]"
+{% elif license_feature %}
+#BSUB -R "rusage[{% for lic, num in license_feature.items %}{% if forloop.first %}{{lic}}={{num}}{% else %},{{lic}}={{num}}{% endif %}{% endfor %}]"
+{% elif ram_size %}
+#BSUB -R "rusage[mem={{ ram_size }}M]"
+{% endif %}
+
+{% if gpu_per_node or use_gpu %}#BSUB -gpu "num={{ gpu_per_node|default:1 }}{% if gpu_resource_name %}:mig={{ gpu_resource_name }}{% endif %}:j_exclusive=yes"{% endif %}
+{% if run_time %}#BSUB -W {% format_lsf_walltime run_time %}{% endif %}
+export LSF_ENABLED=1
+export SCHEDULER_TIGHT_COUPLING=1
+FL_SCHEDULER_HOST_FILE=lsf.${LSB_JOBID}.hosts
+/bin/rm -rf ${FL_SCHEDULER_HOST_FILE}
+if [ -n "$LSB_MCPU_HOSTS" ]; then
+    HOST=""
+    COUNT=0
+    for i in $LSB_MCPU_HOSTS
+    do
+        if [ -z "$HOST" ]; then
+            HOST="$i"
+        else
+            echo "$HOST:$i" >> $FL_SCHEDULER_HOST_FILE
+            COUNT=`expr $COUNT + $i`
+            HOST=""
+        fi
+    done
+fi
+
+port={{ lico.port0 }}
+DISPLAY=$(($port-5900))
+host=`hostname`
+JOBID=${LSB_JOBID}

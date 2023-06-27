@@ -1,0 +1,73 @@
+{% include "scheduler/mpi.sh.in" %}
+{% if not exclusive %}
+{%runtime_sh  lico.user runtime_id%}
+{% else %}
+{%runtime_sh  lico.user runtime_id affinity_id%}
+{% endif %}
+{% if env_file %}source {{ env_file }}{% endif %}
+echo job start time is `date`
+echo `hostname`
+port={{ lico.port0 }}
+
+{% if exclusive and affinity_id %}echo Affinity ID : {{ affinity_id }}{% endif %}
+
+{% settings as settings %}
+{% if settings.LICO.SCHEDULER == "slurm" %}
+ENV_JOB_ID=$SLURM_JOB_ID
+{% elif settings.LICO.SCHEDULER == "lsf" %}
+ENV_JOB_ID=$LSB_JOBID
+{% elif settings.LICO.SCHEDULER == "pbs" %}
+ENV_JOB_ID=$(echo $PBS_JOBID | cut -d "." -f1)
+{% endif %}
+
+results_dir="Intel_Analyzer_Results_$ENV_JOB_ID"
+{% if mpitune_file == "" %}
+genv_mpitune=""
+{% else %}
+genv_mpitune='-genv I_MPI_TUNING={{ mpitune_file|default:"" }}'
+{% endif %}
+
+{% if core_file %}
+ulimit -c unlimited
+{% endif %}
+
+{% if intel_analyzer == "None" and remotely_debug == "gdbserver" %}
+mpiexec {{ mpiargs|default:"" }} $genv_mpitune {{ prog }} {{ args|default:"" }} &
+mpiexec -ppn 1 gdbserver --multi :$port &> gdbserver.log
+{% elif intel_analyzer == "None" and remotely_debug != "gdbserver" %}
+mpiexec {{ mpiargs|default:"" }} $genv_mpitune {{ prog }} {{ args|default:"" }}
+{% elif intel_analyzer == "aps" %}
+mkdir -p {{ job_workspace }}/$results_dir/aps_{{ job_name }}_$ENV_JOB_ID/ &&
+mpiexec {{ mpiargs|default:"" }} $genv_mpitune \
+    aps -r {{ job_workspace }}/$results_dir/aps_{{ job_name }}_$ENV_JOB_ID \
+    {{ prog }} {{ args|default:"" }} &&
+echo -e '\n\n\n' $_{1..90}'-' '\nStart generating HTML report:\n' &&
+aps --report -H {{ job_workspace }}/$results_dir/aps_{{ job_name }}_$ENV_JOB_ID.html \
+    {{ job_workspace }}/$results_dir/aps_{{ job_name }}_$ENV_JOB_ID
+{% elif intel_analyzer == "tac" %}
+mkdir {{ job_workspace }}/$results_dir/ &&
+mpiexec $genv_mpitune -genv VT_LOGFILE_FORMAT=SINGLESTF \
+    -genv VT_LOGFILE_NAME={{ job_workspace }}/$results_dir/itac_{{ job_name }}_$ENV_JOB_ID.stf \
+    -trace {{ mpiargs|default:"" }} {{ prog }} {{ args|default:"" }}
+{% elif intel_analyzer == "vtune_profiler" %}
+{%add_vtune_group lico.user.username%}
+mpiexec {{ mpiargs|default:"" }} $genv_mpitune vtune -collect {{ vtune_analysis_type }}{% if vtune_analysis_type == 'system-overview' %} -knob enable-interrupt-collection=false -knob analyze-power-usage=false -knob sampling-interval=20{% endif %} \
+    -result-dir {{ job_workspace }}/$results_dir/vtune_{{ job_name }}_$ENV_JOB_ID/vtune_{{ job_name }}_$ENV_JOB_ID \
+    -- {{ prog }} {{ args|default:"" }}{% if vtune_analysis_type != 'platform-profiler' %} &&
+echo -e '\n\n\n' $_{1..90}'-' '\nStart generating HTML report:\n' &&
+for filename in `find {{ job_workspace }}/$results_dir/vtune_{{ job_name }}_$ENV_JOB_ID/ -maxdepth 1 -name vtune_{{ job_name }}_$ENV_JOB_ID.*`
+do
+    vtune -report summary -r $filename -format html -report-output $filename.html &&
+    mv $filename.html {{ job_workspace }}/$results_dir/
+done{% endif %}
+{% elif intel_analyzer == "advisor" %}
+mpiexec {{ mpiargs|default:"" }} $genv_mpitune advisor -collect survey \
+    --project-dir {{ job_workspace }}/$results_dir/advisor_survey_{{ job_name }}_$ENV_JOB_ID -- {{ prog }} {{ args|default:"" }} &&
+echo -e '\n\n\n' $_{1..90}'-' '\nStart generating TXT report:\n' &&
+advisor --report survey --project-dir {{ job_workspace }}/$results_dir/advisor_survey_{{ job_name }}_$ENV_JOB_ID --format text \
+    --report-output {{ job_workspace }}/$results_dir/advisor_survey_{{ job_name }}_$ENV_JOB_ID.txt
+echo \
+{% else %}
+echo "vtune error!"
+{% endif %}
+echo job end time is `date`

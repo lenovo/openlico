@@ -1,0 +1,6 @@
+include:
+  - project: 'lico/gitlab-runner-configure'
+    file:
+      - 'stage.yml'
+      - 'python/default.yml'
+      - 'obs.yml'

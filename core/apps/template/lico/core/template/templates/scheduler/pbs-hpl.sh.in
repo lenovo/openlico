@@ -1,0 +1,10 @@
+#!/bin/bash
+#PBS -N {{ job_name }}
+#PBS -q {{ job_queue }}
+#PBS -j oe
+{% get_now as current %}#PBS -o {{ job_workspace }}/{{ job_name }}-{{ current }}.out
+#PBS -l select={{ nodes|default:1 }}:ncpus={{ cores_per_node|default:1 }}:mpiprocs={{ cores_per_node|default:1 }}{% if gpu_per_node or use_gpu %}:ngpus={{ gpu_per_node|default:1 }}{% endif %}
+#PBS -l place=scatter
+{% if run_time %}#PBS -l walltime={% format_pbs_walltime run_time %}{% endif %}
+#PBS -V
+cd {{ job_workspace }}

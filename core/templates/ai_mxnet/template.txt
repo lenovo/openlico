@@ -1,0 +1,95 @@
+{% include "scheduler/ai.sh.in" %}
+{% include "runtime.sh.in" %}
+{% bind_user_share_folder as job_user_share_folder %}
+{% settings as settings %}
+module try-load singularity
+echo job start time is `date`
+
+{% if distributed %}
+export LICO_AVAILABLE_PORTS=@@{lico_port1_{% sum_items ps_worker|get_item:"psNumber"|default_if_none:2 ps_worker|get_item:"workerNumber"|default:2 %}}
+
+ps_num={{ ps_worker|get_item:"psNumber"|default_if_none:2 }}
+worker_num={{ ps_worker|get_item:"workerNumber"|default:2 }}
+lico_ports_array=(`echo $LICO_AVAILABLE_PORTS | tr ','  ' '`)
+{% get_exec_node settings.LICO.SCHEDULER 1 %}
+SINGULARITYENV_DMLC_PS_ROOT_PORT=${lico_ports_array[0]}
+SINGULARITYENV_DMLC_PS_ROOT_URI=`ping -c 1 ${exec_nodes[0]} | head -n 1 | tr '()' ' '|awk '{print $3}'`
+echo $SINGULARITYENV_DMLC_PS_ROOT_URI
+
+# run scheduler
+set -x
+{% scheduler_exec settings.LICO.SCHEDULER 0 gpu_per_node 0 %}${exec_nodes[0]} \
+    bash -c "export SINGULARITYENV_DMLC_NUM_WORKER=${worker_num} SINGULARITYENV_DMLC_NUM_SERVER=${ps_num} \
+    SINGULARITYENV_DMLC_ROLE=scheduler SINGULARITYENV_DMLC_PS_ROOT_URI=${SINGULARITYENV_DMLC_PS_ROOT_URI} \
+    SINGULARITYENV_DMLC_PS_ROOT_PORT=${SINGULARITYENV_DMLC_PS_ROOT_PORT} CUDA_VISIBLE_DEVICES=-1 \
+    && singularity exec {% if gpu_per_node %}--nv{% endif %} \
+    -B {{ lico.user.workspace|addslashes }} {{ job_user_share_folder|addslashes }} \
+    --pwd {{ job_workspace }} \
+    {{ image_path }} {% program_exec prog %} {{ args|default:""|addslashes }}" &
+set +x
+
+
+function run_ps_worker(){
+    num=$1
+    flag=$2
+    i=0
+    start_gpu=0
+    while(( $num>0 ))
+    do
+        for exec_node in ${exec_nodes[*]}
+        do
+            if [ $num == 0 ]
+            then
+                break
+            fi
+
+            if [ $flag == "ps" ]
+            then
+                set -x
+                {% scheduler_exec settings.LICO.SCHEDULER 0 gpu_per_node 0 %}$exec_node \
+                    bash -c "export SINGULARITYENV_DMLC_NUM_WORKER=${worker_num} SINGULARITYENV_DMLC_NUM_SERVER=${ps_num} \
+                    SINGULARITYENV_DMLC_ROLE=server SINGULARITYENV_DMLC_PS_ROOT_URI=${SINGULARITYENV_DMLC_PS_ROOT_URI} \
+                    SINGULARITYENV_DMLC_PS_ROOT_PORT=${SINGULARITYENV_DMLC_PS_ROOT_PORT} CUDA_VISIBLE_DEVICES=-1 \
+                    && singularity exec {% if gpu_per_node %}--nv{% endif %} \
+                    -B {{ lico.user.workspace|addslashes }} {{ job_user_share_folder|addslashes }} \
+                    --pwd {{ job_workspace }} \
+                    {{ image_path }} {% program_exec prog %} {{ args|default:""|addslashes }}" &
+                set +x
+            else
+                set -x
+                {% scheduler_exec settings.LICO.SCHEDULER ps_worker|get_item:"gpuPerWorker" gpu_per_node 0 %}$exec_node \
+                    bash -c "{% if gpu_per_node > 1 %}array=(\${CUDA_VISIBLE_DEVICES//,/ });devs=\$(printf ,%s \${array[@]:$start_gpu:{{ ps_worker|get_item:"gpuPerWorker" }} });CUDA_VISIBLE_DEVICES=\${devs:1} && {% endif %} \
+                    export SINGULARITYENV_DMLC_NUM_WORKER=${worker_num} SINGULARITYENV_DMLC_NUM_SERVER=${ps_num} SINGULARITYENV_DMLC_ROLE=worker \
+                    SINGULARITYENV_DMLC_PS_ROOT_URI=${SINGULARITYENV_DMLC_PS_ROOT_URI} SINGULARITYENV_DMLC_PS_ROOT_PORT=${SINGULARITYENV_DMLC_PS_ROOT_PORT} \
+                    && singularity exec {% if gpu_per_node %}--nv{% endif %} \
+                    -B {{ lico.user.workspace|addslashes }} {{ job_user_share_folder|addslashes }} \
+                    --pwd {{ job_workspace }} \
+                    {{ image_path }} {% program_exec prog %} {{ args|default:""|addslashes }}" &
+                set +x
+            fi
+            let "num--"
+            let "i++"
+        done
+        start_gpu=$(( $start_gpu + {{ ps_worker|get_item:"gpuPerWorker" }} ))
+    done
+}
+
+run_ps_worker $ps_num 'ps'
+run_ps_worker $worker_num 'worker'
+wait
+
+{% else %}
+{% get_exec_node settings.LICO.SCHEDULER 0 %}
+
+set -x
+
+{% scheduler_exec settings.LICO.SCHEDULER gpu_per_node gpu_per_node|default:0 1 %}${exec_node} \{% if settings.LICO.SCHEDULER == "slurm" %}
+    --cpus-per-task=${cpu_curr_node} \{% endif %}
+    singularity exec {% if gpu_per_node %}--nv{% endif %} \
+    -B {{ lico.user.workspace|addslashes }} {{ job_user_share_folder|addslashes }} \
+    --pwd {{ job_workspace }} {{ image_path }} {% program_exec prog %} {{ args|default:""|addslashes }}
+
+set +x
+{% endif %}
+
+echo job end time is `date`

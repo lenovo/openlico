@@ -1,0 +1,270 @@
+{
+  "code": "oneapi_intel_python",
+  "index": 20,
+  "name": "Intel Distribution for Python",
+  "description": "The Intel® Distribution for Python* achieve fast math-intensive workload performance without code changes for data science and machine learning problems.",
+  "category": "Intel_oneAPI,HPC",
+  "featureCode": "sc.host.*,oneapi",
+  "display": true,
+  "type": "system",
+  "params": [
+    {
+      "id": "job_name",
+      "name": {
+        "en": "Job Name",
+        "zh": "作业名称"
+      },
+      "class": "base",
+      "dataType": "string",
+      "must": true,
+      "type": "system",
+      "input": "input",
+      "maxLength": 64
+    },
+    {
+      "id": "job_workspace",
+      "name": {
+        "en": "Workspace",
+        "zh": "工作目录"
+      },
+      "class": "base",
+      "dataType": "folder",
+      "must": true,
+      "type": "system"
+    },
+    {
+      "id": "job_queue",
+      "name": {
+        "en": "Queue",
+        "zh": "队列"
+      },
+      "class": "resource",
+      "dataType": "queue",
+      "must": true,
+      "type": "system"
+    },
+    {
+      "id": "runtime_id",
+      "name": {
+        "en": "Runtime ENV",
+        "zh": "运行环境"
+      },
+      "class": "param",
+      "dataType": "runtime",
+      "must": false,
+      "defaultValue": "Intel_Distribution_for_Python"
+    },
+    {
+      "id": "prog",
+      "name": {
+        "en": "Python Program",
+        "zh": "Python程序"
+      },
+      "class": "param",
+      "dataType": "file",
+      "must": true
+    },
+    {
+      "id": "args",
+      "name": {
+        "en": "Program Arguments",
+        "zh": "程序参数"
+      },
+      "class": "param",
+      "dataType": "string",
+      "input": "input",
+      "must": false
+    },
+    {
+      "id": "intel_analyzer",
+      "name": {
+        "en": "Intel Performance Analyzer",
+        "zh": "Intel性能分析器"
+      },
+      "class": "param",
+      "dataType": "string",
+      "input": "select",
+      "selectOption": [
+        {
+          "label": "Application Performance Snapshot",
+          "value": "aps"
+        },
+        {
+          "label": "VTune Profiler",
+          "value": "vtune_profiler"
+        },
+        {
+          "label": "Advisor",
+          "value": "advisor"
+        },
+        {
+          "label": "None",
+          "value": "None"
+        }
+      ],
+      "defaultValue": "None",
+      "must": false
+    },
+    {
+      "id": "vtune_analysis_type",
+      "name": {
+        "en": "VTune Analysis Type",
+        "zh": "VTune分析类型"
+      },
+      "class": "param",
+      "dataType": "string",
+      "input": "select",
+      "selectOption": [
+        {
+          "label": "Performance Snapshot",
+          "value": "performance-snapshot"
+        },
+        {
+          "label": "Algorithm",
+          "children": [
+            {
+              "label": "Hotspots",
+              "value": "hotspots"
+            },
+            {
+              "label": "Memory Consumption",
+              "value": "memory-consumption"
+            }
+          ]
+        },
+        {
+          "label": "Microarchitecture",
+          "children": [
+            {
+              "label": "Microarchitecture Exploration",
+              "value": "uarch-exploration"
+            },
+            {
+              "label": "Memory Access",
+              "value": "memory-access"
+            }
+          ]
+        },
+        {
+          "label": "Parallelism",
+          "children": [
+            {
+              "label": "Threading",
+              "value": "threading"
+            },
+            {
+              "label": "HPC Performance Characterization",
+              "value": "hpc-performance"
+            }
+          ]
+        },
+        {
+          "label": "Platform Analyses",
+          "children": [
+            {
+              "label": "System Overview",
+              "value": "system-overview"
+            },
+            {
+              "label": "Platform Profiler",
+              "value": "platform-profiler"
+            }
+          ]
+        }
+      ],
+      "defaultValue": "performance-snapshot",
+      "must": false,
+      "visible": "context.intel_analyzer=='vtune_profiler'"
+    },
+    {
+      "id": "exclusive",
+      "name": {
+        "en": "Exclusive",
+        "zh": "独占节点"
+      },
+      "class": "resource",
+      "dataType": "boolean",
+      "defaultValue": true,
+      "must": false
+    },
+    {
+      "id": "cores_per_node",
+      "name": {
+        "en": "CPU Cores",
+        "zh": "CPU核数"
+      },
+      "class": "resource",
+      "dataType": "number",
+      "input": "input",
+      "minValue": "1",
+      "maxValue": "999",
+      "floatLength": 0,
+      "defaultValue": "1",
+      "must": true,
+      "visible": "!context.exclusive"
+    },
+    {
+      "id": "ram_size",
+      "name": {
+        "en": "Memory Used(MB)",
+        "zh": "内存使用(MB)"
+      },
+      "class": "resource",
+      "dataType": "number",
+      "input": "input",
+      "minValue": "1",
+      "maxValue": "9999",
+      "floatLength": 0,
+      "defaultValue": "",
+      "must": false
+    },
+    {
+      "id": "run_time",
+      "name": {
+        "en": "Wall Time",
+        "zh": "最大运行时间"
+      },
+      "class": "resource",
+      "dataType": "string",
+      "input": "input",
+      "tips": {
+        "type": "text",
+        "content": "eg.3d 4h 12m"
+      },
+      "help": {
+        "en": "Please input run time limit for the job,Format is 'Xd Xh Xm',which 'Xd' represents X days,'Xh' represents X hours and 'Xm' represents X minutes.",
+        "zh": "请输入job的运行时间限制，格式为“Xd Xh Xm”，“Xd”表示X天，“Xh”表示X小时，“Xm”表示X分钟。"
+      },
+      "defaultValue": "24h",
+      "must": false
+    },
+    {
+      "id": "job_notify",
+      "name": {
+        "en": "Notify Job Completion",
+        "zh": "作业完成通知"
+      },
+      "class": "notify",
+      "dataType": "string",
+      "input": "select",
+      "selectOption": [
+        {
+          "label": {
+            "en": "None",
+            "zh": "无"
+          },
+          "value": ""
+        },
+        {
+          "label": {
+            "en": "Email",
+            "zh": "邮件"
+          },
+          "value": "email"
+        }
+      ],
+      "defaultValue": "",
+      "must": false
+    }
+  ]
+}

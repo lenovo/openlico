@@ -1,0 +1,14 @@
+trigger.core.templates:
+  variables:
+    TOX_WORKSPACE: core/templates
+    OBS_PACKAGE: lico-job-templates
+  stage: trigger
+  trigger:
+    include: $TOX_WORKSPACE/downstream.yml  
+    strategy: depend
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_TAG =~ /^\d+(\.\d+)+(rc)?$/
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      changes:
+        - $TOX_WORKSPACE/*
+        - $TOX_WORKSPACE/**/*

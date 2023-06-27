@@ -1,0 +1,76 @@
+{
+  "type": "object",
+  "properties": {
+    "job_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32
+    },
+    "job_workspace": {
+      "type": "string",
+      "minLength": 1
+    },
+    "project_workspace": {
+      "type": "string",
+      "minLength": 1
+    },
+    "job_queue": {
+      "type": "string",
+      "minLength": 1
+    },
+    "image_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "nodes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9999
+    },
+    "cores_per_node": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 999
+    },
+    "gpu_per_node": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 99
+    },
+    "password": {
+      "type": "string",
+      "minLength": 1
+    },
+    "persistent_dir": {
+      "type": ["string", "null"],
+      "minLength": 1
+    },
+    "jupyter_cmd": {
+      "type": "string"
+    },
+    "job_uuid": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run_time": {
+      "type": "string",
+      "pattern": "^([0-9]+[d])?(\\s)*([0-9]+[h])?(\\s)*([0-9]+[m])?(\\s)*$"
+    },
+    "jupyter_timeout": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "kernel_timeout": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "terminal_timeout": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "required": [
+    "job_name", "job_workspace", "job_queue",
+    "language", "password", "job_uuid"
+  ]
+}

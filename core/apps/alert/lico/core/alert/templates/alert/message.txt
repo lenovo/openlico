@@ -1,0 +1,5 @@
+{% load i18n %}
+{% trans "The alarm policy" %} '{{ name }}' {% trans "is triggered" %}
+{% trans "Node" %}: {{ node }}
+{% trans "Level" %}: {{ level }}
+{% trans "Time" %}: {{ create_time }}

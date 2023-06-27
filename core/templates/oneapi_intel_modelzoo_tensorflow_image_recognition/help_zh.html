@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>help</title>
+    <style>
+        *::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        *::-webkit-scrollbar-track {
+            background: #efefef;
+            border-radius: 2px;
+        }
+
+        *::-webkit-scrollbar-thumb {
+            background: #bfbfbf;
+            border-radius: 10px;
+        }
+
+        *::-webkit-scrollbar-thumb:hover {
+            background: #333;
+        }
+
+        .father_div {
+            width: 320px;
+            background: #f8fafc;
+            margin: 0 auto;
+            padding: 10px 25px;
+            border-radius: 4px;
+            color: #3f3f3f;
+            font-size: 12px;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .son_div {
+            background: #ffffff;
+            padding: 5px 25px;
+            border-radius: 4px;
+        }
+
+        .code_div {
+            background: #fafafa;
+            margin: 5px auto;
+            padding: 2px;
+            border-radius: 4px;
+        }
+
+        .code_ol {
+            color: #888888;
+            padding-left: 30px;
+            margin: 5px auto;
+            line-height: 18px;
+        }
+
+        .code_ol li {
+            padding-left: 12px;
+        }
+
+        p {
+            margin: 10px auto;
+        }
+
+        .help_font {
+            font-size: 14px;
+            font-weight: 700;
+            color: #222222;
+            margin-bottom: 5px;
+        }
+
+        .body_text {
+            color: #777777;
+            line-height: 20px;
+            font-size: 12px;
+            margin: 2px auto;
+        }
+
+        .t1 {
+            font-size: 12px;
+            font-weight: 600;
+            margin: 5px auto;
+        }
+
+        .red_font {
+            color: #e16d71;
+        }
+
+        .learn_more_a {
+            margin: 10px;
+            color: #4aa2ff;
+            text-decoration: none;
+            font-size: 12px;
+        }
+
+        .body_a {
+            color: #4aa2ff;
+            text-decoration: none;
+        }
+        .code_div_text {
+            color: #777777;
+            line-height: 20px;
+            font-size: 12px;
+            margin: 2px auto;
+            padding-left: 12px;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div class="father_div">
+        <p class="help_font">帮助</p>
+        <div class="son_div">
+            <p class="body_text">
+                对于“TensorFlow Image Recognition of Intel Model Zoo”作业，在某些情况下需要准备数据集。参阅
+                <a href="https://github.com/IntelAI/models/blob/master/datasets/imagenet/README.md" target="_blank"
+                   class="body_a">
+                   下载并预处理ImageNet数据集</a> 说明以准备数据集.</p>
+            <!-- <p class="t1">Image Recognition</p> -->
+            <p class="body_text">
+                最终数据集格式应如下所示：</p>
+            <div class="code_div">
+                <p class="code_div_text"> $ ls -1 < IMAGENET DIR >/tf_records/ </br>
+                    train-00000-of-01024</br>
+                    train-00001-of-01024</br>
+                    train-00002-of-01024</br>
+                    train-00003-of-01024</br>
+                    ...</br>
+                    validation-00000-of-00128</br>
+                    validation-00001-of-00128</br>
+                    validation-00002-of-00128</br>
+                    validation-00003-of-00128</br>
+                    ...</br>
+                </p>
+            </div>
+        </div>
+        <p><a href="https://github.com/IntelAI/models" target="_blank"
+              class="learn_more_a">了解更多</a></p>
+    </div>
+</div>
+</body>
+</html>

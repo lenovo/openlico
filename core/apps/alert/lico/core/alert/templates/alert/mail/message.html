@@ -1,0 +1,17 @@
+{% load i18n %}
+<div>
+    <h2>
+        {% trans "The alarm policy" %} '{{ name }}' {% trans "is triggered" %}
+    </h2>
+    <hr>
+        <dl>
+            <dt>{% trans 'Node' %}:</dt>
+            <dd>{{ node }}</dd>
+            <dt>{% trans 'Level' %}:</dt>
+            <dd>{{ level }}</dd>
+            <dt>{% trans 'Time' %}:</dt>
+            <dd>{{ create_time }}</dd>
+        </dl>
+    <hr>
+    <i>{% trans 'Please deal with it in time!' %}</i>
+</div>

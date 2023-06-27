@@ -1,0 +1,182 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-06-22 09:20+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+# openHPC_web_project.antilles.accounting.tasks.user_daily_bill_report
+msgid "Django.accounting.bill.User_Daily_Bills"
+msgstr " User Daily Bills"
+
+msgid "Bill.User"
+msgstr "User:"
+
+msgid "Bill.Billing_Group"
+msgstr "Billing Group:"
+
+msgid "Bill.Billing_Date"
+msgstr "Billing Date:"
+
+msgid "Bill.Create_Time"
+msgstr "Create Time:"
+
+msgid "Bill.Total_Cost"
+msgstr "Total Cost:"
+
+msgid "Django.accounting.bill.Storage_Quota(GB)"
+msgstr "Storage Quota(GB)"
+
+msgid "Django.accounting.bill.Used"
+msgstr "Used({unit})"
+
+msgid "Django.accounting.bill.GB*Day"
+msgstr "GB*Day"
+
+msgid "Django.accounting.bill.Cost"
+msgstr "Cost"
+
+msgid "Django.accounting.bill.Sum_Total"
+msgstr "Total"
+
+msgid "Django.accounting.bill.Discount"
+msgstr "Discount"
+
+msgid "Django.accounting.bill.Discounted_Cost"
+msgstr "Discounted Cost"
+
+msgid "Django.accounting.bill.Record_ID"
+msgstr "Record ID"
+
+msgid "Django.accounting.bill.Job_ID_Name"
+msgstr "Job ID/Name"
+
+msgid "Django.accounting.bill.Job_ID"
+msgstr "Job ID"
+
+msgid "Django.accounting.bill.Job_Name"
+msgstr "Job Name"
+
+msgid "Django.accounting.bill.Queue"
+msgstr "Queue"
+
+msgid "Django.accounting.bill.Run_Time"
+msgstr "Run Time"
+
+msgid "Django.accounting.bill.Hour"
+msgstr "*Hour"
+
+msgid "Django.accounting.bill.Storage"
+msgstr "Storage"
+
+msgid "Django.accounting.bill.CPU"
+msgstr "CPU"
+
+msgid "Django.accounting.bill.Memory"
+msgstr "Memory"
+
+msgid "Django.accounting.bill.GPU"
+msgstr "GPU"
+
+msgid "Django.accounting.bill.Core"
+msgstr "Core"
+
+msgid "Django.accounting.bill.MB"
+msgstr "MB"
+
+msgid "Django.accounting.bill.GB"
+msgstr "GB"
+
+# openHPC_web_project.antilles.accounting.tasks.admin_daily_bill_report
+msgid "Django.accounting.bill.Daily_Summary_Bills"
+msgstr " Daily Summary Bills"
+
+msgid "Django.accounting.bill.Core*Hour"
+msgstr "Core*Hour"
+
+msgid "Django.accounting.bill.MB*Hour"
+msgstr "MB*Hour"
+
+msgid "Django.accounting.bill.User"
+msgstr "User"
+
+msgid "Django.accounting.bill.Billing_Group"
+msgstr "Billing Group"
+
+msgid "Django.accounting.bill.Job_Number"
+msgstr "Jobs"
+
+# openHPC_web_project.antilles.accounting.tasks.user_monthly_bill_report
+msgid "Django.accounting.bill.User_Monthly_Bills"
+msgstr " User Monthly Bills"
+
+msgid "Django.accounting.bill.Date"
+msgstr "Date"
+
+# openHPC_web_project.antilles.accounting.tasks.admin_monthly_bill_report
+msgid "Django.accounting.bill.Monthly_Summary_Bills"
+msgstr " Monthly Summary Bills"
+
+msgid "Bill.Billing_Month"
+msgstr "Billing Month:"
+
+msgid "Bill.Start_Time"
+msgstr "Start Time:"
+
+msgid "Bill.End_Time"
+msgstr "End Time:"
+
+msgid "Deposit.Billing Group"
+msgstr "Account Statement - {billing_group}"
+
+msgid "Deposit.Created At"
+msgstr "created at"
+
+msgid "Deposit.Data Cycle"
+msgstr "data cycle"
+
+msgid "Deposit.Record ID"
+msgstr "Record ID"
+
+msgid "Deposit.Approved Time"
+msgstr "Date"
+
+msgid "Deposit.Billing Type"
+msgstr "Type"
+
+msgid "Deposit.Billing Description"
+msgstr "Description"
+
+msgid "Deposit.User"
+msgstr "User"
+
+msgid "Deposit.Credits"
+msgstr "Amount({unit})"
+
+msgid "Deposit.Balance"
+msgstr "Balance({unit})"
+
+msgid "Deposit.Type.Job"
+msgstr "Job"
+
+msgid "Deposit.Type.Storage"
+msgstr "Storage"
+
+msgid "Deposit.Type.Deposit"
+msgstr "Deposit"
+
+msgid "Deposit.Type.Withdraw"
+msgstr "Withdraw"

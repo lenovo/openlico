@@ -1,0 +1,21 @@
+{% extends "report/base_report.html" %}
+{% load i18n %}
+{% block content %}
+{% for group_title_data, group_data in data %}
+<table class='table table-striped table-bordered'>
+    <thead>
+    {% block head %}{% endblock %}
+    </thead>
+    <tbody>
+    {% for index, vals in group_data %}
+        <tr>
+            <td>{{ index }}</td>
+            {% for val in vals %}
+                <td>{{ val }}</td>
+            {% endfor %}
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endfor %}
+{% endblock %}

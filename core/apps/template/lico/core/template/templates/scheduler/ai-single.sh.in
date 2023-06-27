@@ -1,0 +1,12 @@
+{% include "scheduler/ai.sh.in" %}
+{% include "runtime.sh.in" %}
+{% bind_user_share_folder as job_user_share_folder %}
+{% settings as settings %}
+module try-load singularity
+echo job start time is `date`
+/opt/lico/pub/ai-scripts/lico-dl-run {% block framework %}{% endblock %} {{ settings.LICO.SCHEDULER }} " -B {{ lico.user.workspace|addslashes }} {{ job_user_share_folder|addslashes }}" {{ image_path }} \
+	{{ prog }} \
+	" {% block args %}{{ args|default:""|addslashes }}{% endblock %}" \
+	{% block gpu-num %}--gpu-num {{ gpu_per_node|default:0 }}{% endblock %} \
+	{% if not exclusive %} --cpu-num {{ cores_per_node|default:1 }}{% endif %}
+echo job end time is `date`

@@ -1,0 +1,23 @@
+{% include "scheduler/ai.sh.in" %}
+mpi_version=`mpirun -V`
+if ! [[ $mpi_version =~ "Intel" ]]
+then
+    module purge
+    module try-load gnu
+    module try-load mpich
+fi
+export OMP_PROC_BIND=false
+{% include "runtime.sh.in" %}
+{% bind_user_share_folder as job_user_share_folder %}
+{% settings as settings %}
+module try-load singularity
+echo job start time is `date`
+set -x
+
+{% if settings.LICO.SCHEDULER == "slurm" %}srun --mpi=pmi2{%else%}mpirun{%endif%} singularity exec \
+    -B {{ lico.user.workspace|addslashes }} {{ job_user_share_folder|addslashes }} \
+    --pwd {{ job_workspace }} \
+    {{ image_path }} {% program_exec prog %} {{ args|default:""|addslashes }}
+
+set +x
+echo job end time is `date`

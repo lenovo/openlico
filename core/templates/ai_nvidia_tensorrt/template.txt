@@ -1,0 +1,8 @@
+{% include "scheduler/ai.sh.in" %}
+{% include "runtime.sh.in" %}
+{% settings as settings %}
+module try-load singularity
+echo job start time is `date`
+singularity exec -B {{ lico.user.workspace }} {% bind_user_share_folder %} \
+    --nv {{ image_path }} {% command_prog prog %} {{ args|default:"" }}
+echo job end time is `date`

@@ -1,0 +1,15 @@
+{
+  "type": "object",
+  "properties": {
+    "job_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "job_file": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": ["job_name", "job_file"]
+}

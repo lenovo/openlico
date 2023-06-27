@@ -1,0 +1,13 @@
+#!/bin/bash
+#SBATCH --job-name='{{ job_name|addslashes }}'
+#SBATCH --chdir={{ job_workspace }}
+#SBATCH --partition={{ job_queue }}
+#SBATCH --nodes={{ nodes|default:1 }}
+#SBATCH {% if exclusive|default_if_none:True %}--exclusive{% else %}--ntasks-per-node={{ cores_per_node|default:1 }}{% endif %}
+{% if run_time %}#SBATCH --time={{ run_time|timeformat }}{% endif %}
+{% if not job_ear %}{% else %}{% if job_ear|get_item:"type" == "off" %}#SBATCH --ear=off{% else %}#SBATCH --ear=on
+{% if job_ear|get_item:"type" == "policy"%}#SBATCH --ear-verbose={{ job_ear|get_item:"verbose" }}
+{% if job_ear|get_item:"value" != "default" %}#SBATCH --ear-policy={{ job_ear|get_item:"value" }}{% endif %}{% elif job_ear|get_item:"type" == "tag" %}#SBATCH --ear-verbose={{ job_ear|get_item:"verbose" }}
+#SBATCH --ear-tag={{ job_ear|get_item:"value" }}{% endif %}{% endif %}{% endif %}
+{% if ram_size %}#SBATCH --mem={{ ram_size }}M{% endif %}
+{% if gpu_per_node %}#SBATCH --gres={% if gpu_resource_name %}{{ gpu_resource_name }}{% else %}gpu{% endif %}:{{ gpu_per_node }}{% endif %}

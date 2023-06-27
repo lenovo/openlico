@@ -1,0 +1,50 @@
+{% include "scheduler/ai.sh.in" %}
+{% include "runtime.sh.in" %}
+
+echo job start time is `date`
+
+port={{ lico.port0 }}
+DISPLAY=$(($port-5900))
+host=`hostname`
+
+mkdir -p  {{ job_workspace }}/.vnc
+echo {{ password }} | vncpasswd -f >  {{ job_workspace }}/.vnc/passwd$DISPLAY
+chmod 600  {{ job_workspace }}/.vnc/passwd$DISPLAY
+
+vnc_token=`perl -e '
+    use Socket;
+    use MIME::Base64;
+    print(MIME::Base64::encode_base64url("'$host'".":"."'$port'"))
+'`
+if [ -z $vnc_token ]
+then
+    echo vnc_token is empty, please check system environment
+    echo job end time is `date`
+    exit -1
+fi
+
+echo "{\"entrance_uri\": \"/novnc/?path=/websockify?token=$vnc_token\"}" > {{ job_workspace }}/entrance_uri.json
+
+bash --login -c "vncserver :$DISPLAY -passwordFile={{ job_workspace }}/.vnc/passwd$DISPLAY --localhost=no"
+
+if [ "$?" -eq 0 ];then
+    trap "vncserver -kill :$DISPLAY;rm -f {{ job_workspace }}/.vnc/passwd$DISPLAY;rm -f {{ job_workspace }}/entrance_uri.json" TERM
+
+    echo "Use either of the following ways to open the VNC instance:"
+    echo "1. On the LiCO Web GUI, select Admin -> VNC from the left navigation pane. Then find `hostname`:$DISPLAY in the VNC instance list, and select Action -> Open to open this VNC instance."
+    echo "2. Connect the VNC instance by using `hostname -i`:$port and your username via a VNC client"
+
+    port_exist(){
+        check=`vncserver -list 2>&1 | awk '/:'"$DISPLAY"'\s/'`
+        if [[ "$check" == "" ]];then
+            return 1
+        fi
+        return 0
+    }
+
+    while port_exist
+    do
+        sleep 5
+    done
+fi
+echo job end time is `date`

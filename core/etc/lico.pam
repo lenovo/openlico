@@ -1,0 +1,9 @@
+#%PAM-1.0
+
+auth        substack     system-auth
+
+account     include      system-auth
+
+password    include      system-auth
+
+session     optional     pam_mkhomedir.so skel=/etc/skel/ umask=0077

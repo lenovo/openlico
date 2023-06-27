@@ -1,0 +1,52 @@
+{
+  "type": "object",
+  "properties": {
+    "job_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "job_workspace": {
+      "type": "string",
+      "minLength": 1
+    },
+    "job_queue": {
+      "type": "string",
+      "minLength": 1
+    },
+    "runtime_id": {
+      "type": ["integer", "null"],
+      "minimum": 1
+    },
+    "env_file": {
+      "type": "string"
+    },
+    "config_file": {
+      "type": "string",
+      "minLength": 1
+    },
+    "nodes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9999
+    },
+    "cores_per_node": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 999
+    },
+    "ram_size": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 999999
+    },
+    "run_time": {
+      "type": "string",
+      "pattern": "^([0-9]+[d])?(\\s)*([0-9]+[h])?(\\s)*([0-9]+[m])?(\\s)*$"
+    }
+  },
+  "required": [
+    "job_name", "job_workspace", "job_queue",
+    "config_file", "nodes", "cores_per_node"
+  ]
+}

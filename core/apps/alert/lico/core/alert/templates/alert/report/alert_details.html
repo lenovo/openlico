@@ -1,0 +1,47 @@
+{% load i18n %}
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <style>{% include "alert/report/style.css" %}</style>
+    <style>
+    {% block style %}{% endblock %}
+    </style>
+</head>
+<body>
+<h2>{{ title }}</h2>
+<h2>{% block subtitle %}{% endblock %}</h2>
+<h3>
+    <span>{{ creator }} {% trans 'created at'%} {{ create_time }}</span>
+</h3>
+
+{% block datacycle %}
+<h3>
+    <span>{% trans 'data cycle' %}:{{ start_time }} - {{ end_time }}</span>
+</h3>
+{% endblock %}
+<table class='table table-striped table-bordered'>
+    <thead>
+        <tr>
+            <th></th>
+            <th>{% trans 'Alert Time' %}</th>
+            <th>{% trans 'Alert Name' %}</th>
+            <th>{% trans 'Alert Source' %}</th>
+            <th>{% trans 'Alert Level' %}</th>
+            <th>{% trans 'Alert Status' %}</th>
+            <th>{% trans 'Remark' %}</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for index, vals in data %}
+        <tr>
+            <td>{{ index }}</td>
+            {% for val in vals %}
+                <td>{{ val }}</td>
+            {% endfor %}
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+</body>
+</html>

@@ -1,0 +1,73 @@
+# Copyright 2015-2023 Lenovo
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-10-09 07:30+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: openHPC_web_project/antilles/report/reportbase.py:54
+#: openHPC_web_project/antilles/report/reportbase.py:58
+#: openHPC_web_project/antilles/report/templates/report/base_report.html:12
+msgid "monitor.created at"
+msgstr "created at"
+
+#: openHPC_web_project/antilles/report/reportbase.py:69
+msgid "monitor.Time"
+msgstr "Time"
+
+#: openHPC_web_project/antilles/report/reportbase.py:60
+#: openHPC_web_project/antilles/report/templates/report/base_report.html:17
+msgid "monitor.data cycle"
+msgstr "data cycle"
+
+#: node_running_statistics info
+msgid "monitor.Node Name"
+msgstr "Node Name"
+
+msgid "monitor.CPU Usage (%)"
+msgstr "CPU Usage (%)"
+
+msgid "monitor.CPU Usage"
+msgstr "CPU Usage"
+
+msgid "monitor.GPU Usage (%)"
+msgstr "GPU Usage (%)"
+
+msgid "monitor.GPU Usage"
+msgstr "GPU Usage"
+
+msgid "monitor.Mem Usage (%)"
+msgstr "Mem Usage (%)"
+
+msgid "monitor.Mem Usage"
+msgstr "Mem Usage"
+
+msgid "monitor.Network Usage (up/down)"
+msgstr "Network Usage (up/down)"
+
+msgid "monitor.Network Usage"
+msgstr "Network Usage"
+
+msgid "monitor.Node Running Status Report"
+msgstr "Node Running Status Report"

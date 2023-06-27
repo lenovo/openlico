@@ -1,0 +1,31 @@
+stages:
+  - check
+  - trigger
+  - report
+
+variables:
+    CI_PARENT_PIPELINE_SOURCE: $CI_PIPELINE_SOURCE
+    LICO_PARENT_RUN_OBS: $LICO_RUN_OBS
+    LICO_PARENT_RUN_SSRB: $LICO_RUN_SSRB
+    LICO_PARENT_UPLOAD_PACKAGE: $LICO_UPLOAD_PACKAGE
+    PIP_REQS: '-r requirements.txt'
+
+include:
+  - project: 'lico/gitlab-runner-configure'
+    file:
+      - 'check.yml'
+      - 'python/fossa.yml'
+      - 'python/ssrb.yml'
+  - local: 'clients/*/.gitlab-ci.yml'
+  - local: 'core/*/.gitlab-ci.yml'
+  - local: 'core/apps/*/.gitlab-ci.yml'
+  - local: 'daemon/*/.gitlab-ci.yml'
+  - local: 'library/*/.gitlab-ci.yml'
+
+tag.fossa:
+  variables:
+    FOSSA_PIP_REQS: $PIP_REQS
+
+tag.ssrb.confused:
+  variables:
+    CONFUSED_PIP_REQS: $PIP_REQS

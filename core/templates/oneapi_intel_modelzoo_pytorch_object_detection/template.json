@@ -1,0 +1,250 @@
+{
+  "code": "oneapi_intel_modelzoo_pytorch_object_detection",
+  "index": 52,
+  "name": "PyTorch Object Detection of Intel Model Zoo",
+  "description": "The Model Zoo for Intel Architecture contains links to pre-trained models, sample scripts, best practices, and step-by-step tutorials for many popular open-source machine learning models optimized by Intel to run on Intel® Xeon® Scalable processors.Model packages and containers for running the Model Zoo's workloads can be found at the Intel® oneContainer Portal.",
+  "category": "Intel_oneAPI",
+  "display": true,
+  "featureCode": "sc.host.*,oneapi",
+  "type": "system",
+  "help": true,
+  "params": [
+    {
+      "id": "job_name",
+      "name": {
+        "en": "Job Name",
+        "zh": "作业名称"
+      },
+      "class": "base",
+      "dataType": "string",
+      "must": true,
+      "type": "system",
+      "input": "input",
+      "maxLength": 64
+    },
+    {
+      "id": "job_workspace",
+      "name": {
+        "en": "Workspace",
+        "zh": "工作目录"
+      },
+      "class": "base",
+      "dataType": "folder",
+      "must": true,
+      "type": "system"
+    },
+    {
+      "id": "model_name",
+      "name": {
+        "en": "Model",
+        "zh": "模型"
+      },
+      "class": "param",
+      "dataType": "string",
+      "input": "select",
+      "selectOption": [
+        {
+          "label": "Faster R-CNN ResNet50 FPN / FP32",
+          "value": "fasterrcnn_resnet50_fpn_fp32"
+        },
+        {
+          "label": "Mask R-CNN / FP32 - jit",
+          "value": "maskrcnn_fp32-jit"
+        },
+        {
+          "label": "Mask R-CNN / BFloat16 - jit",
+          "value": "maskrcnn_bf16-jit",
+          "content": {
+            "en": "Please make sure your machine supports bf16 instruction, you can use 'lscpu | grep bf16' command to check it.",
+            "zh": "请确保您的机器支持bf16指令，您可以使用'lscpu | grep bf16'命令来检查它。"
+          }
+        },
+        {
+          "label": "Mask R-CNN / FP32 - imperative",
+          "value": "maskrcnn_fp32-imperative"
+        },
+        {
+          "label": "Mask R-CNN / BFloat16 - imperative",
+          "value": "maskrcnn_bf16-imperative",
+          "content": {
+            "en": "Please make sure your machine supports bf16 instruction, you can use 'lscpu | grep bf16' command to check it.",
+            "zh": "请确保您的机器支持bf16指令，您可以使用'lscpu | grep bf16'命令来检查它。"
+          }
+        },
+        {
+          "label": "Mask R-CNN ResNet50 FPN / FP32",
+          "value": "maskrcnn_resnet50_fpn_fp32"
+        },
+        {
+          "label": "RetinaNet ResNet-50 FPN / FP32",
+          "value": "retinanet_resnet50_fpn_fp32"
+        },
+        {
+          "label": "SSD-ResNet34 / FP32",
+          "value": "ssd-resnet34_fp32"
+        },
+        {
+          "label": "SSD-ResNet34 / BFloat16",
+          "value": "ssd-resnet34_bf16",
+          "content": {
+            "en": "Please make sure your machine supports bf16 instruction, you can use 'lscpu | grep bf16' command to check it.",
+            "zh": "请确保您的机器支持bf16指令，您可以使用'lscpu | grep bf16'命令来检查它。"
+          }
+        },
+        {
+          "label": "SSD-ResNet34 / INT8",
+          "value": "ssd-resnet34_int8"
+        }
+      ],
+      "defaultValue": "fasterrcnn_resnet50_fpn_fp32",
+      "must": true
+    },
+    {
+      "id": "measurement_type",
+      "name": {
+        "en": "Measurement Type",
+        "zh": "测量类型"
+      },
+      "class": "param",
+      "dataType": "string",
+      "input": "select",
+      "selectOption": [
+        {
+          "label": "Online Inference",
+          "value": "online_inference"
+        },
+        {
+          "label": "Batch Inference",
+          "value": "batch_inference"
+        },
+        {
+          "label": "Accuracy",
+          "value": "accuracy"
+        }
+      ],
+      "defaultValue": "online_inference",
+      "help": {
+        "en": "'Online Inference': 'bash size' = 1 performance test, 'Batch Inference': 'bash size' = default value performance test, 'Accuracy': model accuracy test.",
+        "zh": "'Online Inference': 'bash size'=1的性能测试，'Batch Inference': 'bash size'=默认值的性能测试，'Accuracy':模型精度测试。"
+      },
+      "must": false
+    },
+    {
+      "id": "dataset_dir",
+      "name": {
+        "en": "Dataset Directory",
+        "zh": "数据集目录"
+      },
+      "class": "param",
+      "dataType": "folder",
+      "must": true,
+      "help": {
+        "en": "Please select the official given data set.",
+        "zh": "请选择官方给定的数据集。"
+      }
+    },
+    {
+      "id": "job_queue",
+      "name": {
+        "en": "Queue",
+        "zh": "队列"
+      },
+      "class": "resource",
+      "dataType": "queue",
+      "must": true,
+      "type": "system"
+    },
+    {
+      "id": "exclusive",
+      "name": {
+        "en": "Exclusive",
+        "zh": "独占节点"
+      },
+      "class": "resource",
+      "dataType": "boolean",
+      "defaultValue": true,
+      "must": false,
+      "valueTrigger": "context.measurement_type!='online_inference'"
+    },
+    {
+      "id": "cores_per_node",
+      "name": {
+        "en": "CPU Cores",
+        "zh": "CPU核数"
+      },
+      "class": "resource",
+      "dataType": "number",
+      "input": "input",
+      "minValue": "1",
+      "maxValue": "999",
+      "floatLength": 0,
+      "defaultValue": "4",
+      "must": true,
+      "visible": "!context.exclusive"
+    },
+    {
+      "id": "ram_size",
+      "name": {
+        "en": "Memory Used(MB)",
+        "zh": "内存使用(MB)"
+      },
+      "class": "resource",
+      "dataType": "number",
+      "input": "input",
+      "minValue": "1",
+      "maxValue": "9999",
+      "floatLength": 0,
+      "defaultValue": "",
+      "must": false
+    },
+    {
+      "id": "run_time",
+      "name": {
+        "en": "Wall Time",
+        "zh": "最大运行时间"
+      },
+      "class": "resource",
+      "dataType": "string",
+      "input": "input",
+      "tips": {
+        "type": "text",
+        "content": "eg.3d 4h 12m"
+      },
+      "help": {
+        "en": "Please input run time limit for the job,Format is 'Xd Xh Xm',which 'Xd' represents X days,'Xh' represents X hours and 'Xm' represents X minutes.",
+        "zh": "请输入job的运行时间限制，格式为“Xd Xh Xm”，“Xd”表示X天，“Xh”表示X小时，“Xm”表示X分钟。"
+      },
+      "defaultValue": "24h",
+      "must": false
+    },
+    {
+      "id": "job_notify",
+      "name": {
+        "en": "Notify Job Completion",
+        "zh": "作业完成通知"
+      },
+      "class": "notify",
+      "dataType": "string",
+      "input": "select",
+      "selectOption": [
+        {
+          "label": {
+            "en": "None",
+            "zh": "无"
+          },
+          "value": ""
+        },
+        {
+          "label": {
+            "en": "Email",
+            "zh": "邮件"
+          },
+          "value": "email"
+        }
+      ],
+      "defaultValue": "",
+      "must": false
+    }
+  ]
+}
+

@@ -1,0 +1,59 @@
+{% include "scheduler/mpi.sh.in" %}
+{% runtime_sh  lico.user runtime_id %}
+
+echo job start time is `date`
+echo `hostname`
+
+port={{ lico.port0 }}
+echo port:$port
+
+url_suffix=`perl -e '
+    use Socket;
+    use MIME::Base64;
+    print(MIME::Base64::encode_base64url("'$host_addr'".":"."'$port'"))
+'`
+
+url_path=/static/cloudtools/intel_gdb.html
+
+{% if vnc_desktop  %}
+gdbserver --multi :$port &> gdbserver.log &
+
+echo "Intel GDB server has been launched."
+
+vnc_port={{ lico.port1 }}
+DISPLAY=$(($vnc_port-5900))
+
+echo "$url_path?vnc_desktop=true&vnc_port=$vnc_port&display=$DISPLAY&gdb_port=$port&hostname=`hostname`&hostaddr=`hostname -i`" &> entrance_uri.txt
+
+mkdir -p  {{ job_workspace }}/.vnc
+echo {{ password }} | vncpasswd -f >  {{ job_workspace }}/.vnc/passwd$DISPLAY
+chmod 600  {{ job_workspace }}/.vnc/passwd$DISPLAY
+
+bash --login -c "vncserver :$DISPLAY -passwordFile={{ job_workspace }}/.vnc/passwd$DISPLAY"
+
+if [ "$?" -eq 0 ];then
+    trap "vncserver -kill :$DISPLAY;rm -f {{ job_workspace }}/.vnc/passwd$DISPLAY" TERM
+
+    echo "Use either of the following ways to open the VNC instance:"
+    echo "1. On the LiCO Web GUI, select Admin -> VNC from the left navigation pane. Then find `hostname`:$DISPLAY in the VNC instance list, and select Action -> Open to open this VNC instance."
+    echo "2. Connect the VNC instance by using `hostname -i`:$vnc_port and your username via a VNC client"
+
+    port_exist(){
+        check=`vncserver -list 2>&1 | awk '/:'"$DISPLAY"'\s/'`
+        if [[ "$check" == "" ]];then
+            return 1
+        fi
+        return 0
+    }
+
+    while port_exist
+    do
+        sleep 5
+    done
+fi
+{% else %}
+echo "Intel GDB server has been launched."
+echo "$url_path?vnc_desktop=false&gdb_port=$port&hostname=`hostname`&hostaddr=`hostname -i`" &> entrance_uri.txt
+gdbserver --multi :$port &> gdbserver.log
+{% endif %}
+echo job end time is `date`

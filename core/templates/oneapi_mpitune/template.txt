@@ -1,0 +1,18 @@
+{% include "scheduler/mpi.sh.in" %}
+{%runtime_sh  lico.user runtime_id%}
+{% if env_file %}source {{ env_file }}{% endif %}
+echo job start time is `date`
+echo `hostname`
+result_collect=$(mpitune -np {{ nodes|default:1|multi:cores_per_node|default:1 }}  -ppn {{ cores_per_node|default:1 }} -m collect -c {{config_file}})
+echo $result_collect
+reg="Dump file:\s+(.*)\s+Info"
+if [[ $result_collect =~ $reg ]]
+then
+    dump_path="${BASH_REMATCH[1]}"
+    result_analyze=$(mpitune -np  {{ nodes|default:1|multi:cores_per_node|default:1 }} -ppn {{ cores_per_node|default:1 }} -m analyze -c {{config_file}}  -d $dump_path)
+    echo $result_analyze
+else
+    echo "Error to get dump file path."
+fi
+
+echo job end time is `date`

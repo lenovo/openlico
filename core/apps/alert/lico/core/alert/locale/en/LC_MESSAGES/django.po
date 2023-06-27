@@ -1,0 +1,200 @@
+# Copyright 2015-2023 Lenovo
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-06-20 14:46+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: templates/alert/mail/message.html:4 templates/alert/message.txt:2
+msgid "The alarm policy"
+msgstr ""
+
+#: templates/alert/mail/message.html:4 templates/alert/message.txt:2
+msgid "is triggered"
+msgstr ""
+
+#: templates/alert/mail/message.html:8 templates/alert/message.txt:3
+msgid "Node"
+msgstr ""
+
+#: templates/alert/mail/message.html:10 templates/alert/message.txt:4
+msgid "Level"
+msgstr ""
+
+#: templates/alert/mail/message.html:12 templates/alert/mail/title.html:2
+#: templates/alert/message.txt:5
+msgid "Time"
+msgstr ""
+
+#: templates/alert/mail/message.html:16
+msgid "Please deal with it in time!"
+msgstr ""
+
+#: templates/alert/mail/title.html:2
+msgid "Alarm"
+msgstr ""
+
+#: templates/alert/report/alert_details.html:15
+#: templates/alert/report/alert_statistics.html:15 views/reportbase.py:56
+#: views/reportbase.py:60
+msgid "created at"
+msgstr ""
+
+#: templates/alert/report/alert_details.html:20
+#: templates/alert/report/alert_statistics.html:20 views/reportbase.py:62
+msgid "data cycle"
+msgstr ""
+
+#: templates/alert/report/alert_details.html:27
+#: templates/alert/report/alert_statistics.html:27
+msgid "Alert Time"
+msgstr ""
+
+#: templates/alert/report/alert_details.html:28
+msgid "Alert Name"
+msgstr ""
+
+#: templates/alert/report/alert_details.html:29
+msgid "Alert Source"
+msgstr ""
+
+#: templates/alert/report/alert_details.html:30
+msgid "Alert Level"
+msgstr ""
+
+#: templates/alert/report/alert_details.html:31
+msgid "Alert Status"
+msgstr ""
+
+#: templates/alert/report/alert_details.html:32
+msgid "Remark"
+msgstr ""
+
+#: templates/alert/report/alert_statistics.html:28
+msgid "Alert Num"
+msgstr ""
+
+#: templates/alert/report/alert_statistics.html:31
+msgid "Critical"
+msgstr ""
+
+#: templates/alert/report/alert_statistics.html:32
+msgid "Error"
+msgstr ""
+
+#: templates/alert/report/alert_statistics.html:33
+msgid "Warning"
+msgstr ""
+
+#: templates/alert/report/alert_statistics.html:34
+msgid "Information"
+msgstr ""
+
+#: templates/alert/report/alert_statistics.html:35
+msgid "Total"
+msgstr ""
+
+msgid "fatal"
+msgstr "critical"
+
+msgid "error"
+msgstr ""
+
+msgid "warn"
+msgstr "warning"
+
+msgid "info"
+msgstr "information"
+
+msgid "turn off"
+msgstr ""
+
+msgid "turn on"
+msgstr ""
+
+msgid "confirm"
+msgstr ""
+
+msgid "solve"
+msgstr ""
+
+msgid "all"
+msgstr ""
+
+msgid "not set"
+msgstr ""
+
+msgid "unknown"
+msgstr ""
+
+msgid "keyword"
+msgstr ""
+
+msgid "time"
+msgstr ""
+
+msgid "present"
+msgstr ""
+
+msgid "history"
+msgstr ""
+
+msgid "confirmed"
+msgstr ""
+
+msgid "resolved"
+msgstr ""
+
+msgid "add"
+msgstr ""
+
+msgid "policy"
+msgstr ""
+
+msgid "Alert Detailed Report"
+msgstr ""
+
+msgid "Alert Date"
+msgstr ""
+
+msgid "Alert Statistics Report"
+msgstr ""
+
+msgid "update"
+msgstr ""
+
+msgid "alarm"
+msgstr ""
+
+msgid "Unconfirmed"
+msgstr ""
+
+msgid "Confirmed"
+msgstr ""
+
+msgid "Fixed"
+msgstr ""

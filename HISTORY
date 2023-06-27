@@ -1,0 +1,21 @@
+=======
+History
+=======
+
+
+----------------
+7.1.0 (2023-06-28)
+----------------
+New Hardware
+* Support Lenovo ThinkSystem SR630v3,SR650v3,SD650v3,SD650-Iv3,SR635v3,SR655v3,SD665,SR675v3
+* Support Nvidia H100
+* Support Nvidia Mellanox NDR Infiniband 
+* Support Intel Flex Series 140 GPU,Intel Flex Series 170 GPU
+
+New Support
+* Support OpenHPC v2.6.1
+
+New AI Features
+* Intel oneAPI job templates can support Intel GPU:
+  - Intel Extension for TensorFlow
+  - Intel Extension for PyTorch

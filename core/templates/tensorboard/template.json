@@ -1,0 +1,83 @@
+{
+  "code": "ai_tensorboard",
+  "name": "Datasource",
+  "description": "Tensorboard for tensorflow",
+  "category": "AI",
+  "featureCode": "ai",
+  "display": false,
+  "type": "system",
+  "params": [
+    {
+      "id": "job_name",
+      "name": {
+        "en": "Job Name",
+        "zh": "作业名称"
+      },
+      "class": "base",
+      "dataType": "string",
+      "must": true,
+      "type": "system",
+      "input": "input",
+      "maxLength": 64
+    },
+    {
+      "id": "job_workspace",
+      "name": {
+        "en": "Workspace",
+        "zh": "工作目录"
+      },
+      "class": "base",
+      "dataType": "folder",
+      "must": true,
+      "type": "system"
+    },
+    {
+      "id": "job_queue",
+      "name": {
+          "en": "Queue",
+          "zh": "队列"
+      },
+      "class": "resource",
+      "dataType": "queue",
+      "must": true,
+      "type": "system"
+    },
+    {
+      "id": "log_dir",
+      "name": {
+        "en": "Train Directory",
+        "zh": "Train Directory"
+      },
+      "class": "param",
+      "dataType": "string",
+      "must": true,
+      "input": "input"
+    },
+    {
+      "id": "image_path",
+      "name": {
+        "en": "Container Image Path",
+        "zh": "Container Image Path"
+      },
+      "class": "param",
+      "dataType": "string",
+      "must": true,
+      "input": "input"
+    },
+    {  
+      "id": "cores_per_node",
+      "name": {
+        "en": "CPU Cores Per Node",
+        "zh": "每节点的CPU核数"
+      },
+      "class": "resource",
+      "dataType": "number",
+      "input": "input",
+      "minValue": "1",
+      "maxValue": "999",
+      "floatLength": 0,
+      "defaultValue": "4",
+      "must": true
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{% extends "report/group_report.html" %}
+{% load i18n %}
+{% block head %}
+<tr>
+    <th colspan="13" class="group-title">
+        {% trans 'job.User Name' %}: {{ group_title_data }}
+    </th>
+</tr>
+<tr>
+    <th></th>
+    <th>{% trans 'job.Job ID' %}</th>
+    <th>{% trans 'job.Job Name' %}</th>
+    <th>{% trans 'job.Status' %}</th>{% if operator == 'host' %}
+    <th>{% trans 'job.Queue'%}</th>{% endif %}
+    <th>{% trans 'job.Submit Time' %}</th>
+    <th>{% trans 'job.Start Time' %}</th>
+    <th>{% trans 'job.End Time' %}</th>
+    <th>{% trans 'job.Submitter' %}</th>
+    <th>{% trans 'job.CPU Core Num' %}</th>
+    <th>{% trans 'job.CPU Core Time (Core*s)' %}</th>
+    <th>{% trans 'job.GPU Num'%}</th>
+    <th>{% trans 'job.GPU Time (Card*s)'%}</th>
+</tr>
+{% endblock %}

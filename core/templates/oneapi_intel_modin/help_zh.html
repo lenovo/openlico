@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>help</title>
+    <style>
+        *::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        *::-webkit-scrollbar-track {
+            background: #efefef;
+            border-radius: 2px;
+        }
+
+        *::-webkit-scrollbar-thumb {
+            background: #bfbfbf;
+            border-radius: 10px;
+        }
+
+        *::-webkit-scrollbar-thumb:hover {
+            background: #333;
+        }
+        .father_div{
+            width: 320px;
+            background: #f8fafc;
+            margin: 0 auto;
+            padding: 10px 25px;
+            border-radius: 4px;
+            color: #3f3f3f;
+            font-size: 12px;
+            font-family: Arial,Helvetica,sans-serif;
+        }
+        .son_div{
+            background: #ffffff;
+            padding: 5px 25px;
+            border-radius: 4px;
+        }
+        .code_div{
+            background: #fafafa;
+            margin: 5px auto;
+            padding: 2px;
+            border-radius: 4px;
+        }
+        .code_ol{
+            color: #888888;
+            padding-left: 30px;
+            margin: 5px auto;
+            line-height: 18px;
+        }
+        .code_ol li{
+            padding-left: 12px;
+        }
+        p{
+            margin: 10px auto;
+        }
+        .help_font{
+            font-size: 14px;
+            font-weight: 700;
+            color: #222222;
+            margin-bottom: 5px;
+        }
+        .body_text{
+            color: #777777;
+            line-height: 20px;
+            font-size: 12px;
+            margin: 2px auto;
+        }
+        .t1{
+            font-size: 12px;
+            font-weight: 600;
+            margin: 5px auto;
+        }
+        .red_font{
+            color: #e16d71;
+        }
+        .learn_more_a{
+            margin: 10px;
+            color: #4aa2ff;
+            text-decoration: none;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+<div>
+    <div class="father_div">
+        <p class="help_font">帮助</p>
+        <div class="son_div">
+            <p class="body_text">使用Modin加速Pandas运行，您只需要在运行作业前，简单的修改您的Pandas代码，就可以像使用Pandas一样使用Modin了</p>
+            <p class="t1">修改前</p>
+            <div class="code_div">
+                <ol type="1" class="code_ol">
+                    <li><span class="red_font">import pandas as pd</span></li>
+                    <li>...</li>
+                </ol>
+            </div>
+            <p class="t1">修改后</p>
+            <div class="code_div">
+                <ol type="1" class="code_ol">
+                    <li><span class="red_font">import modin.pandas as pd</span></li>
+                    <li>...</li>
+                </ol>
+            </div>
+            <p class="t1">Modin 代码示例</p>
+            <div class="code_div">
+                <ol type="1" class="code_ol">
+                    <li><span class="red_font">import modin.pandas as pd</span></li>
+                    <li>import time</li>
+                    <li>s = time.time()</li>
+                    <li>df = pd.read_csv("test.csv")</li>
+                    <li>e = time.time()</li>
+                    <li>print("Modin read time = {}".format(e-s))</li>
+                </ol>
+            </div>
+        </div>
+        <p><a href="https://github.com/modin-project/modin" target="_blank" class="learn_more_a">了解更多</a></p>
+    </div>
+</div>
+</body>
+</html>
+

@@ -1,0 +1,238 @@
+{
+  "code": "oneapi_intel_modelzoo_tensorflow_object_detection",
+  "name": "TensorFlow Object Detection of Intel Model Zoo",
+  "index": 42,
+  "description": "The Model Zoo for Intel Architecture contains links to pre-trained models, sample scripts, best practices, and step-by-step tutorials for many popular open-source machine learning models optimized by Intel to run on Intel® Xeon® Scalable processors. Model packages and containers for running the Model Zoo's workloads can be found at the Intel® oneContainer Portal.",
+  "category": "Intel_oneAPI",
+  "display": true,
+  "featureCode": "sc.host.*,oneapi",
+  "type": "system",
+  "help": true,
+  "params": [
+    {
+      "id": "job_name",
+      "name": {
+        "en": "Job Name",
+        "zh": "作业名称"
+      },
+      "class": "base",
+      "dataType": "string",
+      "must": true,
+      "type": "system",
+      "input": "input",
+      "maxLength": 64
+    },
+    {
+      "id": "job_workspace",
+      "name": {
+        "en": "Workspace",
+        "zh": "工作目录"
+      },
+      "class": "base",
+      "dataType": "folder",
+      "must": true,
+      "type": "system"
+    },
+    {
+      "id": "model_name",
+      "name": {
+        "en": "Model",
+        "zh": "模型"
+      },
+      "class": "param",
+      "dataType": "string",
+      "input": "select",
+      "selectOption": [
+        {
+          "label": "R-FCN / FP32",
+          "value": "r_fcn_fp32"
+        },
+        {
+          "label": "R-FCN / INT8",
+          "value": "r_fcn_int8"
+        },
+        {
+          "label": "SSD-MobileNet* / FP32",
+          "value": "ssd_mobilenet_fp32"
+        },
+        {
+          "label": "SSD-MobileNet* / BFloat16",
+          "value": "ssd_mobilenet_bfloat16",
+          "content": {
+            "en": "Please make sure your machine supports bf16 instruction, you can use 'lscpu | grep bf16' command to check it.",
+            "zh": "请确保您的机器支持bf16指令，您可以使用'lscpu | grep bf16'命令来检查它。"
+          }
+        },
+        {
+          "label": "SSD-MobileNet* / INT8",
+          "value": "ssd_mobilenet_int8"
+        },
+        {
+          "label": "SSD-ResNet34* / FP32",
+          "value": "ssd_resnet34_fp32"
+        },
+        {
+          "label": "SSD-ResNet34* / BFloat16",
+          "value": "ssd_resnet34_bfloat16",
+          "content": {
+            "en": "Please make sure your machine supports bf16 instruction, you can use 'lscpu | grep bf16' command to check it.",
+            "zh": "请确保您的机器支持bf16指令，您可以使用'lscpu | grep bf16'命令来检查它。"
+          }
+        },
+        {
+          "label": "SSD-ResNet34* / INT8",
+          "value": "ssd_resnet34_int8"
+        }
+      ],
+      "defaultValue": "r_fcn_fp32",
+      "must": true
+    },
+    {
+      "id": "measurement_type",
+      "name": {
+        "en": "Measurement Type",
+        "zh": "测量类型"
+      },
+      "class": "param",
+      "dataType": "string",
+      "input": "select",
+      "selectOption": [
+        {
+          "label": "Inference",
+          "value": "inference",
+          "content": {
+            "en": "When the model name is ssd-resnet34*, the dummy dataset will be used.",
+            "zh": "当模为SSD-ResNet34*时，将使用dummy数据集。"
+          }
+        },
+        {
+          "label": "Accuracy",
+          "value": "accuracy"
+        }
+      ],
+      "defaultValue": "inference",
+      "help": {
+        "en": "'Inference': 'bash size' = 1 performance test, 'Accuracy': model accuracy test.'",
+        "zh": "'Inference': 'bash size'=1 的性能测试，'Accuracy':模型精度测试。"
+      },
+      "must": false
+    },
+    {
+      "id": "dataset_dir",
+      "name": {
+        "en": "Dataset Directory",
+        "zh": "数据集目录"
+      },
+      "class": "param",
+      "dataType": "folder",
+      "must": true,
+      "help": {
+        "en": "Please select the official given data set.",
+        "zh": "请选择官方给定的数据集。"
+      },
+      "visible": "(context.model_name=='r_fcn_fp32' && context.measurement_type=='inference')||(context.model_name=='r_fcn_int8' && context.measurement_type=='inference')||(context.model_name=='ssd_mobilenet_fp32' && context.measurement_type=='inference')||(context.model_name=='ssd_mobilenet_bfloat16' && context.measurement_type=='inference')||(context.model_name=='ssd_mobilenet_int8' && context.measurement_type=='inference')||context.measurement_type=='accuracy'"
+    },
+    {
+      "id": "job_queue",
+      "name": {
+        "en": "Queue",
+        "zh": "队列"
+      },
+      "class": "resource",
+      "dataType": "queue",
+      "must": true,
+      "type": "system"
+    },
+    {
+      "id": "exclusive",
+      "name": {
+        "en": "Exclusive",
+        "zh": "独占节点"
+      },
+      "class": "resource",
+      "dataType": "boolean",
+      "defaultValue": false,
+      "must": false
+    },
+    {
+      "id": "socket",
+      "name": {
+        "en": "Bind to Single Socket",
+        "zh": "绑定到单个Socket"
+      },
+      "class": "resource",
+      "dataType": "boolean",
+      "defaultValue": false,
+      "must": false,
+      "help": {
+        "en": "Running inference on all cpu cores could degrade performance. Check to specify to run using the cpu cores on a single socket.",
+        "zh": "在所有cpu核心上运行推理可能会降低性能。勾选以指定使用单个socket上的cpu核心运行。"
+      },
+      "visible": "context.exclusive"
+    },
+    {
+      "id": "cores_per_node",
+      "name": {
+        "en": "CPU Cores",
+        "zh": "CPU核数"
+      },
+      "class": "resource",
+      "dataType": "number",
+      "input": "input",
+      "minValue": "1",
+      "maxValue": "999",
+      "floatLength": 0,
+      "defaultValue": "4",
+      "must": true,
+      "visible": "!context.exclusive"
+    },
+    {
+      "id": "run_time",
+      "name": {
+        "en": "Wall Time",
+        "zh": "最大运行时间"
+      },
+      "class": "resource",
+      "dataType": "string",
+      "input": "input",
+      "tips": {
+        "type": "text",
+        "content": "eg.3d 4h 12m"
+      },
+      "help": {
+        "en": "Please input run time limit for the job,Format is 'Xd Xh Xm',which 'Xd' represents X days,'Xh' represents X hours and 'Xm' represents X minutes.",
+        "zh": "请输入job的运行时间限制，格式为“Xd Xh Xm”，“Xd”表示X天，“Xh”表示X小时，“Xm”表示X分钟。"
+      },
+      "defaultValue": "24h",
+      "must": false
+    },
+    {
+      "id": "job_notify",
+      "name": {
+        "en": "Notify Job Completion",
+        "zh": "作业完成通知"
+      },
+      "class": "notify",
+      "dataType": "string",
+      "input": "select",
+      "selectOption": [
+        {
+          "label": {
+            "en": "None",
+            "zh": "无"
+          },
+          "value": ""
+        },
+        {
+          "label": {
+            "en": "Email",
+            "zh": "邮件"
+          },
+          "value": "email"
+        }
+      ],
+      "defaultValue": "",
+      "must": false
+    }
+  ]
+}

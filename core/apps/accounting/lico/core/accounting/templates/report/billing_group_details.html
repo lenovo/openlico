@@ -1,0 +1,18 @@
+{% extends "report/deposit_base_report.html" %}
+{% load i18n %}
+{% block content %}
+<table class='table table-striped table-bordered'>
+    <thead>
+        <tr>{% for head in headline %}
+            <th>{{ head }}</th>{% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+    {% for values in data %}
+    <tr>{% for val in values %}
+        <td>{{ val }}</td>{% endfor %}
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

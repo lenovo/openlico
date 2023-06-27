@@ -1,0 +1,12 @@
+{% include "scheduler/mpi.sh.in" %}
+{%runtime_sh  lico.user runtime_id%}
+export TF_ENABLE_ONEDNN_OPTS=1
+
+echo job start time is `date`
+echo `hostname`
+
+rm -rf {{ job_workspace }}/entrance_uri.txt
+port={{ lico.port0 }}
+inc_bench -p $port -vv
+
+echo job end time is `date`

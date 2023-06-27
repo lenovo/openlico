@@ -1,0 +1,16 @@
+{% include "scheduler/ai.sh.in" %}
+{% include "runtime.sh.in" %}
+{% bind_user_share_folder as job_user_share_folder %}
+{% settings as settings %}
+module try-load singularity
+
+export LICO_AVAILABLE_PORTS=@@{lico_port1_{% sum_items ps_worker|get_item:"psNumber"|default_if_none:2 ps_worker|get_item:"workerNumber"|default:2 %}}
+
+echo job start time is `date`
+/opt/lico/pub/ai-scripts/lico-dl-run {% block framework %}{% endblock %} {{ settings.LICO.SCHEDULER }} " -B {{ lico.user.workspace|addslashes }} {{ job_user_share_folder|addslashes }}" {{ image_path }} \
+	{{ prog }} " {{ args|default:""|addslashes }}" \
+	--ps_number {{ ps_worker|get_item:"psNumber"|default_if_none:2 }} \
+	--worker_number {{ ps_worker|get_item:"workerNumber"|default:2 }} \
+	--gpu-num {{ gpu_per_node|default:0 }} \
+	{% if not exclusive %} --cpu-num {{ cores_per_node|default:1 }}{% endif %}
+echo job end time is `date`

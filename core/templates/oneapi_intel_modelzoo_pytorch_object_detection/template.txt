@@ -1,0 +1,166 @@
+{% include "scheduler/ai.sh.in" %}
+{% settings as settings %}
+
+echo job start time is `date`
+echo `hostname`
+source {{ settings.ONEAPI.INTEL_MODULE_PATH }}/pytorch/latest/env/vars.sh
+module load mkl/latest
+export DNNL_PRIMITIVE_CACHE_CAPACITY=1024
+export KMP_BLOCKTIME=1
+export KMP_AFFINITY=granularity=fine,verbose,compact,1,0
+export DATASET_DIR={{ dataset_dir }}
+export TORCH_HOME="${HOME}/Intel_Model_Zoo/PyTorch_object_detection"
+export CHECKPOINT_DIR="${TORCH_HOME}/hub/checkpoints"
+
+{% if settings.LICO.SCHEDULER == "slurm" %}
+cpus=${SLURM_JOB_CPUS_PER_NODE}
+{% elif settings.LICO.SCHEDULER == "lsf" %}
+{% if exclusive %}
+cpus=$(lscpu | grep -w '^CPU(s):' | tr -cd "[0-9]")
+{% else %}
+cpus=${LSB_DJOB_NUMPROC}
+{% endif %}
+{% elif settings.LICO.SCHEDULER == "pbs" %}
+cpus=${NCPUS}
+{% endif %}
+
+threads_per_core=$(lscpu | grep -w 'Thread(s) per core'| tr -cd "[0-9]")
+physics_cores=$(expr ${cpus} / ${threads_per_core})
+physics_cores_rem=$(expr ${cpus} % ${threads_per_core})
+if [ ${physics_cores_rem} -ne 0 ];then
+    physics_cores=$((${physics_cores}+1))
+fi
+export NUMEXPR_MAX_THREADS=${physics_cores}
+export OMP_NUM_THREADS=${physics_cores}
+
+{% if measurement_type == "online_inference" %}
+BATCH_SIZE=1
+{% else %}
+BATCH_SIZE=16
+{% endif %}
+
+model={{ model_name }}
+model_name=${model%_*}
+precision=${model##*_}
+models_path={{ settings.ONEAPI.INTEL_MODULE_PATH }}/modelzoo/latest/models
+time_suffix=$(date "+%Y%m%d_%H%M%S")
+log_path={{ job_workspace }}/Intel_Model_Zoo_PyTorch_log
+if [ ! -e ${log_path} ];then
+    mkdir -p ${log_path}
+fi
+if [ ! -e ${TORCH_HOME} ];then
+    mkdir -p ${TORCH_HOME}
+fi
+
+echo "[INFO] If the model download fails, you can manually download the model according to the \"Download pretrained model: 'https://...' to /.../.../xxx.pth\" information in the Log and upload it to the corresponding location in the \"${CHECKPOINT_DIR}\" directory."
+echo "[INFO] The \"Download pretrained model: 'https://...' to /.../.../xxx.pth\" message will only appear if there is no corresponding model in the \"${CHECKPOINT_DIR}\" directory."
+echo "[INFO] If the model is not fully downloaded, then the job will run with an error. You can delete the corresponding model from the \"${CHECKPOINT_DIR}\" directory and rerun the job. This will download the model again."
+
+{% if model_name == 'maskrcnn_fp32-jit' or model_name == 'maskrcnn_bf16-jit'  or model_name == 'maskrcnn_fp32-imperative' or model_name == 'maskrcnn_bf16-imperative' %}
+export TRAIN=0
+export PYTHONPATH="${TORCH_HOME}/maskrcnn-benchmark:$PYTHONPATH"
+pip install defusedxml
+if [ ! -e ${TORCH_HOME}/maskrcnn-benchmark ];then
+pip install yacs opencv-python pycocotools cityscapesscripts
+cp -r ${models_path}/models/object_detection/pytorch/maskrcnn/maskrcnn-benchmark ${TORCH_HOME}
+cd ${TORCH_HOME}/maskrcnn-benchmark
+python setup.py develop --install-dir ${TORCH_HOME}/maskrcnn-benchmark
+cd -
+fi
+echo "[INFO] If the job reports an import error： cannot import name '_C' from 'maskrcnn_benchmark'. You can delete the \"${TORCH_HOME}/maskrcnn-benchmark\" directory and rerun the job. This will recompile the environment."
+if [ ! -e ${CHECKPOINT_DIR}/e2e_mask_rcnn_R_50_FPN_1x.pth ];then
+    echo "Download pretrained model: 'https://download.pytorch.org/models/maskrcnn/e2e_mask_rcnn_R_50_FPN_1x.pth' to ${CHECKPOINT_DIR}/e2e_mask_rcnn_R_50_FPN_1x.pth"
+    bash ${models_path}/quickstart/object_detection/pytorch/maskrcnn/inference/cpu/download_model.sh
+fi
+python -m intel_extension_for_pytorch.cpu.launch \
+    --disable_numactl \
+    ${models_path}/models/object_detection/pytorch/maskrcnn/maskrcnn-benchmark/tools/test_net.py {% if model_name == 'maskrcnn_bf16-jit' or model_name == 'maskrcnn_bf16-imperative' %}\
+    --bf16 {% endif %}{% if model_name == 'maskrcnn_fp32-jit' or model_name == 'maskrcnn_bf16-jit' %}\
+    --jit {% endif %}\
+    --config-file ${models_path}/models/object_detection/pytorch/maskrcnn/maskrcnn-benchmark/configs/e2e_mask_rcnn_R_50_FPN_1x_coco2017_inf.yaml \
+    TEST.IMS_PER_BATCH ${BATCH_SIZE} \
+    MODEL.WEIGHT ${CHECKPOINT_DIR}/e2e_mask_rcnn_R_50_FPN_1x.pth \
+    MODEL.DEVICE cpu \
+    2>&1 | tee ${log_path}/pytorch_{{ model_name }}_${time_suffix}.log
+wait
+latency=$(grep 'Throughput:' ${log_path}/pytorch_{{ model_name }}_${time_suffix}.log | sed -e 's/.*Throughput//;s/[^0-9.]//g' | awk '{printf("%.3f", 1 / $1 * 1000)}')
+echo "Latency: ${latency} ms"
+grep -E "Accuracy:|Throughput:" ${log_path}/pytorch_{{ model_name }}_${time_suffix}.log | sort -r | uniq
+
+{% elif model_name == 'ssd-resnet34_fp32' or model_name == 'ssd-resnet34_bf16' or model_name == 'ssd-resnet34_int8' %}
+export DNNL_GRAPH_CONSTANT_CACHE=1
+export USE_IPEX=1
+if [ ! -s ${CHECKPOINT_DIR}/pretrained/resnet34-ssd1200.pth ];then
+    echo "Download pretrained model: 'https://docs.google.com/uc?export=download&id=13kWgEItsoxbVKUlkQz4ntjl1IZGk6_5Z' to ${CHECKPOINT_DIR}/pretrained/resnet34-ssd1200.pth"
+    bash ${models_path}/quickstart/object_detection/pytorch/ssd-resnet34/inference/cpu/download_model.sh
+fi
+python -m intel_extension_for_pytorch.cpu.launch \
+    --disable_numactl \
+    ${models_path}/models/object_detection/pytorch/ssd-resnet34/inference/cpu/infer.py \
+    --accuracy-mode \
+    --data ${DATASET_DIR}/coco \
+    --device 0 \
+    --checkpoint ${CHECKPOINT_DIR}/pretrained/resnet34-ssd1200.pth \
+    -j 0 \
+    --no-cuda \
+    --batch-size ${BATCH_SIZE} \
+    --jit {% if model_name == 'ssd-resnet34_int8' %}\
+    --int8 \
+    --seed 1 \
+    --threshold 0.2 \
+    --configure ${models_path}/models/object_detection/pytorch/ssd-resnet34/inference/cpu/pytorch_default_recipe_ssd_configure.json {% elif model_name == 'ssd-resnet34_bf16' %}\
+    --autocast {% endif %}\
+    2>&1 | tee ${log_path}/pytorch_{{ model_name }}_${time_suffix}.log
+
+{% elif model_name == 'fasterrcnn_resnet50_fpn_fp32' %}
+export USE_IPEX=1
+python -m intel_extension_for_pytorch.cpu.launch \
+    --disable_numactl \
+    ${models_path}/models/object_detection/pytorch/faster_rcnn_resnet50_fpn/inference/cpu/inference.py \
+    --data_path ${DATASET_DIR}/coco \
+    --arch ${model_name} \
+    --batch_size ${BATCH_SIZE} \
+    --ipex \
+    --jit \
+    -j 0 \
+    --precision ${precision} \
+    2>&1 | tee ${log_path}/pytorch_{{ model_name }}_${time_suffix}.log
+
+
+{% elif model_name == 'maskrcnn_resnet50_fpn_fp32' %}
+export USE_IPEX=1
+python -m intel_extension_for_pytorch.cpu.launch \
+    --disable_numactl \
+    ${models_path}/models/object_detection/pytorch/maskrcnn_resnet50_fpn/inference/cpu/inference.py \
+    --data_path ${DATASET_DIR}/coco \
+    --arch ${model_name} \
+    --batch_size ${BATCH_SIZE} \
+    --ipex \
+    --jit \
+    -j 0 \
+    --precision ${precision} \
+    2>&1 | tee ${log_path}/pytorch_{{ model_name }}_${time_suffix}.log
+
+
+{% elif model_name == 'retinanet_resnet50_fpn_fp32' %}
+export USE_IPEX=1
+python -m intel_extension_for_pytorch.cpu.launch \
+    --disable_numactl \
+    ${models_path}/models/object_detection/pytorch/retinanet_resnet50_fpn/inference/cpu/inference.py \
+    --data_path ${DATASET_DIR}/coco \
+    --arch ${model_name} \
+    --batch_size ${BATCH_SIZE} \
+    --ipex \
+    --jit \
+    -j 0 \
+    --precision ${precision} \
+    2>&1 | tee ${log_path}/pytorch_{{ model_name }}_${time_suffix}.log
+
+{% else %}
+echo "Cannot support the model,please check it！"
+{% endif %}
+
+echo "Operating model: {{ model_name }}"
+echo "Storage location of the pre-trained model: ${CHECKPOINT_DIR}"
+echo "Storage location of log file: ${log_path}/pytorch_{{ model_name }}_${time_suffix}.log"
+echo job end time is `date`

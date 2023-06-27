@@ -1,0 +1,8 @@
+#!/bin/bash
+#SBATCH --job-name='{{ job_name|addslashes }}'
+#SBATCH --chdir={{ job_workspace }}
+#SBATCH --partition={{ job_queue }}
+#SBATCH --nodes={{ nodes|default:1 }}
+#SBATCH --mincpus={{ cores_per_node|default:1 }}
+{% if run_time %}#SBATCH --time={{ run_time|timeformat }}{% endif %}
+{% if gpu_per_node %}#SBATCH --gres={% if gpu_resource_name %}{{ gpu_resource_name }}{% else %}gpu{% endif %}:{{ gpu_per_node }}{% endif %}

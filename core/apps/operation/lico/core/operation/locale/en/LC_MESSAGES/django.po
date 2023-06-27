@@ -1,0 +1,112 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-06-11 09:20+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: lico/core/operation/templates/log/operation_details.html:15
+#: lico/core/operation/views/logbase.py:53 lico/core/operation/views/logbase.py:57
+msgid "operation.created at"
+msgstr "created at"
+
+#: lico/core/operation/templates/log/operation_details.html:20
+#: lico/core/operation/views/logbase.py:59
+msgid "operation.data cycle"
+msgstr "data cycle"
+
+#: lico/core/operation/templates/log/operation_details.html:29
+msgid "operation.Time"
+msgstr "Time"
+
+#: lico/core/operation/templates/log/operation_details.html:30
+msgid "operation.Module"
+msgstr "Module"
+
+#: lico/core/operation/templates/log/operation_details.html:31
+msgid "operation.Operator"
+msgstr "Operator"
+
+#: lico/core/operation/templates/log/operation_details.html:32
+msgid "operation.Operation"
+msgstr "Operation"
+
+#: lico/core/operation/templates/log/operation_details.html:33
+msgid "operation.Operating Details"
+msgstr "Operating Details"
+
+msgid "operation.Operation Log Detailed Report"
+msgstr "Operation Log Detailed Report"
+
+msgid "operation.user"
+msgstr "user"
+
+msgid "operation.job"
+msgstr "job"
+
+msgid "operation.node"
+msgstr "node"
+
+msgid "operation.alert"
+msgstr "alert"
+
+msgid "operation.policy"
+msgstr "policy"
+
+msgid "operation.billgroup"
+msgstr "billgroup"
+
+msgid "operation.deposit"
+msgstr "deposit"
+
+msgid "operation.osgroup"
+msgstr "osgroup"
+
+msgid "operation.create"
+msgstr "create"
+
+msgid "operation.update"
+msgstr "update"
+
+msgid "operation.delete"
+msgstr "delete"
+
+msgid "operation.recharge"
+msgstr "recharge"
+
+msgid "operation.chargeback"
+msgstr "chargeback"
+
+msgid "operation.confirm"
+msgstr "confirm"
+
+msgid "operation.solve"
+msgstr "solve"
+
+msgid "operation.turn_off"
+msgstr "turn_off"
+
+msgid "operation.turn_on"
+msgstr "turn_on"
+
+msgid "operation.cancel"
+msgstr "cancel"
+
+msgid "operation.rerun"
+msgstr "rerun"
+
+msgid "operation.comment"
+msgstr "comment"

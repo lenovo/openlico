@@ -1,0 +1,50 @@
+{% load i18n %}
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <style>{% include "log/style.css" %}</style>
+    <style>
+    {% block style %}{% endblock %}
+    </style>
+</head>
+<body>
+<h2>{{ title }}</h2>
+<h2>{% block subtitle %}{% endblock %}</h2>
+<h3>
+    <span>{{ creator }} {% trans 'operation.created at'%} {{ create_time }}</span>
+</h3>
+
+{% block datacycle %}
+<h3>
+    <span>{% trans 'operation.data cycle' %}:{{ start_time }} - {{ end_time }}</span>
+</h3>
+{% endblock %}
+{% block content %}
+<table class='table table-striped table-bordered'>
+    <thead>
+    {% block head %}
+    <tr>
+        <th></th>
+        <th>{% trans 'operation.Time' %}</th>
+        <th>{% trans 'operation.Module' %}</th>
+        <th>{% trans 'operation.Operator' %}</th>
+        <th>{% trans 'operation.Operation' %}</th>
+        <th>{% trans 'operation.Operating Details' %}</th>
+    </tr>
+    {% endblock %}
+    </thead>
+    <tbody>
+    {% for index, vals in data %}
+        <tr>
+            <td>{{ index }}</td>
+            {% for val in vals %}
+                <td>{{ val }}</td>
+            {% endfor %}
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
+</body>
+</html>

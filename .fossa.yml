@@ -1,0 +1,10 @@
+version: 3
+
+paths:
+  exclude:
+    - .git
+    - venv
+
+targets:
+  only:
+    - type: setuptools

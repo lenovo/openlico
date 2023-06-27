@@ -1,0 +1,5 @@
+{% include "scheduler/mpi.sh.in" %}
+echo job start time is `date`
+echo `hostname`
+{{ run_script }}
+echo job end time is `date`

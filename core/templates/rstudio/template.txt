@@ -1,0 +1,60 @@
+{% include "scheduler/ai.sh.in" %}
+
+echo job start time is `date`
+
+nginx_port={{ lico.port0 }}
+rstudio_port={{ lico.port1 }}
+host_addr=`hostname -i`
+url_suffix=`perl -e '
+    use Socket;
+    use MIME::Base64;
+	print(MIME::Base64::encode_base64url("'$host_addr'".":"."'$nginx_port'"))
+	'`
+
+if [ -z $url_suffix ]
+then
+    echo url_suffix is empty, please check system environment
+    echo job end time is `date`
+    exit -1
+fi
+
+workdir={{ persistent_dir }}
+mkdir -p -m 700 $workdir/run $workdir/tmp $workdir/var/lib/rstudio-server $workdir/rstudio_nginx_log $workdir/rstudio_nginx_run $workdir/rstudio_nginx_conf
+cat > $workdir/database.conf <<END
+provider=sqlite
+directory=/var/lib/rstudio-server
+END
+
+cat > $workdir/rsession.sh <<END
+#!/bin/bash
+export OMP_NUM_THREADS=$SLURM_JOB_CPUS_PER_NODE
+export R_LIBS_USER=$workdir/R/rstudio/4.0
+exec rsession "\${@}"
+END
+chmod +x $workdir/rsession.sh
+
+base_url=/dev/rstudio/$url_suffix/{{ job_uuid }}/
+export SINGULARITY_BIND="$workdir/run:/run,$workdir/tmp:/tmp,$workdir/database.conf:/etc/rstudio/database.conf,$workdir/rsession.sh:/etc/rstudio/rsession.sh,$workdir/var/lib/rstudio-server:/var/lib/rstudio-server,$workdir/rstudio_nginx_log:/var/log/nginx,$workdir/rstudio_nginx_conf:/etc/nginx/conf.d,$workdir/rstudio_nginx_run:/var/lib/nginx/"
+export SINGULARITYENV_USER=$(id -un)
+export SINGULARITYENV_PASSWORD={{ password }}
+export XDG_DATA_HOME="$workdir/.local"
+
+cat 1>&2 <<END
+log in to RStudio Server using the following credentials:
+   base_url: /dev/rstudio/$url_suffix/{{ job_uuid }}/
+
+When done using RStudio Server, terminate the job by:
+1. Exit the RStudio Session ("power" button in the top right corner of the RStudio window)
+2. Cancel the job
+END
+
+module try-load singularity
+singularity exec -B {{ lico.user.workspace }} {% bind_user_share_folder %} {% if gpu_per_node %}--nv {% endif %} \
+    --env RSTUDIO_NGINX_PORT=$nginx_port \
+    --env RSTUDIO_PORT=$rstudio_port \
+    --env WORKDIR=$workdir \
+    --env BASE_URL=$base_url \
+    {% rstudio_image %} /scripts/start
+
+
+echo job end time is `date`

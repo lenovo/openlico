@@ -1,0 +1,204 @@
+{% include "scheduler/ai.sh.in" %}
+echo job start time is `date`
+echo `hostname`
+{% settings as settings %}
+oneAPI_BASE={{ settings.ONEAPI.INTEL_MODULE_PATH }}
+oneAPI_modelzoo_BASE=${oneAPI_BASE}/modelzoo/latest/models/
+source ${oneAPI_BASE}/tensorflow/latest/env/vars.sh
+
+{% if settings.LICO.SCHEDULER == "slurm" %}
+cpus=${SLURM_JOB_CPUS_PER_NODE}
+{% elif settings.LICO.SCHEDULER == "lsf" %}
+{% if exclusive %}
+cpus=$(lscpu | grep -w '^CPU(s):' | tr -cd "[0-9]")
+{% else %}
+cpus=${LSB_DJOB_NUMPROC}
+{% endif %}
+{% elif settings.LICO.SCHEDULER == "pbs" %}
+cpus=${NCPUS}
+{% endif %}
+threads_per_core=$(lscpu |grep -w 'Thread(s) per core'|tr -cd "[0-9]")
+{% if not exclusive %}
+physics_cores=$(({{ cores_per_node|default:1 }}/${threads_per_core}))
+physics_cores_rem=`expr {{ cores_per_node|default:1 }} % ${threads_per_core}`
+if [ ${physics_cores_rem} -ne 0 ]; then
+    physics_cores=$((${physics_cores}+1))
+fi
+export OMP_NUM_THREADS=${physics_cores}
+THREADS_NUM_COMMOND="-e ${threads_per_core} -a ${physics_cores}"
+{% else %}
+{% if socket %}
+THREADS_NUM_COMMOND="--socket-id 0"
+{% else %}
+physics_cores=$(($cpus/${threads_per_core}))
+export OMP_NUM_THREADS=${physics_cores}
+THREADS_NUM_COMMOND="-e ${threads_per_core} -a ${physics_cores}"
+{% endif %}
+{% endif %}
+
+intel_model_zoo_dir=${HOME}/Intel_Model_Zoo/TensorFlow_image_recognition/
+echo "[INFO] Automatic download of dependent files requires wget and git tools support. If the dependent file cannot be downloaded, please download it manually and upload it to the ${intel_model_zoo_dir} directory according to the tips."
+if [ ! -d $intel_model_zoo_dir ]; then
+    mkdir -p $intel_model_zoo_dir
+fi
+cd $intel_model_zoo_dir
+{% if model_name == "densenet169_fp32" %}
+model_name=densenet169
+precision_value=fp32
+if [ ! -f ${intel_model_zoo_dir}/densenet169_fp32_pretrained_model.pb ]; then
+    echo "[INFO] DOWNLOAD PRETRAINED MODEL ... If the download fails, manually download it from https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/densenet169_fp32_pretrained_model.pb and upload it to ${intel_model_zoo_dir}"
+    wget https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/densenet169_fp32_pretrained_model.pb
+fi
+export PRETRAINED_MODEL=${intel_model_zoo_dir}/densenet169_fp32_pretrained_model.pb
+{% elif model_name == "inceptionv3_fp32" %}
+model_name=inceptionv3
+precision_value=fp32
+if [ ! -f ${intel_model_zoo_dir}/inceptionv3_fp32_pretrained_model.pb ]; then
+    echo "[INFO] DOWNLOAD PRETRAINED MODEL ... If the download fails, manually download it from https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/inceptionv3_fp32_pretrained_model.pb and upload it to ${intel_model_zoo_dir}"
+    wget https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/inceptionv3_fp32_pretrained_model.pb
+fi
+export PRETRAINED_MODEL=${intel_model_zoo_dir}/inceptionv3_fp32_pretrained_model.pb
+{% elif model_name == "inceptionv3_int8" %}
+model_name=inceptionv3
+precision_value=int8
+if [ ! -f ${intel_model_zoo_dir}/inceptionv3_int8_pretrained_model.pb ]; then
+    echo "[INFO] DOWNLOAD PRETRAINED MODEL ... If the download fails, manually download it from https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/inceptionv3_int8_pretrained_model.pb and upload it to ${intel_model_zoo_dir}"
+    wget https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/inceptionv3_int8_pretrained_model.pb
+fi
+export PRETRAINED_MODEL=${intel_model_zoo_dir}/inceptionv3_int8_pretrained_model.pb
+{% elif model_name == "inceptionv4_fp32" %}
+model_name=inceptionv4
+precision_value=fp32
+if [ ! -f ${intel_model_zoo_dir}/inceptionv4_fp32_pretrained_model.pb ]; then
+    echo "[INFO] DOWNLOAD PRETRAINED MODEL ... If the download fails, manually download it from https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/inceptionv4_fp32_pretrained_model.pb and upload it to ${intel_model_zoo_dir}"
+    wget https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/inceptionv4_fp32_pretrained_model.pb
+fi
+export PRETRAINED_MODEL=${intel_model_zoo_dir}/inceptionv4_fp32_pretrained_model.pb
+{% elif model_name == "inceptionv4_int8" %}
+model_name=inceptionv4
+precision_value=int8
+if [ ! -f ${intel_model_zoo_dir}/inceptionv4_int8_pretrained_model.pb ]; then
+    echo "[INFO] DOWNLOAD PRETRAINED MODEL ... If the download fails, manually download it from https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/inceptionv4_fp32_pretrained_model.pb and upload it to ${intel_model_zoo_dir}"
+    wget https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/inceptionv4_int8_pretrained_model.pb
+fi
+export PRETRAINED_MODEL=${intel_model_zoo_dir}/inceptionv4_int8_pretrained_model.pb
+{% elif model_name == "mobilenet_v1_fp32" %}
+model_name=mobilenet_v1
+precision_value=fp32
+if [ ! -f ${intel_model_zoo_dir}/mobilenet_v1_1.0_224_frozen.pb ]; then
+    echo "[INFO] DOWNLOAD PRETRAINED MODEL ... If the download fails, manually download it from https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/mobilenet_v1_1.0_224_frozen.pb and upload it to ${intel_model_zoo_dir}"
+    wget https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/mobilenet_v1_1.0_224_frozen.pb
+fi
+export PRETRAINED_MODEL=${intel_model_zoo_dir}/mobilenet_v1_1.0_224_frozen.pb
+{% elif model_name == "mobilenet_v1_bfloat16" %}
+model_name=mobilenet_v1
+precision_value=bfloat16
+export TF_AUTO_MIXED_PRECISION_GRAPH_REWRITE_INFERLIST_REMOVE=BiasAdd \
+export TF_AUTO_MIXED_PRECISION_GRAPH_REWRITE_DENYLIST_REMOVE=Softmax \
+export TF_AUTO_MIXED_PRECISION_GRAPH_REWRITE_ALLOWLIST_ADD=BiasAdd,Softmax
+if [ ! -f ${intel_model_zoo_dir}/mobilenet_v1_1.0_224_frozen.pb ]; then
+    echo "[INFO] DOWNLOAD PRETRAINED MODEL ... If the download fails, manually download it from https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/mobilenet_v1_1.0_224_frozen.pb and upload it to ${intel_model_zoo_dir}"
+    wget https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/mobilenet_v1_1.0_224_frozen.pb
+fi
+export PRETRAINED_MODEL=${intel_model_zoo_dir}/mobilenet_v1_1.0_224_frozen.pb
+if [ ! -d ${intel_model_zoo_dir}/tensorflow_models_mobilenet ]; then
+    echo "[INFO] GIT CLONE TENSORFLOW MODELS GARDEN code ... If LiCO can't download, Please install git on the LiCO command line and execute \"cd ${intel_model_zoo_dir} && git clone https://github.com/tensorflow/models tensorflow_models_mobilenet \" ."
+    git clone https://github.com/tensorflow/models tensorflow_models_mobilenet
+fi
+export TF_MODELS_DIR=${intel_model_zoo_dir}/tensorflow_models_mobilenet
+TF_MODELS_DIR_COMMOND="--model-source-dir ${TF_MODELS_DIR}"
+{% elif model_name == "mobilenet_v1_int8" %}
+model_name=mobilenet_v1
+precision_value=int8
+if [ ! -f ${intel_model_zoo_dir}/mobilenetv1_int8_pretrained_model.pb ]; then
+    echo "[INFO] DOWNLOAD PRETRAINED MODEL ... If the download fails, manually download it from https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/mobilenetv1_int8_pretrained_model.pb and upload it to ${intel_model_zoo_dir}"
+    wget https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/mobilenetv1_int8_pretrained_model.pb 
+fi
+export PRETRAINED_MODEL=${intel_model_zoo_dir}/mobilenetv1_int8_pretrained_model.pb
+{% elif model_name == "resnet101_fp32" %}
+model_name=resnet101
+precision_value=fp32
+if [ ! -f ${intel_model_zoo_dir}/resnet101_fp32_pretrained_model.pb ]; then
+    echo "[INFO] DOWNLOAD PRETRAINED MODEL ... If the download fails, manually download it from https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/resnet101_fp32_pretrained_model.pb and upload it to ${intel_model_zoo_dir}"
+    wget https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/resnet101_fp32_pretrained_model.pb
+fi
+export PRETRAINED_MODEL=${intel_model_zoo_dir}/resnet101_fp32_pretrained_model.pb
+{% elif model_name == "resnet101_int8" %}
+model_name=resnet101
+precision_value=int8
+if [ ! -f ${intel_model_zoo_dir}/resnet101_int8_pretrained_model.pb ]; then
+    echo "[INFO] DOWNLOAD PRETRAINED MODEL ... If the download fails, manually download it from https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/resnet101_int8_pretrained_model.pb and upload it to ${intel_model_zoo_dir}"
+    wget https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/resnet101_int8_pretrained_model.pb
+fi
+export PRETRAINED_MODEL=${intel_model_zoo_dir}/resnet101_int8_pretrained_model.pb
+{% elif model_name == "resnet50_fp32" %}
+model_name=resnet50
+precision_value=fp32
+if [ ! -f ${intel_model_zoo_dir}/resnet50_fp32_pretrained_model.pb ]; then
+    echo "[INFO] DOWNLOAD PRETRAINED MODEL ... If the download fails, manually download it from https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/resnet50_fp32_pretrained_model.pb and upload it to ${intel_model_zoo_dir}"
+    wget https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/resnet50_fp32_pretrained_model.pb
+fi
+export PRETRAINED_MODEL=${intel_model_zoo_dir}/resnet50_fp32_pretrained_model.pb
+{% elif model_name == "resnet50_int8" %}
+model_name=resnet50
+precision_value=int8
+if [ ! -f ${intel_model_zoo_dir}/resnet50_int8_pretrained_model.pb ]; then
+    echo "[INFO] DOWNLOAD PRETRAINED MODEL ... If the download fails, manually download it from https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/resnet50_int8_pretrained_model.pb and upload it to ${intel_model_zoo_dir}"
+    wget https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/resnet50_int8_pretrained_model.pb
+fi
+export PRETRAINED_MODEL=${intel_model_zoo_dir}/resnet50_int8_pretrained_model.pb
+{% elif model_name == "resnet50v1_5_fp32" %}
+model_name=resnet50v1_5
+precision_value=fp32
+if [ ! -f ${intel_model_zoo_dir}/resnet50_v1.pb ]; then
+    echo "[INFO] DOWNLOAD PRETRAINED MODEL ... If the download fails, manually download it from https://zenodo.org/record/2535873/files/resnet50_v1.pb and upload it to ${intel_model_zoo_dir}"
+    wget https://zenodo.org/record/2535873/files/resnet50_v1.pb
+fi
+export PRETRAINED_MODEL=${intel_model_zoo_dir}/resnet50_v1.pb
+{% elif model_name == "resnet50v1_5_bfloat16" %}
+model_name=resnet50v1_5
+precision_value=bfloat16
+if [ ! -f ${intel_model_zoo_dir}/resnet50_v1_5_bfloat16.pb ]; then
+    echo "[INFO] DOWNLOAD PRETRAINED MODEL ... If the download fails, manually download it from https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/resnet50_v1_5_bfloat16.pb and upload it to ${intel_model_zoo_dir}"
+    wget https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/resnet50_v1_5_bfloat16.pb
+fi
+export PRETRAINED_MODEL=${intel_model_zoo_dir}/resnet50_v1_5_bfloat16.pb
+{% elif model_name == "resnet50v1_5_int8" %}
+model_name=resnet50v1_5
+precision_value=int8
+if [ ! -f ${intel_model_zoo_dir}/resnet50v1_5_int8_pretrained_model.pb ]; then
+    echo "[INFO] DOWNLOAD PRETRAINED MODEL ... If the download fails, manually download it from https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/resnet50v1_5_int8_pretrained_model.pb and upload it to ${intel_model_zoo_dir}"
+    wget https://storage.googleapis.com/intel-optimized-tensorflow/models/v1_8/resnet50v1_5_int8_pretrained_model.pb
+fi
+export PRETRAINED_MODEL=${intel_model_zoo_dir}/resnet50v1_5_int8_pretrained_model.pb
+{% endif %}
+{% if measurement_type == "online_inference" %}
+batch_size_num=1
+{% endif %}
+{% if measurement_type == "batch_inference" %}
+batch_size_num=100
+{% endif %}
+{% if measurement_type == "custom_inference" %}
+batch_size_num={{ batch_size }}
+{% endif %}
+{% if measurement_type == "accuracy" %}
+batch_size_num={{ batch_size }}
+ACCURACY_COMMOND="--accuracy-only"
+{% endif %}
+{% if dataset_dir and measurement_type == "accuracy" %}
+DATASET_DIR_COMMOND="--data-location {{ dataset_dir }}"
+{% endif %}
+cd $oneAPI_modelzoo_BASE
+python ${oneAPI_modelzoo_BASE}/benchmarks/launch_benchmark.py \
+    --model-name ${model_name} \
+    --mode inference \
+    --precision ${precision_value} \
+    --framework tensorflow \
+    --in-graph ${PRETRAINED_MODEL} \
+    --output-dir {{ job_workspace }}/Intel_Model_Zoo_TensorFlow_log \
+    --batch-size ${batch_size_num} \
+    --steps=100 \
+    $THREADS_NUM_COMMOND $DATASET_DIR_COMMOND $TF_MODELS_DIR_COMMOND $ACCURACY_COMMOND
+
+echo "Pre-trained model file and TensorFlow Model Garden code location: ${intel_model_zoo_dir}"
+echo job end time is `date`

@@ -1,0 +1,71 @@
+{% include "scheduler/ai.sh.in" %}
+{% include "runtime.sh.in" %}
+{% bind_user_share_folder as job_user_share_folder %}
+{% settings as settings %}
+module try-load singularity
+echo job start time is `date`
+
+{%if distributed%}
+{% get_exec_node settings.LICO.SCHEDULER 1 %}
+
+export LICO_AVAILABLE_PORTS=@@{lico_port1_1}
+lico_ports_array=(`echo $LICO_AVAILABLE_PORTS | tr ','  ' '`)
+
+function run_nodes(){
+    if [ {{nodes}} == 1 ]
+    then
+        set -x
+        {% scheduler_exec settings.LICO.SCHEDULER gpu_per_node gpu_per_node 0 %}${exec_nodes[0]} \
+                        singularity exec {% if gpu_per_node > 0 %}--nv{% endif %} \
+                        -B {{ lico.user.workspace|addslashes }} {{ job_user_share_folder|addslashes }} \
+                        --pwd {{ job_workspace }} \
+                        {{ image_path }} \
+                        torchrun \
+                        --nnodes {{ nodes }} {% if gpu_per_node > 0 %}--nproc_per_node {{ gpu_per_node }} {% endif %}\
+                        {{ distributed_args|default:""|addslashes }} \
+                        {{ prog }} \
+                        {{ args|default:""|addslashes }} &
+        set +x
+    else
+        node_rank=0
+        for exec_node in ${exec_nodes[*]}
+        do
+            set -x
+            {% scheduler_exec settings.LICO.SCHEDULER gpu_per_node gpu_per_node 0 %}$exec_node \
+                singularity exec {% if gpu_per_node > 0 %}--nv{% endif %} \
+                -B {{ lico.user.workspace|addslashes }} {{ job_user_share_folder|addslashes }} \
+                --pwd {{ job_workspace }} \
+                {{ image_path }} \
+                torchrun \
+                --nnodes {{ nodes }} {% if gpu_per_node > 0 %}--nproc_per_node {{ gpu_per_node }} {% endif %}\
+                --node_rank ${node_rank} \
+                --master_addr ${exec_nodes[0]} \
+                --master_port ${lico_ports_array[0]} \
+                {{ distributed_args|default:""|addslashes }} \
+                {{ prog }} \
+                {{ args|default:""|addslashes }} &
+            set +x
+            let node_rank+=1
+        done
+    fi
+}
+
+echo "nodes:{{nodes}}"
+run_nodes
+
+wait
+
+{%else%}
+{% get_exec_node settings.LICO.SCHEDULER 0 %}
+
+set -x
+{% scheduler_exec settings.LICO.SCHEDULER gpu_per_node gpu_per_node|default:0 1 %}${exec_node} \{% if settings.LICO.SCHEDULER == "slurm" %}
+    --cpus-per-task=${cpu_curr_node} \{% endif %}
+    singularity exec {% if gpu_per_node %}--nv{% endif %} \
+    -B {{ lico.user.workspace|addslashes }} {{ job_user_share_folder|addslashes }} \
+    --pwd {{ job_workspace }} \
+    {{ image_path }} {% program_exec prog %} {{ args|default:""|addslashes }}
+set +x
+{%endif%}
+
+echo job end time is `date`

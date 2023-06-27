@@ -1,0 +1,6 @@
+{% include "scheduler/hpl.sh.in" %}
+{% include "runtime.sh.in" %}
+echo job start time is `date`
+echo `hostname`
+{% if not job_ear or job_ear|get_item:"type" == "off" %}mpirun {% else %}srun {% if job_ear|get_item:"mpi_type" != "default" %}--mpi={{ job_ear|get_item:"mpi_type" }}{% endif %}{% endif %}{% if wdir %}-wdir {{ wdir }}{% endif %} {{ args|default:"" }} {{ prog }}
+echo job end time is `date`
