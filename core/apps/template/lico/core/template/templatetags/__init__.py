@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import re
-from subprocess import run
+from subprocess import run  # nosec B404
 
 from django import template
 from django.db.models import Q
@@ -37,7 +37,7 @@ def add_vtune_group(user):
     command = ["su", "-c",
                f"echo {password} | lgroupadd vtune;"
                f"echo {password} | lgroupmod -M {user} vtune"]
-    state = run(command)
+    state = run(command)  # nosec B603
     if state.returncode:
         return "echo 'Add vtune group failed.'"
     else:

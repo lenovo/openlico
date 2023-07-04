@@ -27,15 +27,12 @@ class Client(BaseClient):
 
     def handle_exception(self, exc, response):  # pragma: no cover
         logger.exception('Unknown exception')
+
+        # while job rasie 400 exception, can also get job id
         try:
             response.json()
         except Exception:
-            pass
-        else:
-            # while job rasie 400 exception, can also get job id
-            return
-
-        super().handle_exception(exc, response)
+            super().handle_exception(exc, response)
 
     def query_job(self, job_id):
         if self.username is None:

@@ -15,7 +15,7 @@
 import logging
 import os
 import re
-from subprocess import (
+from subprocess import (  # nosec B404
     CalledProcessError, check_call, check_output, list2cmdline,
 )
 
@@ -45,7 +45,7 @@ class StorageBilling(object):
     def billing(self, local_date):
         billing_date = local_date.astimezone(tzutc())
         with open(os.devnull) as f:
-            check_call(
+            check_call(  # nosec B603 B607
                 ['bash', '--login', '-c',
                  list2cmdline(
                      ['which', settings.ACCOUNTING.STORAGE.GPFS_STORAGE_CMD]
@@ -192,7 +192,7 @@ class StorageBilling(object):
         try:
             cmd = settings.ACCOUNTING.STORAGE.GPFS_STORAGE_CMD
             with open(os.devnull) as f:
-                data = check_output(
+                data = check_output(  # nosec B603 B607
                     ['bash', '--login', '-c',
                      list2cmdline([cmd, '-u', path, '--block-size', 'M'])
                      ], stderr=f)

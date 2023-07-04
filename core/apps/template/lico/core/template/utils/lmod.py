@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import logging
-from subprocess import PIPE, CalledProcessError, run
+from subprocess import PIPE, CalledProcessError, run  # nosec B404
 
 from ..exceptions import ModuleInvalid
 from ..models import Module, ModuleItem
@@ -85,7 +85,7 @@ def _process_module_item_for_ubuntu(module, item_name, item):
 
 def verify_modules(user, modules):
     try:
-        run(
+        run(  # nosec B603 B607
             ['lico-lmod-verify'],
             input=('\n'.join(modules)).encode(),
             stdout=PIPE, stderr=PIPE,

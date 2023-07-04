@@ -40,7 +40,7 @@ class BaseConfluentClient(metaclass=ABCMeta):
 
 
 class ConfluentClient(BaseConfluentClient):
-    def __init__(
+    def __init__(  # nosec B107
             self,
             host='localhost', port='4005',
             user='', password='',
@@ -135,7 +135,7 @@ class ConfluentClient(BaseConfluentClient):
 
 class ClusterConfluentClient:
 
-    def __init__(
+    def __init__(  # nosec B107
             self,
             host='127.0.0.1', port='4005',
             user='', password='',
@@ -258,7 +258,7 @@ class ClusterConfluentClient:
             )
             return res
         else:
-            from random import choice
+            from random import choice  # nosec B311
             ipaddr = choice(self.members) if self.members else self.host
             url = f'http://{ipaddr}:{self.port}/sessions/current/async'
             session = self.session[ipaddr]
@@ -280,7 +280,7 @@ class ClusterConfluentClient:
 
 class Database:
 
-    def __init__(
+    def __init__(  # nosec B107
             self, db_host='127.0.0.1', db_database='lico',
             db_port=3306, db_user='', db_pass=''
     ):

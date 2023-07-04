@@ -265,7 +265,7 @@ class HostlistMixin(object):
                 # with nothing in the prefix or numeric parts.
                 # We do not want that, so we move it to the prefix and put
                 # None as a special marker where the suffix should be.
-                assert prefix == ""
+                assert prefix == ""  # nosec B101
                 sortlist.append(((host, None), None, None, host))
             else:
                 # A left part with at least an numeric part
@@ -311,7 +311,7 @@ class HostlistMixin(object):
                         # from the set. Therefore, skip the host here if it
                         # is gone from the set.
                         continue
-                    assert num_int is not None
+                    assert num_int is not None  # nosec B101
 
                     # Scan for a range starting at the current host
                     low = num_int
@@ -323,7 +323,7 @@ class HostlistMixin(object):
                         else:
                             break
                     high = num_int - 1
-                    assert high >= low
+                    assert high >= low  # nosec B101
                     range_list.append((low, high, num_width))
 
                 # We have a list of ranges to format. We make sure
@@ -348,7 +348,7 @@ class HostlistMixin(object):
         # are ready to return the result, together with the flag that says
         # if we need to loop again (we do if we have added something to a
         # left part).
-        assert not remaining
+        assert not remaining  # nosec B101
         return results, needs_another_loop
 
     def format_range(self, low, high, width):

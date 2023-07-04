@@ -15,7 +15,7 @@
 
 import logging
 from collections import defaultdict
-from subprocess import check_output
+from subprocess import check_output  # nosec B404
 
 from dateutil.parser import parse
 from dateutil.tz import tzlocal
@@ -234,7 +234,7 @@ def query_events_by_time(start_timestamp, end_timestamp):  # noqa: C901
             "--noheader", "--format", ','.join(SLURM_SACCT_FIELDS)
         ]
 
-        out = check_output(cmd)
+        out = check_output(cmd)  # nosec B603
         lines = out.decode().splitlines()
 
         line_num = 0

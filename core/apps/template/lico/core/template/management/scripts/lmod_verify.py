@@ -15,7 +15,7 @@
 import os
 import sys
 from os import path
-from subprocess import PIPE, run
+from subprocess import PIPE, run  # nosec B404
 
 
 def module(command, *args):
@@ -28,7 +28,7 @@ def module(command, *args):
         )
     args = [lmod_exec, 'python', command] + list(args)
 
-    proc = run(args, stdout=PIPE, stderr=PIPE)
+    proc = run(args, stdout=PIPE, stderr=PIPE)  # nosec B603
 
     print(proc.stderr.decode(), file=sys.stderr)
     exec(proc.stdout.decode())  # nosec B102

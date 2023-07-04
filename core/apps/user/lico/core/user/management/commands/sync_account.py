@@ -15,7 +15,7 @@ import logging
 import sys
 from collections import defaultdict
 from os import environ, path
-from subprocess import STDOUT, CalledProcessError, check_output
+from subprocess import STDOUT, CalledProcessError, check_output  # nosec B404
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -248,7 +248,7 @@ class Command(BaseCommand):
     def exec_cmd(self, cmd):
         return_code, output = 0, b''
         try:
-            output = check_output(cmd, stderr=STDOUT)
+            output = check_output(cmd, stderr=STDOUT)  # nosec B603
         except FileNotFoundError as e:
             logger.warning(e)
             sys.exit(1)

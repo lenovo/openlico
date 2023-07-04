@@ -18,7 +18,7 @@ import pwd
 import re
 import stat
 from enum import Enum
-from subprocess import CalledProcessError, check_call, check_output
+from subprocess import CalledProcessError  # nosec B404
 
 from django.conf import settings
 from py.path import local
@@ -36,7 +36,8 @@ def user_image_path(workspace):
 
 def get_singularity_path():
     try:
-        out_put = check_output([
+        from subprocess import check_output  # nosec B404
+        out_put = check_output([  # nosec B603 B607
             'bash',
             '--login',
             '-c',
@@ -59,7 +60,8 @@ def check_original_path(file_path):
     if "singularity" not in singularity_path:
         raise SingularityNotExists
     try:
-        check_call(
+        from subprocess import check_call  # nosec B404
+        check_call(  # nosec B607
             [singularity_path, 'inspect', file_path]
         )
     except CalledProcessError as e:

@@ -197,11 +197,15 @@ class Operation:
 
 @transaction.atomic  # noqa: C901
 def _handle_workflow_operation(workflow, operation):
-    assert operation in (
+    if operation not in (
         Operation.RUN,
         Operation.RERUN,
         Operation.CANCEL,
-    )
+    ):
+        raise WorkflowOperationException(
+            f"does not support specified operation {operation}"
+        )
+
     before_status = workflow.status
     workflow_steps = workflow.workflow_steps
     step_number = workflow_steps.count()
@@ -595,3 +599,4 @@ class WorkflowStepJobMoveView(APIView):
 
         ret_dict = job.as_dict(inspect_related=False)
         return Response(ret_dict)
+

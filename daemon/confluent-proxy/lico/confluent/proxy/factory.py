@@ -35,7 +35,7 @@ def _add_route(app, client):
     app.add_route('/api/confluent/console/{name}', Console(client))
 
 
-def app_factory(
+def app_factory(  # nosec B107
         global_conf,
         host='127.0.0.1',
         port='4005',

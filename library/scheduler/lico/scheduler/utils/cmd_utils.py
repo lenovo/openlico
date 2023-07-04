@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from subprocess import PIPE, list2cmdline, run
+from subprocess import PIPE, list2cmdline, run  # nosec B404
 
 
 def exec_oscmd(args, timeout: int):
@@ -23,7 +23,7 @@ def exec_oscmd(args, timeout: int):
 
 
 def exec_oscmd_with_login(args, timeout: int):
-    process = run(
+    process = run(  # nosec B603 B607
         [
             'bash', '--login', '-c',
             list2cmdline(args)
@@ -36,7 +36,7 @@ def exec_oscmd_with_login(args, timeout: int):
 
 
 def exec_oscmd_with_user(user, args, timeout: int):
-    process = run(
+    process = run(  # nosec B603 B607
         [
             'su', '-', user, '-c',
             list2cmdline(args)

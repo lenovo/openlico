@@ -17,7 +17,7 @@ import os
 import re
 import shutil
 from os import path, remove
-from subprocess import check_call, check_output
+from subprocess import check_call, check_output  # nosec B404
 from typing import List
 
 from lico.scheduler.base.exception.manager_exception import (
@@ -47,7 +47,7 @@ def save_slurm_conf():
         os.setuid(0)
 
     try:
-        new_config = check_output(
+        new_config = check_output(  # nosec B603 B607
             ['scontrol', 'write', 'config'],
             preexec_fn=_set_root_gid_uid
         ).decode()
@@ -76,7 +76,7 @@ def save_slurm_conf():
 
 def check_slurm_nodes(nodes: str):
     try:
-        check_call(['scontrol', 'show', 'Node', nodes])
+        check_call(['scontrol', 'show', 'Node', nodes])  # nosec B603 B607
     except Exception as e:
         logger.exception("Scheduler nodes %s not exist.", nodes)
         raise NodeNotExistException from e
@@ -95,7 +95,7 @@ def get_queue_detail(q_name=None):
 
     try:
         data = {}
-        queue = check_output(['sinfo']).decode()[:-1]
+        queue = check_output(['sinfo']).decode()[:-1]  # nosec B603 B607
         title = queue.split('\n')[0].split()
         for q in queue.split('\n')[1:]:
             query = {}
@@ -108,7 +108,9 @@ def get_queue_detail(q_name=None):
                     q[title.index(title[i])] if len(q) > i else ""
 
             queue_name = query['queue_name']
-            check_queue = check_output(['sinfo', '-p', queue_name]).decode()
+            check_queue = check_output([  # nosec B603 B607
+                'sinfo', '-p', queue_name
+            ]).decode()
             if len(check_queue.split('\n')[1]) == 0:
                 queue_name = queue_name[:-1]   # trim * from default queue_name
 
@@ -117,7 +119,7 @@ def get_queue_detail(q_name=None):
 
             node_state = query['state']
             if queue_name not in data:
-                queues = check_output(
+                queues = check_output(  # nosec B603 B607
                     ['scontrol', 'show', 'partition', '-o', queue_name],
                 ).decode()
                 queues = dict(
@@ -230,7 +232,9 @@ def get_all_limitation_details(lim_name: str = None) -> List[dict]:
         console_command = ["sacctmgr", "show", "qos", show_format, '-Pn']
         if lim_name is not None:
             console_command.insert(3, lim_name)
-        qos_query = check_output(console_command).decode().split("\n")
+        qos_query = check_output(  # nosec B603 B607
+            console_command
+        ).decode().split("\n")
         for qos in qos_query[:-1]:
             setting = qos.split('|')
             if setting[0] == 'normal':
@@ -284,8 +288,11 @@ def check_gres_available(gres_codes):
     Raises:
         GresNotAvailableException: if GRES code is not available in Slurm
     """
-    tres = check_output(['sacctmgr', 'show', 'tres', '-Pn']).decode().split('\n') # noqa
+    tres = check_output([  # nosec B603 B607
+        'sacctmgr', 'show', 'tres', '-Pn'
+    ]).decode().split('\n')
     slurm_gres = [t.split('|')[1] for t in tres if t.split('|')[0] == 'gres']
     for lico_gres in gres_codes:
         if lico_gres.lower() not in slurm_gres:
             raise GresNotAvailableException(lico_gres)
+

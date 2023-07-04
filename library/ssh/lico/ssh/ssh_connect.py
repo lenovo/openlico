@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from collections import defaultdict
-from subprocess import list2cmdline
+from subprocess import list2cmdline  # nosec B404
 
 import paramiko
 from fabric import Connection

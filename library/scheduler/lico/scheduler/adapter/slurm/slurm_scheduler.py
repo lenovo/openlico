@@ -16,7 +16,7 @@ import logging
 import os
 import re
 from collections import defaultdict
-from subprocess import TimeoutExpired
+from subprocess import TimeoutExpired  # nosec B404
 from typing import List, Optional
 
 from dateutil.parser import parse
