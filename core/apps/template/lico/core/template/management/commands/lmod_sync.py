@@ -49,9 +49,9 @@ class Command(BaseCommand):
             return
 
         import json
-        from subprocess import check_output
+        from subprocess import check_output  # nosec B404
 
-        output = check_output(
+        output = check_output(  # nosec B603
             [spider, '-o', 'spider-json', modulepath]
         )
 

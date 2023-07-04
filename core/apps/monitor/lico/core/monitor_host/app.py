@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import subprocess
+import subprocess  # nosec B404
 import tempfile
 
 from lico.core.contrib.client import Client
@@ -60,7 +60,7 @@ def backup_to_tmp(client, tmpdir, settings):
         tmpdir
     ]
     try:
-        completed_process = subprocess.run(
+        completed_process = subprocess.run(  # nosec B603
             backup_command,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -83,7 +83,7 @@ def restore_to_backup_db(from_db, to_db, tmpdir):
     ]
 
     try:
-        subprocess.run(
+        subprocess.run(  # nosec B603
             restore_command,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,

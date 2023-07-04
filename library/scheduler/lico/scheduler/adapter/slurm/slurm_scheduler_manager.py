@@ -15,7 +15,7 @@
 import logging
 import re
 from collections import defaultdict
-from subprocess import check_call, check_output
+from subprocess import check_call, check_output  # nosec B404
 from typing import List
 
 from lico.scheduler.base.exception.manager_exception import (
@@ -89,7 +89,9 @@ class SchedulerManager(ISchedulerManager):
     def create_queue_setting(self, queue_setting: QueueSetting) -> dict:
         qs = queue_setting
         try:
-            queue = check_output(['sinfo', '-p', qs.name]).decode()
+            queue = check_output(  # nosec B603 B607
+                ['sinfo', '-p', qs.name]
+            ).decode()
         except Exception as e:
             logger.exception("Query queue '%s' failed.", qs.name)
             raise QueryQueueException from e
@@ -99,7 +101,9 @@ class SchedulerManager(ISchedulerManager):
 
         check_slurm_nodes(qs.nodes)
         try:
-            check_call(['scontrol', 'create'] + qs.queue_params_list())
+            check_call([ # nosec B603 B607
+                'scontrol', 'create', *qs.queue_params_list()
+            ])
             save_slurm_conf()
             is_scheduler_node = self.is_scheduler_node()
         except (
@@ -116,7 +120,9 @@ class SchedulerManager(ISchedulerManager):
         new_qs = queue_setting
         check_slurm_nodes(new_qs.nodes)
         try:
-            check_call(['scontrol', 'update'] + new_qs.queue_params_list())
+            check_call([ # nosec B603 B607
+                'scontrol', 'update', *new_qs.queue_params_list()
+            ])
             save_slurm_conf()
             is_scheduler_node = self.is_scheduler_node()
         except (
@@ -131,8 +137,12 @@ class SchedulerManager(ISchedulerManager):
 
     def delete_queue_setting(self, queue_name) -> dict:
         try:
-            queue = check_output(['sinfo', '-p', queue_name]).decode()
-            is_used = check_output(['squeue', '-p', queue_name]).decode()
+            queue = check_output( # nosec B603 B607
+                ['sinfo', '-p', queue_name]
+            ).decode()
+            is_used = check_output( # nosec B603 B607
+                ['squeue', '-p', queue_name]
+            ).decode()
         except Exception as e:
             logger.exception("Query queue '%s' failed.", queue_name)
             raise QueryQueueException from e
@@ -143,8 +153,8 @@ class SchedulerManager(ISchedulerManager):
             logger.error("Queue '%s' is busy now.", queue_name)
             raise QueueBusyException
         try:
-            check_call(
-                ['scontrol', 'delete', 'PartitionName=' + queue_name]
+            check_call( # nosec B603 B607
+                ['scontrol', 'delete', f'PartitionName={queue_name}']
             )
             save_slurm_conf()
             is_scheduler_node = self.is_scheduler_node()
@@ -160,9 +170,11 @@ class SchedulerManager(ISchedulerManager):
 
     def update_queue_state(self, queue_name, queue_state) -> dict:
         try:
-            parameter = 'PartitionName={} State={}'.format(
+            parameters = 'PartitionName={} State={}'.format(
                 queue_name, queue_state).split()
-            check_call(['scontrol', 'update'] + parameter)
+            check_call([ # nosec B603 B607
+                'scontrol', 'update', *parameters
+            ])
             save_slurm_conf()
             is_scheduler_node = self.is_scheduler_node()
         except (
@@ -234,7 +246,7 @@ class SchedulerManager(ISchedulerManager):
                 list_cmd.append("Reason=down by {}".format(
                     self._operator_username)
                 )
-            check_call(list_cmd)
+            check_call(list_cmd) # nosec B603
         except Exception as e:
             raise UpdateNodeStateException from e
 
@@ -253,8 +265,10 @@ class SchedulerManager(ISchedulerManager):
 
     def create_limitation(self, new_lim: QueueLimitation) -> dict:
         try:
-            limitation = check_output(['sacctmgr', 'show', 'qos', new_lim.name,
-                                       'format=name', '-Pn']).decode()
+            limitation = check_output([  # nosec B603 B607
+                'sacctmgr', 'show', 'qos', new_lim.name,
+                'format=name', '-Pn'
+            ]).decode()
         except Exception as e:
             logger.exception("Query limitation '%s' failed.", new_lim.name)
             raise QueryLimitationException from e
@@ -269,8 +283,9 @@ class SchedulerManager(ISchedulerManager):
 
         try:
             # flake8: noqa: E501
-            check_call(["sacctmgr", "-i", "add", "qos"]
-                       + new_lim.limitation_params_list())
+            check_call([ # nosec B603 B607
+                "sacctmgr", "-i", "add", "qos", *new_lim.limitation_params_list()
+            ])
             save_slurm_conf()
             is_scheduler_node = self.is_scheduler_node()
         except (
@@ -285,8 +300,10 @@ class SchedulerManager(ISchedulerManager):
 
     def update_limitation_setting(self, lim_setting: QueueLimitation) -> dict:
         try:
-            check_call(['sacctmgr', '-i', 'modify', 'qos', lim_setting.name,
-                       'set'] + lim_setting.limitation_params_list())
+            check_call([  # nosec B603 B607
+                'sacctmgr', '-i', 'modify', 'qos',
+                lim_setting.name, 'set', *lim_setting.limitation_params_list()
+            ])
             save_slurm_conf()
             is_scheduler_node = self.is_scheduler_node()
         except (
@@ -304,7 +321,7 @@ class SchedulerManager(ISchedulerManager):
     def delete_limitation(self, limitation_name: str) -> dict:
         # Check if limitation exists
         try:
-            limitation = check_output(
+            limitation = check_output(  # nosec B603 B607
                 ["sacctmgr", "show", "qos", limitation_name, "format=name"]
             ).decode()
         except Exception as e:
@@ -317,10 +334,14 @@ class SchedulerManager(ISchedulerManager):
 
         # Check if limitation is in use
         # By partitions
-        partitions = check_output(['scontrol', 'show', 'partition']).decode()
+        partitions = check_output([  # nosec B603 B607
+            'scontrol', 'show', 'partition'
+        ]).decode()
         # By associations
         assocs = (
-            check_output(['sacctmgr', 'show', 'association', 'format=qos'])
+            check_output([  # nosec B603 B607
+                'sacctmgr', 'show', 'association', 'format=qos'
+            ])
             .decode()
             .split('\n')
         )
@@ -337,7 +358,9 @@ class SchedulerManager(ISchedulerManager):
 
         # Delete limitation
         try:
-            check_call(['sacctmgr', '-i', 'delete', 'qos', limitation_name])
+            check_call([  # nosec B603 B607
+                'sacctmgr', '-i', 'delete', 'qos', limitation_name
+            ])
             save_slurm_conf()
             is_scheduler_node = self.is_scheduler_node()
         except (
@@ -357,7 +380,7 @@ class SchedulerManager(ISchedulerManager):
         """ Returns a list with the associations between
         account, user, queue and qos
         """
-        lines = check_output(
+        lines = check_output(  # nosec B603 B607
             ["sacctmgr", "show", "account", "format=account,descr", "-Pn"]
         ).decode().split("\n")
 
@@ -369,9 +392,9 @@ class SchedulerManager(ISchedulerManager):
             name, descr = line.split("|")
             account_descr[name] = descr
 
-        lines = check_output(
-            ["sacctmgr", "show", "assoc", "format=account,user,partition,qos", "-Pn"]  # noqa
-        ).decode().split("\n")
+        lines = check_output([  # nosec B603 B607
+            "sacctmgr", "show", "assoc", "format=account,user,partition,qos", "-Pn"
+        ]).decode().split("\n")
 
         items = []
         for line in lines:
@@ -396,10 +419,10 @@ class SchedulerManager(ISchedulerManager):
         # Check if account exists
         try:
             account = (
-                check_output(
-                    ['sacctmgr', 'show', 'account',
-                     f'account={new_assoc.account}', 'format=account', '-Pn']
-                )
+                check_output([  # nosec B603 B607
+                    'sacctmgr', 'show', 'account',
+                     f'account={new_assoc.account}', 'format=account', '-Pn'
+                ])
                 .decode()
                 .split('\n')
             )[0]
@@ -410,7 +433,7 @@ class SchedulerManager(ISchedulerManager):
         if not account:
             # Create SLURM account for LICO billing group
             try:
-                check_call(
+                check_call(  # nosec B603 B607
                     ['sacctmgr', '-i', 'create', 'account',
                      f'name={new_assoc.account}', 'descr=lico.billing_group']
                 )
@@ -422,10 +445,10 @@ class SchedulerManager(ISchedulerManager):
         # Create association
         qos = ','.join(new_assoc.qos)
         try:
-            check_call(
-                ['sacctmgr', '-i', 'modify', 'account',
-                 f'name={new_assoc.account}', 'set', f'qos={qos}']
-            )
+            check_call([  # nosec B603 B607
+                'sacctmgr', '-i', 'modify', 'account',
+                f'name={new_assoc.account}', 'set', f'qos={qos}'
+            ])
             is_scheduler_node = self.is_scheduler_node()
         except QuerySlurmctlServiceStatusException:
             raise
@@ -441,10 +464,10 @@ class SchedulerManager(ISchedulerManager):
         # Check if account exists
         try:
             account = (
-                check_output(
-                    ['sacctmgr', 'show', 'account',
-                     f'account={account_name}', 'format=account', '-Pn']
-                )
+                check_output([  # nosec B603 B607
+                    'sacctmgr', 'show', 'account',
+                    f'account={account_name}', 'format=account', '-Pn'
+                ])
                 .decode()
                 .split('\n')
             )[0]
@@ -460,15 +483,15 @@ class SchedulerManager(ISchedulerManager):
         # Delete association between account and qos by setting qos-={current}
         try:
             # Current qos associated to account
-            current = check_output(
-                ['sacctmgr','show','association', f'account={account_name}',
-                 "user=''","partition=''", 'format=qos', '-Pn']
-            ).decode().split('\n')[0]
+            current = check_output([  # nosec B603 B607
+                'sacctmgr','show','association', f'account={account_name}',
+                 "user=''","partition=''", 'format=qos', '-Pn'
+            ]).decode().split('\n')[0]
             # Delete
-            check_call(
-                ['sacctmgr', '-i', 'modify', 'account', f'name={account_name}',
-                 'set', f"qos-={current}"]
-            )
+            check_call([  # nosec B603 B607
+                'sacctmgr', '-i', 'modify', 'account', f'name={account_name}',
+                 'set', f"qos-={current}"
+            ])
             is_scheduler_node = self.is_scheduler_node()
         except QuerySlurmctlServiceStatusException:
             raise
@@ -476,3 +499,4 @@ class SchedulerManager(ISchedulerManager):
             logger.exception("Delete association '%s' failed.", account_name)
             raise DeleteAssociationException from e
         return {"is_scheduler_node": is_scheduler_node}
+

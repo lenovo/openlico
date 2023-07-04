@@ -107,7 +107,7 @@ def str_to_float(value):
     try:
         value = round(float(value), 2)
     except Exception:
-        pass
+        logger.warn('Invalid float format: %s', value)
     finally:
         return value
 

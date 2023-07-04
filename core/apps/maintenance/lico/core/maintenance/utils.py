@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from subprocess import PIPE, run
+from subprocess import PIPE, run  # nosec B404
 
 from lico.ssh import RemoteSSH
 
@@ -77,7 +77,7 @@ def sum_resource(resource_used_dict, resource):
 
 
 def exec_oscmd(cmd, args=None, timeout=30):
-    process = run(
+    process = run(  # nosec B603
         cmd, input=args, stdout=PIPE, stderr=PIPE, timeout=timeout
     )
     return process.returncode, process.stdout, process.stderr

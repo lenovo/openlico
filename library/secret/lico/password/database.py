@@ -27,7 +27,7 @@ class Database:
             if username == '':
                 username = None
             password = toml_dict[keyword].get('password')
-            if password == '':
+            if password == '':  # nosec B105
                 password = None
             return username, password
         return None, None

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from os import path
-from subprocess import call
+from subprocess import call  # nosec B404
 
 from celery.utils.log import get_task_logger
 from django.conf import settings
@@ -26,7 +26,7 @@ logger = get_task_logger(__name__)
 @app.task(ignore_result=True)
 def script(node, level, name, target):
     logger.info('run script: %s', script)
-    call(
+    call(  # nosec B603
         [
             path.join(settings.ALERT.SCRIPTS_DIR, target)
         ],

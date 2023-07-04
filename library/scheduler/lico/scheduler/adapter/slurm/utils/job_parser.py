@@ -17,7 +17,7 @@ import re
 import time
 from collections import defaultdict
 from datetime import datetime, timedelta
-from subprocess import CalledProcessError, check_output
+from subprocess import CalledProcessError, check_output  # nosec B404
 from typing import Dict, List, Optional
 
 from dateutil.parser import parse
@@ -386,8 +386,8 @@ def get_job_memory(
                       "-j", jobid]
 
         try:
-            running_step_raw_info = check_output(sstat_args)
-            all_step_raw_info = check_output(sacct_args)
+            running_step_raw_info = check_output(sstat_args)  # nosec B603
+            all_step_raw_info = check_output(sacct_args)  # nosec B603
         except CalledProcessError as e:
             logger.warning(
                 'Get job memory failed, the cmd is {0}, the error is {1}'

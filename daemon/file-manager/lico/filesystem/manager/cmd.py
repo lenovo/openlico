@@ -59,7 +59,7 @@ def main():
                 if e.errno == errno.ELOOP:
                     print('Too many levels of symbolic links: ', full_filename)
                     return -1
-            except Exception:
+            except Exception:  # nosec B110
                 pass
 
 

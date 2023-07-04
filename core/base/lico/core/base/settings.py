@@ -20,7 +20,7 @@ from py.path import local
 from .settings_toml import load_settings
 from .subapp import iter_sub_apps
 
-SECRET_KEY = '!Do not use!'
+SECRET_KEY = '!Do not use!'  # nosec B105
 
 DEBUG = False
 
@@ -118,3 +118,4 @@ for app in iter_sub_apps():
     app.on_install_apps(INSTALLED_APPS, arch)
     app.on_load_settings(__name__, arch)
     app.on_load_template_builtins(builtins, arch)
+

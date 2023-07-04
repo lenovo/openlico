@@ -14,7 +14,7 @@
 import os.path
 import sys
 import tempfile
-from subprocess import CalledProcessError, check_output
+from subprocess import CalledProcessError, check_output  # nosec B404
 
 from celery.schedules import crontab
 from django.core.exceptions import ValidationError
@@ -127,7 +127,7 @@ class Command(BaseCommand):
 
     def _exec_cmd(self, cmd):
         try:
-            out = check_output(cmd)
+            out = check_output(cmd)  # nosec B603
         except CalledProcessError:
             return ''
         return out.decode()

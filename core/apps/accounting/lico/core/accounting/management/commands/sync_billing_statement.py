@@ -17,7 +17,7 @@ import logging
 import sys
 from datetime import datetime, timedelta
 from os import environ, path
-from subprocess import CalledProcessError
+from subprocess import CalledProcessError  # nosec B404
 
 from dateutil.parser import parse
 from django.core.management import BaseCommand
