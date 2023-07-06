@@ -19,7 +19,7 @@ passwd() {
   algorithm="sha1"
   salt_len=12
   salt=$(printf "%0${salt_len}x" $(( RANDOM % (16**${salt_len}) )) )
-  h=$(printf "${passphrase}${salt}" | openssl dgst -${algorithm} -binary | xxd -p)
+  h=$(printf "${passphrase}${salt}" | openssl dgst -${algorithm} | awk '{print $2}')
   echo "${algorithm}:${salt}:${h}"
 }
 
