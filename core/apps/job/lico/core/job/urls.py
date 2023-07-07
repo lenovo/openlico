@@ -32,6 +32,7 @@ from .views.job_submit_view import JobSubmitView
 from .views.job_view import (
     InternalJobView, JobListView, JobRawInfoView, JobView,
 )
+from .views.priority import PriorityView
 from .views.queue import QueueListView
 from .views.recent_job_view import RecentJobListView, UserRecentJobListView
 from .views.report_view import JobReportPreview, ReportView
@@ -96,4 +97,6 @@ urlpatterns = [
 
     path('tag/', TagView.as_view()),
     path('<int:pk>/comment/', JobCommentView.as_view()),
+
+    path('priority/', PriorityView.as_view()),
 ]

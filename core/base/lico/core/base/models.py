@@ -36,6 +36,7 @@ class OperationLog(models.Model):
     CANCEL = 'cancel'
     RERUN = 'rerun'
     COMMENT = 'comment'
+    PRIORITY = 'priority'
 
     MODULE_TYPE_CHOIXES = (
         (USER, 'user'),
@@ -60,7 +61,8 @@ class OperationLog(models.Model):
         (TURN_OFF, 'turn_off'),
         (CANCEL, 'cancel'),
         (RERUN, 'rerun'),
-        (COMMENT, 'comment')
+        (COMMENT, 'comment'),
+        (PRIORITY, 'priority')
     )
 
     module = models.CharField(

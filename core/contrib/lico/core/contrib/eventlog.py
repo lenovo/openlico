@@ -42,6 +42,7 @@ class EventLog(object):
     cancel = OperationLog.CANCEL
     rerun = OperationLog.RERUN
     comment = OperationLog.COMMENT
+    priority = OperationLog.PRIORITY
 
     @classmethod
     def opt_create_instance(cls, targets, **kwargs):

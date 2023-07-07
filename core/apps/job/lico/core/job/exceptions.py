@@ -69,3 +69,18 @@ class QuerySchedulerRuntimeException(JobException):
 class QuerySchedulerLicenseFeatureException(JobException):
     errid = 7009
     message = "Query scheduler license feature failed."
+
+
+class InvalidJobPriorityException(JobException):
+    errid = 7010
+    message = "Invalid job priority."
+
+
+class QueryJobPriorityException(JobException):
+    errid = 7011
+    message = "Query job priority failed."
+
+
+class AdjustJobPriorityException(JobException):
+    errid = 7012
+    message = "Failed to set the job priority."

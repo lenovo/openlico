@@ -501,6 +501,8 @@ def parse_job_info(  # noqa: C901
                 job.time_limit = convert_runtime_2_seconds(value)
             elif key == "ExitCode":
                 job.exit_code = value
+            elif key == "Priority":
+                job.priority = value if is_number(value) else ''
             elif key == 'NodeList':
                 node_lists = value
             elif key == 'NumNodes':

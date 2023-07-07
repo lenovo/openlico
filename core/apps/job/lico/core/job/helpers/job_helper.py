@@ -52,6 +52,7 @@ def job_changed(job_pair):
         job.error_output_file != scheduler_job.error_output_filename,
         scheduler_job.runtime - job.runtime >
         settings.JOB.JOB_SYNC_RUNTIME_INTERVAL,
+        job.priority != scheduler_job.priority,
     ]
 
     if any(conditions):
@@ -128,6 +129,9 @@ def update_job_by_scheduler_job(job, scheduler_job):  # noqa: C901
     if scheduler_job.exit_code is not None:
         job.exit_code = scheduler_job.exit_code
         append('exit_code')
+    if scheduler_job.priority:
+        job.priority = scheduler_job.priority
+        append('priority')
 
     # job.raw_info = ''
     # job.reason = ''

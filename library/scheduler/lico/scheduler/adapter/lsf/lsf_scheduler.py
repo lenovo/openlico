@@ -25,9 +25,10 @@ from dateutil.parser import parse
 
 from lico.scheduler.adapter.lsf.lsf_job_identity import JobIdentity
 from lico.scheduler.base.exception.job_exception import (
-    AcctNoFileException, CancelJobFailedException, JobFileNotExistException,
-    QueryJobFailedException, QueryJobRawInfoFailedException,
-    QueryRuntimeException, SchedulerConnectTimeoutException,
+    AcctNoFileException, CancelJobFailedException, InvalidPriorityException,
+    JobFileNotExistException, QueryJobFailedException,
+    QueryJobRawInfoFailedException, QueryRuntimeException,
+    QueryUserPriorityException, SchedulerConnectTimeoutException,
     ServerDownException, SubmitJobFailedException,
 )
 from lico.scheduler.base.exception.manager_exception import (
@@ -38,7 +39,7 @@ from lico.scheduler.base.job.queue import Queue
 from lico.scheduler.base.job.queue_state import QueueState
 from lico.scheduler.base.scheduler import IScheduler
 from lico.scheduler.utils.cmd_utils import (
-    exec_oscmd_with_login, exec_oscmd_with_user,
+    exec_oscmd, exec_oscmd_with_login, exec_oscmd_with_user,
 )
 
 from .lsf_acct_parser import query_events_by_time
@@ -137,7 +138,7 @@ class Scheduler(IScheduler):
         formatter = r"jobid job_name stat user queue job_description " \
                     r"exit_code exec_host alloc_slot run_time slots " \
                     r"avg_mem input_file output_file error_file " \
-                    r"output_dir runtimelimit exec_cwd pend_reason "
+                    r"output_dir runtimelimit exec_cwd pend_reason priority"
         if self.is_gpu_new_syntax_extend():
             formatter += r"gpu_alloc "
         cmd = ["bjobs", "-o", formatter + r"delimiter=';'", "-json"]
@@ -180,7 +181,7 @@ class Scheduler(IScheduler):
                     r"job_description exit_code exec_host alloc_slot " \
                     r"run_time slots avg_mem input_file output_file" \
                     r" error_file output_dir runtimelimit exec_cwd " \
-                    r"pend_reason "
+                    r"pend_reason priority"
         if self.is_gpu_new_syntax_extend():
             formatter += r"gpu_alloc "
         cmd = ["bjobs", "-o", formatter + r"delimiter=';'", "-json"]
@@ -707,3 +708,44 @@ class Scheduler(IScheduler):
             self.get_running_jobs_cmd,
             self.get_job_pidlist
         ]
+
+    def _query_user_priority(self):
+        logger.debug("query the maximum user priority")
+        args = ["bparams", "-a", "|", "grep", "MAX_USER_PRIORITY", "|",
+                "awk", "'", "{", "print", "$3", "}", "'"]
+        rc, out, err = exec_oscmd_with_login(
+            args,
+            timeout=self._config.timeout
+        )
+        if err:
+            logger.error(
+                "query the maximum user priority failed, "
+                "Error message is: %s", err.decode()
+            )
+            raise QueryUserPriorityException(err.decode())
+        return out.decode().strip()
+
+    def get_priority_value(self):
+        priority_max = self._query_user_priority()
+        priority_dict = {"priority_min": "1",
+                         "priority_max": priority_max}
+        return priority_dict
+
+    def update_job_priority(self, scheduler_ids, priority_value):
+        logger.debug("Update job priority, scheduler_ids: %s" % scheduler_ids)
+        if int(priority_value) > int(self._query_user_priority()) or int(
+                priority_value) < 1:
+            raise InvalidPriorityException
+        ids = " ".join(scheduler_ids)
+        args = ['bash', '--login', '-c',
+                'job_ids=(%s); for job_id in "${job_ids[@]}";'
+                ' do bmod -sp %s $job_id ;done' % (ids, priority_value)]
+        rc, out, err = exec_oscmd(
+            args, timeout=self._config.timeout
+        )
+        if err:
+            logger.error(
+                "Update job priority failed, Error message is: %s",
+                err.decode()
+            )
+        return out.decode(), err.decode()

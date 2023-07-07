@@ -87,3 +87,12 @@ class IScheduler(metaclass=ABCMeta):
     @abstractmethod
     def get_license_feature(self) -> list:
         pass
+
+    @abstractmethod
+    def get_priority_value(self) -> dict:
+        pass
+
+    @abstractmethod
+    def update_job_priority(self, scheduler_ids: list,
+                            priority_value: str) -> str:
+        pass

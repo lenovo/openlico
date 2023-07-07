@@ -22,10 +22,10 @@ from typing import List, Optional
 from dateutil.parser import parse
 
 from lico.scheduler.base.exception.job_exception import (
-    CancelJobFailedException, JobFileNotExistException,
-    QueryJobFailedException, QueryJobRawInfoFailedException,
-    QueryRuntimeException, SchedulerConnectTimeoutException,
-    SubmitJobFailedException,
+    CancelJobFailedException, InvalidPriorityException,
+    JobFileNotExistException, QueryJobFailedException,
+    QueryJobRawInfoFailedException, QueryRuntimeException,
+    SchedulerConnectTimeoutException, SubmitJobFailedException,
 )
 from lico.scheduler.base.exception.manager_exception import (
     QueryLicenseFeatureException,
@@ -526,3 +526,24 @@ class Scheduler(IScheduler):
             self.get_job_pidlist_cmd,
             self.parse_job_pidlist
         ]
+
+    def get_priority_value(self):
+        priority_dict = {"priority_min": "1", "priority_max": "4294967293"}
+        return priority_dict
+
+    def update_job_priority(self, scheduler_ids, priority_value):
+        logger.debug("Update job priority, scheduler_ids: %s" % scheduler_ids)
+        if int(priority_value) > 4294967293 or int(priority_value) < 1:
+            raise InvalidPriorityException
+        ids = ",".join(scheduler_ids)
+        args = ["scontrol", "update", "job=%s" % ids,
+                "Priority=%s" % priority_value]
+        rc, out, err = exec_oscmd(
+            args, timeout=self._config.timeout
+        )
+        if err:
+            logger.error(
+                "Update job priority failed, Error message is: %s",
+                err.decode()
+            )
+        return out.decode(), err.decode()
