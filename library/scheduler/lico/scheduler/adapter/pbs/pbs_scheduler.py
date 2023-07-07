@@ -21,10 +21,10 @@ from collections import defaultdict
 from typing import List, Optional
 
 from lico.scheduler.base.exception.job_exception import (
-    CancelJobFailedException, JobFileNotExistException,
-    QueryJobFailedException, QueryJobRawInfoFailedException,
-    QueryRuntimeException, SchedulerNotWorkingException,
-    SubmitJobFailedException,
+    CancelJobFailedException, InvalidPriorityException,
+    JobFileNotExistException, QueryJobFailedException,
+    QueryJobRawInfoFailedException, QueryRuntimeException,
+    SchedulerNotWorkingException, SubmitJobFailedException,
 )
 from lico.scheduler.base.job.job import Job
 from lico.scheduler.base.job.queue import Queue
@@ -431,3 +431,26 @@ class Scheduler(IScheduler):
             self.get_pid_sid_cmd,
             self.get_job_pidlist
         ]
+
+    def get_priority_value(self):
+        priority_dict = {"priority_min": "-1024", "priority_max": "1023"}
+        return priority_dict
+
+    def update_job_priority(self, scheduler_ids, priority_value):
+        logger.debug("Update job priority, scheduler_ids: %s" % scheduler_ids)
+        if int(priority_value) > 1023 or int(
+                priority_value) < -1024:
+            raise InvalidPriorityException
+        ids = " ".join(scheduler_ids)
+        args = ['bash', '--login', '-c',
+                'job_ids=(%s); for job_id in "${job_ids[@]}";'
+                ' do qalter -p %s $job_id ;done' % (ids, priority_value)]
+        rc, out, err = exec_oscmd(
+            args, timeout=self._config.timeout
+        )
+        if err:
+            logger.error(
+                "Update job priority failed, Error message is: %s",
+                err.decode()
+            )
+        return out.decode(), err.decode()

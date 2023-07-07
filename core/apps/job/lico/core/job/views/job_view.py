@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import logging
 
 from django.db import transaction
@@ -82,10 +81,11 @@ class JobListView(DataTableView):
 
     def global_sort_fields(self, param_args):
         sort = param_args.get("sort")
-        if sort and sort['prop'] == 'scheduler_id':
+        if sort and sort['prop'] in ['scheduler_id', 'priority']:
             sql = Case(
                 When(Q(scheduler_id=''), then=-1),
-                default=Cast('scheduler_id', IntegerField())
+                When(Q(priority=''), then=-9999),
+                default=Cast(sort['prop'], IntegerField())
             )
             return [sql.asc() if sort['order'] == 'ascend' else sql.desc()]
         else:

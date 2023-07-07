@@ -99,3 +99,11 @@ class ServerDownException(SchedulerJobBaseException):
 
 class QueryRuntimeException(SchedulerJobBaseException):
     message = "Query runtime failed."
+
+
+class QueryUserPriorityException(SchedulerJobBaseException):
+    message = "Query user priority failed."
+
+
+class InvalidPriorityException(SchedulerJobBaseException):
+    message = "Invalid Priority."

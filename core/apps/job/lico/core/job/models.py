@@ -71,6 +71,7 @@ class Job(Model):
     update_time = DateTimeField(auto_now=True)
     tags = ManyToManyField(Tag, through="JobTags")
     user_comment = TextField(null=True, blank=True, default="")
+    priority = CharField(null=True, max_length=16, blank=True, default="")
 
     @property
     def get_job_password(self):

@@ -35,6 +35,14 @@ from .utils import (
 logger = logging.getLogger(__name__)
 
 
+def is_number(value):
+    try:
+        float(value)
+        return True
+    except ValueError:
+        return False
+
+
 def parse_job_info(
         scheduler_id: str,
         job_dict: dict,
@@ -186,6 +194,8 @@ def parse_info_o(job, info_o):
         job.workspace_path, info_o.get('ERROR_FILE'))
     job.exit_code = info_o.get('EXIT_CODE')
     job.queue_name = info_o.get('QUEUE')
+    priority = info_o.get('JOB_PRIORITY', '')
+    job.priority = priority if is_number(priority) else ''
     if info_o.get('RUNTIMELIMIT'):
         job.time_limit = int(float(info_o.get('RUNTIMELIMIT'))) * 60  # seconds
     job.comment = info_o.get('JOB_DESCRIPTION')

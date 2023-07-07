@@ -43,3 +43,4 @@ class Job:
     runtime: int = attr.ib(default=0)        # "1-00:10:00" -> seconds
     time_limit: int = attr.ib(default=None)  # 0 means unlimited
     comment: str = attr.ib(default=None)
+    priority: str = attr.ib(default=None)

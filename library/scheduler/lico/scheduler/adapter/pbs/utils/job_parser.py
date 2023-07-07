@@ -32,6 +32,14 @@ from ..pbs_job_identity import JobIdentity
 logger = logging.getLogger(__name__)
 
 
+def is_number(value):
+    try:
+        float(value)
+        return True
+    except ValueError:
+        return False
+
+
 def parse_job_info(  # noqa: C901
         jobid: str,
         job_info: dict,
@@ -102,6 +110,8 @@ def parse_job_info(  # noqa: C901
         scheduler_id=jobid,
         submit_time=job.submit_time
     )
+    priority = job_info.get('Priority', '')
+    job.priority = str(priority) if is_number(priority) else ''
 
     return job
 
