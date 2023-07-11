@@ -1,0 +1,60 @@
+{% include "scheduler/ai.sh.in" %}
+port={{ lico.port0 }}
+host_addr=`hostname -i`
+url_suffix=`perl -e '
+    use Socket;
+    use MIME::Base64;
+    print(MIME::Base64::encode_base64url("'$host_addr'".":"."'$port'"))
+'`
+
+if [ -z $url_suffix ]
+then
+    echo url_suffix is empty, please check system environment
+    echo job end time is `date`
+    exit -1
+fi
+
+passwd() {
+  passphrase="{{ password }}"
+  algorithm="sha1"
+  salt_len=12
+  salt=$(printf "%0${salt_len}x" $(( RANDOM % (16**${salt_len}) )) )
+  h=$(printf "${passphrase}${salt}" | openssl dgst -${algorithm} | awk '{print $2}')
+  echo "${algorithm}:${salt}:${h}"
+}
+
+mypassword=$(passwd)
+
+module try-load singularity
+{% if jupyterlab_cmd == '' %}
+    singularity exec -B {{ lico.user.workspace }} {% bind_user_share_folder %} \
+        {% if gpu_per_node %}--nv {% endif %} \
+        {{ image_path }} /opt/start \
+        --port $port \
+        --workdir {{ project_workspace }} \
+        --password $mypassword \
+        --conda_env '{{ persistent_dir|addslashes }}' \
+        --base_url /dev/jupyterlab/$url_suffix/{{ job_uuid }}/ \
+        {% if check_timeout and jupyterlab_timeout %}--jupyter_timeout {{jupyterlab_timeout}} \{% endif %}
+        {% if check_timeout and kernel_timeout %}--kernel_timeout {{kernel_timeout}} \{% endif %}
+        {% if check_timeout and terminal_timeout %}--terminal_timeout {{terminal_timeout}} {% endif %}
+{% else %}
+    singularity exec -B {{ lico.user.workspace }} {% bind_user_share_folder %} \
+        {% if gpu_per_node %}--nv{% endif %} \
+        {{ image_path }} {{ jupyterlab_cmd }} \
+        --ip=0.0.0.0 \
+        --port=$port \
+        --ServerApp.port_retries=0 \
+        --ServerApp.password=$mypassword \
+        --ServerApp.allow_origin='*' \
+        --no-browser \
+        --ServerApp.allow_remote_access=True \
+        --ServerApp.disable_check_xsrf=True \
+        --ServerApp.notebook_dir={{ project_workspace }} \
+        --ServerApp.base_url=/dev/jupyterlab/$url_suffix/{{ job_uuid }}/ \
+        {% if check_timeout and jupyterlab_timeout %}--ServerApp.shutdown_no_activity_timeout={{jupyterlab_timeout}} \{% endif %}
+        {% if check_timeout and kernel_timeout %}--MappingKernelManager.cull_idle_timeout={{kernel_timeout}} \{% endif %}
+        {% if check_timeout and terminal_timeout %}--TerminalManager.cull_inactive_timeout={{terminal_timeout}} {% endif %}
+{% endif %}
+
+echo job end time is `date`
