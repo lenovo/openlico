@@ -115,3 +115,7 @@ class QueryUserPriorityException(SchedulerJobBaseException):
 
 class InvalidPriorityException(SchedulerJobBaseException):
     message = "Invalid Priority."
+
+
+class RequeueJobException(SchedulerJobBaseException):
+    message = "Failed to requeue the job."

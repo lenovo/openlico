@@ -112,3 +112,7 @@ class IScheduler(metaclass=ABCMeta):
     def update_job_priority(self, scheduler_ids: list,
                             priority_value: str) -> str:
         pass
+
+    @abstractmethod
+    def requeue_job(self, scheduler_ids: list) -> str:
+        pass

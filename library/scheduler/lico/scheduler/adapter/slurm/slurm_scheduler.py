@@ -25,8 +25,8 @@ from lico.scheduler.base.exception.job_exception import (
     CancelJobFailedException, HoldJobFailedException, InvalidPriorityException,
     JobFileNotExistException, QueryJobFailedException,
     QueryJobRawInfoFailedException, QueryRuntimeException,
-    ReleaseJobFailedException, SchedulerConnectTimeoutException,
-    SubmitJobFailedException,
+    ReleaseJobFailedException, RequeueJobException,
+    SchedulerConnectTimeoutException, SubmitJobFailedException,
 )
 from lico.scheduler.base.exception.manager_exception import (
     QueryLicenseFeatureException,
@@ -563,4 +563,27 @@ class Scheduler(IScheduler):
                 "Update job priority failed, Error message is: %s",
                 err.decode()
             )
+        return out.decode(), err.decode()
+
+    def requeue_job(self, scheduler_ids):
+        logger.debug("requeue_job entry")
+        ids = ",".join(scheduler_ids)
+        if self._as_admin:
+            rc, out, err = exec_oscmd(
+                ['scontrol', 'requeue', 'Incomplete', ids],
+                timeout=self._config.timeout
+            )
+        else:
+            rc, out, err = exec_oscmd_with_user(
+                self._operator_username,
+                ['scontrol', 'requeue', 'Incomplete', ids],
+                timeout=self._config.timeout
+            )
+
+        if err:
+            logger.error(
+                "Requeue job failed. Error message is: %s",
+                err.decode()
+            )
+            raise RequeueJobException
         return out.decode(), err.decode()

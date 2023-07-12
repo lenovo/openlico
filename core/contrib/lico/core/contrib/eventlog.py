@@ -45,6 +45,7 @@ class EventLog(object):
     rerun = OperationLog.RERUN
     comment = OperationLog.COMMENT
     priority = OperationLog.PRIORITY
+    requeue = OperationLog.REQUEUE
 
     @classmethod
     def opt_create_instance(cls, targets, **kwargs):
