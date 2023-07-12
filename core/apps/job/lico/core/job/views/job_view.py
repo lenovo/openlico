@@ -286,7 +286,7 @@ class JobHoldView(JobBaseActionView):
             },
             "role": {
                 "type": "string",
-                "enum": ["admin", "operator", "staff"],
+                "enum": ["admin", "operator", "user"],
             },
         },
         "required": ["job_id"]
@@ -326,7 +326,7 @@ class JobReleaseView(JobBaseActionView):
             },
             "role": {
                 "type": "string",
-                "enum": ["admin", "operator", "staff"],
+                "enum": ["admin", "operator", "user"],
             },
         },
         "required": ["job_id"]
