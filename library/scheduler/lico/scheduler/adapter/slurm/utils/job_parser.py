@@ -476,6 +476,8 @@ def parse_job_info(  # noqa: C901
                 job.name = value
             elif key == "JobState":
                 job.state = JobState[value]
+            elif key == "Reason":
+                job.reason = value
             elif key == "RunTime":
                 job.runtime = convert_runtime_2_seconds(value)
             elif key == "SubmitTime":
@@ -563,6 +565,11 @@ def parse_job_info(  # noqa: C901
     if job.state in JobState.get_final_state() \
             and end_time_raw_value.lower() == 'unknown':
         job.state = JobState.RUNNING
+    if job.state == JobState.PENDING:
+        if 'job_requeued_in_held_state' in job.reason or \
+                'JobHeldAdmin' in job.reason or \
+                'JobHeldUser' in job.reason:
+            job.state = JobState.HOLD
 
     if job.submit_time is None:
         logger.warning("Fail to get job submit time. Job id: %s", jobid)

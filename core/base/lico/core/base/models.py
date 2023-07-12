@@ -34,6 +34,8 @@ class OperationLog(models.Model):
     TURN_ON = 'turn_on'
     TURN_OFF = 'turn_off'
     CANCEL = 'cancel'
+    HOLD = 'hold'
+    RELEASE = 'release'
     RERUN = 'rerun'
     COMMENT = 'comment'
     PRIORITY = 'priority'
@@ -60,6 +62,8 @@ class OperationLog(models.Model):
         (TURN_ON, 'turn_on'),
         (TURN_OFF, 'turn_off'),
         (CANCEL, 'cancel'),
+        (HOLD, 'hold'),
+        (RELEASE, 'release'),
         (RERUN, 'rerun'),
         (COMMENT, 'comment'),
         (PRIORITY, 'priority')

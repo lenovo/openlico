@@ -25,10 +25,11 @@ from dateutil.parser import parse
 
 from lico.scheduler.adapter.lsf.lsf_job_identity import JobIdentity
 from lico.scheduler.base.exception.job_exception import (
-    AcctNoFileException, CancelJobFailedException, InvalidPriorityException,
-    JobFileNotExistException, QueryJobFailedException,
-    QueryJobRawInfoFailedException, QueryRuntimeException,
-    QueryUserPriorityException, SchedulerConnectTimeoutException,
+    AcctNoFileException, CancelJobFailedException, HoldJobFailedException,
+    InvalidPriorityException, JobFileNotExistException,
+    QueryJobFailedException, QueryJobRawInfoFailedException,
+    QueryRuntimeException, QueryUserPriorityException,
+    ReleaseJobFailedException, SchedulerConnectTimeoutException,
     ServerDownException, SubmitJobFailedException,
 )
 from lico.scheduler.base.exception.manager_exception import (
@@ -110,28 +111,50 @@ class Scheduler(IScheduler):
             )
         )
 
-    def cancel_job(self, job_identity: JobIdentity) -> None:
+    def job_action(self, job_identity: JobIdentity, command: List[str]):
         scheduler_id = job_identity.scheduler_id
 
-        logger.debug("cancel job entry")
+        logger.debug("%s job entry", " ".join(command))
         if self._as_admin:
             rc, out, err = exec_oscmd_with_login(
-                ['bkill', scheduler_id], self._config.timeout
+                [*command, scheduler_id], self._config.timeout
             )
         else:
             rc, out, err = exec_oscmd_with_user(
                 self._operator_username,
-                ['bkill', scheduler_id],
+                [*command, scheduler_id],
                 self._config.timeout
             )
-        if out.decode().find("being terminated") == -1:
-            if 'Job has already finished' in err.decode():
+        return rc, out.decode(), err
+
+    def cancel_job(self, job_identity: JobIdentity) -> None:
+        rc, out, err = self.job_action(job_identity, ['bkill'])
+        if out.find("being terminated") == -1:
+            if 'Job has already finished' in err:
                 return
             logger.error(
                 "Cancel job %s failed, job_identity is invalid. "
-                "Error message is: %s", scheduler_id, err.decode()
+                "Error message is: %s", job_identity.scheduler_id, err
             )
             raise CancelJobFailedException(err.decode())
+
+    def hold_job(self, job_identity: JobIdentity) -> None:
+        rc, out, err = self.job_action(job_identity, ['bstop'])
+        if rc != 0:
+            logger.error(
+                "Hold job %s failed, Error message is: %s",
+                job_identity.scheduler_id, err
+            )
+            raise HoldJobFailedException(err)
+
+    def release_job(self, job_identity: JobIdentity) -> None:
+        rc, out, err = self.job_action(job_identity, ['bresume'])
+        if rc != 0:
+            logger.error(
+                "Release job %s failed, Error message is: %s",
+                job_identity.scheduler_id, err
+            )
+            raise ReleaseJobFailedException(err)
 
     def query_job(self, job_identity: JobIdentity) -> Job:
         scheduler_id = job_identity.scheduler_id

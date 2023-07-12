@@ -84,3 +84,13 @@ class QueryJobPriorityException(JobException):
 class AdjustJobPriorityException(JobException):
     errid = 7012
     message = "Failed to set the job priority."
+
+
+class HoldJobException(JobException):
+    errid = 7013
+    message = "Failed to hold the job"
+
+
+class ReleaseJobException(JobException):
+    errid = 7014
+    message = "Failed to release the job"

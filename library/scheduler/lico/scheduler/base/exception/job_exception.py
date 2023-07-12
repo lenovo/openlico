@@ -37,6 +37,14 @@ class CancelJobFailedException(SchedulerJobBaseException):
     message = 'Cancel job failed.'
 
 
+class HoldJobFailedException(SchedulerJobBaseException):
+    message = 'Hold job failed.'
+
+
+class ReleaseJobFailedException(SchedulerJobBaseException):
+    message = 'Release job failed.'
+
+
 class RecycleResourceFailedException(SchedulerJobBaseException):
     message = 'Recycle resource failed.'
 

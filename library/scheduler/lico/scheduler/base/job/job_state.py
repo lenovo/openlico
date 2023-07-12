@@ -29,6 +29,7 @@ class JobState(Enum):
     PREEMPTED = 'PR'
     RUNNING = 'R'
     RESV_DEL_HOLD = 'RD'
+    HOLD = 'HD'
     REQUEUE_FED = 'RF'
     REQUEUE_HOLD = 'RH'
     REQUEUED = 'RQ'
@@ -75,5 +76,6 @@ class JobState(Enum):
             JobState.REQUEUE_FED,
             JobState.REQUEUE_HOLD,
             JobState.REQUEUED,
-            JobState.SPECIAL_EXIT
+            JobState.SPECIAL_EXIT,
+            JobState.HOLD
         ]
