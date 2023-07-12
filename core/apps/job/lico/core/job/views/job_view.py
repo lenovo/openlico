@@ -71,7 +71,7 @@ class JobListView(DataTableView):
             if user_role < AsOperatorRole.floor:
                 raise PermissionDenied
         else:
-            query.filter(submitter=submitter)
+            query = query.filter(submitter=submitter)
 
         return query
 
