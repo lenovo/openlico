@@ -79,7 +79,7 @@ run_ps_worker $worker_num 'worker'
 wait
 
 {% else %}
-{% get_exec_node settings.LICO.SCHEDULER 0 %}
+{% get_exec_node settings.LICO.SCHEDULER 0 cores_per_node|default:1%}
 
 set -x
 

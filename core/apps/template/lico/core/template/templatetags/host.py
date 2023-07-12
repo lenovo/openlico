@@ -51,7 +51,7 @@ def scheduler_exec(scheduler, gpu_per_worker, gpu_per_node, dis):
 
 
 @register.simple_tag
-def get_exec_node(scheduler, is_multinode):
+def get_exec_node(scheduler, is_multinode, cores_per_node=1):
     if scheduler == "slurm":
         if is_multinode:
             cmd = "exec_nodes=(`scontrol show hostname " \
@@ -60,7 +60,7 @@ def get_exec_node(scheduler, is_multinode):
             cmd = 'exec_node=${SLURM_JOB_NODELIST}\n' \
                   'cpu_curr_node=${SLURM_CPUS_ON_NODE}\n' \
                   'if [ "${cpu_curr_node}" = "" ]; then ' \
-                  ' cpu_curr_node={{ cores_per_node|default:1 }}; fi'
+                  ' cpu_curr_node=%s; fi' % cores_per_node
     elif scheduler == "lsf":
         if is_multinode:
             cmd = "exec_nodes=(`echo ${LSB_MCPU_HOSTS} | tr ' ' '\n' | " \
