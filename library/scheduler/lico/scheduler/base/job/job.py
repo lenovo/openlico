@@ -32,6 +32,7 @@ class Job:
     end_time: datetime = attr.ib(default=None)
     submitter_username: str = attr.ib(default=None)
     state: JobState = attr.ib(default=None)
+    reason: str = attr.ib(default=None)
     resource_list: List[TrackableResource] = attr.ib(factory=list)
     running_list: List[JobRunning] = attr.ib(factory=list)
     workspace_path: str = attr.ib(default=None)

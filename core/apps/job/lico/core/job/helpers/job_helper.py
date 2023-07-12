@@ -53,6 +53,7 @@ def job_changed(job_pair):
         scheduler_job.runtime - job.runtime >
         settings.JOB.JOB_SYNC_RUNTIME_INTERVAL,
         job.priority != scheduler_job.priority,
+        job.reason != scheduler_job.reason,
     ]
 
     if any(conditions):
@@ -132,6 +133,9 @@ def update_job_by_scheduler_job(job, scheduler_job):  # noqa: C901
     if scheduler_job.priority:
         job.priority = scheduler_job.priority
         append('priority')
+    if scheduler_job.reason and scheduler_job.reason != 'None':
+        job.reason = scheduler_job.reason
+        append('reason')
 
     # job.raw_info = ''
     # job.reason = ''

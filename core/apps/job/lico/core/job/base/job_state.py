@@ -87,6 +87,7 @@ class JobState(Enum):
             SchedulerJobState.RESV_DEL_HOLD: JobState.HOLD,
             SchedulerJobState.REQUEUE_FED: JobState.QUEUING,
             SchedulerJobState.REQUEUE_HOLD: JobState.QUEUING,
+            SchedulerJobState.HOLD: JobState.HOLD,
             SchedulerJobState.REQUEUED: JobState.QUEUING,
             SchedulerJobState.RESIZING: JobState.RUNNING,
             SchedulerJobState.REVOKED: JobState.COMPLETED,

@@ -16,6 +16,7 @@ import logging
 from django.db import transaction
 from django.db.models import Case, IntegerField, Q, When
 from django.db.models.functions import Cast
+from django.db.transaction import atomic
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
@@ -26,12 +27,17 @@ from lico.core.contrib.authentication import (
 )
 from lico.core.contrib.eventlog import EventLog
 from lico.core.contrib.permissions import AsOperatorRole
+from lico.core.contrib.schema import json_schema_validate
 from lico.core.contrib.views import APIView, DataTableView, InternalAPIView
+from lico.scheduler.base.exception.job_exception import (
+    HoldJobFailedException, ReleaseJobFailedException,
+)
 
 from ..base.job_operate_state import JobOperateState
 from ..base.job_state import JobState
 from ..exceptions import (
-    DeleteRunningJobException, JobException, QueryJobDetailException,
+    DeleteRunningJobException, HoldJobException, JobException,
+    QueryJobDetailException, ReleaseJobException,
 )
 from ..helpers.scheduler_helper import (
     get_admin_scheduler, get_scheduler, parse_job_identity,
@@ -235,3 +241,117 @@ class JobRawInfoView(APIView):
             logger.exception("Query job raw info failed.")
             raise QueryJobDetailException from e
         return Response(ret)
+
+
+class JobBaseActionView(APIView):
+    @staticmethod
+    def is_admin_or_operator(user, role):
+        if role in ['admin', 'operator'] and \
+                user.role >= AsOperatorRole.floor:
+            return True
+        return False
+
+    @staticmethod
+    def get_job_object(pk, user, has_manager_permission=False):
+        job = Job.objects.get(id=pk, delete_flag=False)
+        if has_manager_permission:
+            return job
+        if job.submitter != user.username:
+            raise PermissionDenied
+        return job
+
+    @staticmethod
+    def get_job_scheduler(user, has_manager_permission=False):
+        if has_manager_permission:
+            return get_admin_scheduler()
+        else:
+            return get_scheduler(user)
+
+    @staticmethod
+    def get_action_response(job, state):
+        return {
+            "id": job.id,
+            "scheduler_id": job.scheduler_id,
+            "job_name": job.job_name,
+            "state": state
+        }
+
+
+class JobHoldView(JobBaseActionView):
+    @json_schema_validate({
+        "type": "object",
+        "properties": {
+            "job_id": {
+                "type": "integer",
+            },
+            "role": {
+                "type": "string",
+                "enum": ["admin", "operator", "staff"],
+            },
+        },
+        "required": ["job_id"]
+    })
+    @atomic()
+    def post(self, request):
+        user = request.user
+        pk = request.data['job_id']
+        role = request.data.get('role', None)
+        try:
+            has_manager_permission = self.is_admin_or_operator(user, role)
+            job = self.get_job_object(pk, user, has_manager_permission)
+            res = self.get_action_response(job, JobState.HOLD.value)
+            if job.state == JobState.HOLD.value:
+                return Response(res)
+            if job.state != JobState.QUEUING.value:
+                logger.exception('Only support hold queuing job, '
+                                 'job state is: %s', job.state)
+                raise HoldJobException
+            scheduler = self.get_job_scheduler(user, has_manager_permission)
+            scheduler.hold_job(
+                job_identity=parse_job_identity(job.identity_str))
+            return Response(res)
+        except HoldJobFailedException:
+            raise HoldJobException
+        except Exception as e:
+            logger.exception('Failed to hold the job, reason: %s' % e)
+            raise HoldJobException
+
+
+class JobReleaseView(JobBaseActionView):
+    @json_schema_validate({
+        "type": "object",
+        "properties": {
+            "job_id": {
+                "type": "integer",
+            },
+            "role": {
+                "type": "string",
+                "enum": ["admin", "operator", "staff"],
+            },
+        },
+        "required": ["job_id"]
+    })
+    @atomic()
+    def post(self, request):
+        user = request.user
+        pk = request.data['job_id']
+        role = request.data.get('role', None)
+        try:
+            has_manager_permission = self.is_admin_or_operator(user, role)
+            job = self.get_job_object(pk, user, has_manager_permission)
+            res = self.get_action_response(job, JobState.QUEUING.value)
+            if job.state == JobState.QUEUING.value:
+                return Response(res)
+            if job.state != JobState.HOLD.value:
+                logger.exception('Only support release held job, '
+                                 'job state is: %s', job.state)
+                raise ReleaseJobException
+            scheduler = self.get_job_scheduler(user, has_manager_permission)
+            scheduler.release_job(
+                job_identity=parse_job_identity(job.identity_str))
+            return Response(res)
+        except ReleaseJobFailedException:
+            raise ReleaseJobException
+        except Exception as e:
+            logger.exception('Failed to release the job, reason: %s' % e)
+            raise ReleaseJobException

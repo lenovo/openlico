@@ -40,6 +40,8 @@ class EventLog(object):
     turn_on = OperationLog.TURN_ON
     turn_off = OperationLog.TURN_OFF
     cancel = OperationLog.CANCEL
+    hold = OperationLog.HOLD
+    release = OperationLog.RELEASE
     rerun = OperationLog.RERUN
     comment = OperationLog.COMMENT
     priority = OperationLog.PRIORITY

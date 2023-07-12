@@ -45,6 +45,22 @@ class IScheduler(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def job_action(
+            self,
+            job_identity: IJobIdentity,
+            command: List[str]
+    ):
+        pass
+
+    @abstractmethod
+    def hold_job(self, job_identity: IJobIdentity) -> None:
+        pass
+
+    @abstractmethod
+    def release_job(self, job_identity: IJobIdentity) -> None:
+        pass
+
+    @abstractmethod
     def query_job(self, job_identity: IJobIdentity) -> Job:
         pass
 

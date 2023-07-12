@@ -39,7 +39,7 @@ job_state_mapping = {
     "WAIT": JobState.PENDING,
     "PROV": JobState.PENDING,
     "FWD_PEND": JobState.PENDING,
-    "PSUSP": JobState.SUSPENDED,
+    "PSUSP": JobState.HOLD,
     "USUSP": JobState.SUSPENDED,
     "SSUSP": JobState.SUSPENDED
 }

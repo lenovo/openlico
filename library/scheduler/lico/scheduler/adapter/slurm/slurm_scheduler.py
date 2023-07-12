@@ -22,10 +22,11 @@ from typing import List, Optional
 from dateutil.parser import parse
 
 from lico.scheduler.base.exception.job_exception import (
-    CancelJobFailedException, InvalidPriorityException,
+    CancelJobFailedException, HoldJobFailedException, InvalidPriorityException,
     JobFileNotExistException, QueryJobFailedException,
     QueryJobRawInfoFailedException, QueryRuntimeException,
-    SchedulerConnectTimeoutException, SubmitJobFailedException,
+    ReleaseJobFailedException, SchedulerConnectTimeoutException,
+    SubmitJobFailedException,
 )
 from lico.scheduler.base.exception.manager_exception import (
     QueryLicenseFeatureException,
@@ -104,27 +105,43 @@ class Scheduler(IScheduler):
                          "Error message is: %s", err.decode())
             raise SubmitJobFailedException(err.decode())
 
-    def cancel_job(self, job_identity: JobIdentity) -> None:
+    def job_action(self, job_identity: JobIdentity, command: List[str]):
         jobid = job_identity.scheduler_id
         jobid = get_job_alter_id(jobid, self._config.timeout)
-        logger.debug("cancel_job entry")
+        logger.debug("%s job entry", " ".join(command))
         if self._as_admin:
             rc, out, err = exec_oscmd(
-                ['scancel', jobid],
+                [*command, jobid],
                 self._config.timeout
             )
         else:
             rc, out, err = exec_oscmd_with_user(
                 self._operator_username,
-                ['scancel', jobid],
+                [*command, jobid],
                 self._config.timeout
             )
         if rc != 0:
             logger.error(
-                "Cancel job %s failed, job_identity is invalid. "
-                "Error message is: %s", jobid, err.decode()
+                "Job %s %s failed, Error message is: %s",
+                jobid, " ".join(command), err.decode()
             )
-            raise CancelJobFailedException(err.decode())
+            return False, err.decode()
+        return True, None
+
+    def cancel_job(self, job_identity: JobIdentity) -> None:
+        success, err = self.job_action(job_identity, ["scancel"])
+        if not success:
+            raise CancelJobFailedException(err)
+
+    def hold_job(self, job_identity: JobIdentity) -> None:
+        success, err = self.job_action(job_identity, ["scontrol", "hold"])
+        if not success:
+            raise HoldJobFailedException(err)
+
+    def release_job(self, job_identity: JobIdentity) -> None:
+        success, err = self.job_action(job_identity, ["scontrol", "release"])
+        if not success:
+            raise ReleaseJobFailedException(err)
 
     def query_job(self, job_identity: JobIdentity) -> Job:
         jobid = job_identity.scheduler_id

@@ -21,10 +21,11 @@ from collections import defaultdict
 from typing import List, Optional
 
 from lico.scheduler.base.exception.job_exception import (
-    CancelJobFailedException, InvalidPriorityException,
+    CancelJobFailedException, HoldJobFailedException, InvalidPriorityException,
     JobFileNotExistException, QueryJobFailedException,
     QueryJobRawInfoFailedException, QueryRuntimeException,
-    SchedulerNotWorkingException, SubmitJobFailedException,
+    ReleaseJobFailedException, SchedulerNotWorkingException,
+    SubmitJobFailedException,
 )
 from lico.scheduler.base.job.job import Job
 from lico.scheduler.base.job.queue import Queue
@@ -94,24 +95,44 @@ class Scheduler(IScheduler):
             )
         )
 
-    def cancel_job(self, job_identity: JobIdentity) -> None:
+    def job_action(self, job_identity: JobIdentity, command: List[str]):
         scheduler_id = job_identity.scheduler_id
 
-        logger.debug("cancel job entry")
-        args = (['qdel', scheduler_id], self._config.timeout)
+        logger.debug("%s job entry", " ".join(command))
+        args = ([*command, scheduler_id], self._config.timeout)
         if self._as_admin:
             rc, out, err = exec_oscmd_with_login(*args)
         else:
             rc, out, err = exec_oscmd_with_user(self._operator_username, *args)
+        return rc, out.decode(), err
 
-        if rc == 0 or b'Job has finished' in out:
+    def cancel_job(self, job_identity: JobIdentity) -> None:
+        rc, out, err = self.job_action(job_identity, ["qdel"])
+        if rc == 0 or 'Job has finished' in out:
             return
-
         logger.error(
             "Cancel job %s failed, job_identity is invalid. "
-            "Error message is: %s", scheduler_id, err.decode()
+            "Error message is: %s", job_identity.scheduler_id, err
         )
-        raise CancelJobFailedException(err.decode())
+        raise CancelJobFailedException(err)
+
+    def hold_job(self, job_identity: JobIdentity) -> None:
+        rc, out, err = self.job_action(job_identity, ["qhold"])
+        if rc != 0:
+            logger.error(
+                "Hold job %s failed, Error message is: %s",
+                job_identity.scheduler_id, err
+            )
+            raise HoldJobFailedException(err)
+
+    def release_job(self, job_identity: JobIdentity) -> None:
+        rc, out, err = self.job_action(job_identity, ["qrls"])
+        if rc != 0:
+            logger.error(
+                "Release job %s failed, Error message is: %s",
+                job_identity.scheduler_id, err
+            )
+            raise ReleaseJobFailedException(err)
 
     def query_job(self, job_identity: JobIdentity) -> Job:
         jobid = job_identity.scheduler_id

@@ -60,7 +60,7 @@ def parse_job_info(  # noqa: C901
         'B': JobState.RUNNING,  # array job has at least on job running
         'E': JobState.COMPLETING,  # exiting after having run
         'F': JobState.COMPLETED,  # finished
-        'H': JobState.PENDING,  # held
+        'H': JobState.HOLD,  # held
         'M': JobState.REQUEUED,  # moved to another server
         'Q': JobState.PENDING,  # queued
         'R': JobState.RUNNING,  # running
