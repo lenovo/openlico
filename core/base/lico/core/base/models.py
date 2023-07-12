@@ -39,6 +39,7 @@ class OperationLog(models.Model):
     RERUN = 'rerun'
     COMMENT = 'comment'
     PRIORITY = 'priority'
+    REQUEUE = 'requeue'
 
     MODULE_TYPE_CHOIXES = (
         (USER, 'user'),

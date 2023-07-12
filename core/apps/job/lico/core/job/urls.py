@@ -23,6 +23,7 @@ from .views.job_history import JobHistoryView, JobHistoryViewUser
 from .views.job_latest_view import JobLatestView, JobLatestViewUser
 from .views.job_list import JobList
 from .views.job_log_view import JobLogView
+from .views.job_requeue_view import JobRequeueView
 from .views.job_rerun_view import JobRerunView
 from .views.job_resource_view import (
     HostResourceUsedView, RunningJobResourceView, RunningJobsDetailView,
@@ -100,6 +101,7 @@ urlpatterns = [
     path('<int:pk>/comment/', JobCommentView.as_view()),
 
     path('priority/', PriorityView.as_view()),
+    path('requeue/', JobRequeueView.as_view()),
     path('hold/', JobHoldView.as_view()),
     path('release/', JobReleaseView.as_view())
 ]

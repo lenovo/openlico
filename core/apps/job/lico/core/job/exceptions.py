@@ -94,3 +94,13 @@ class HoldJobException(JobException):
 class ReleaseJobException(JobException):
     errid = 7014
     message = "Failed to release the job"
+
+
+class RequeueJobException(JobException):
+    errid = 7015
+    message = "Failed to requeue the job."
+
+
+class InvalidUserRoleException(JobException):
+    errid = 7016
+    message = "Submit an Invalid user role."

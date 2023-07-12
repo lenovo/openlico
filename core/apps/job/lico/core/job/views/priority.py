@@ -17,7 +17,7 @@ import logging
 from django.db.transaction import atomic
 from rest_framework.response import Response
 
-from lico.core.contrib.eventlog import EventLog
+# from lico.core.contrib.eventlog import EventLog
 from lico.core.contrib.permissions import AsOperatorRole
 from lico.core.contrib.schema import json_schema_validate
 from lico.core.contrib.views import APIView
@@ -78,9 +78,9 @@ class PriorityView(APIView):
             raise AdjustJobPriorityException
         else:
             query.update(priority=priority_value)
-        for job in query:
-            EventLog.opt_create(
-                request.user.username, EventLog.job, EventLog.priority,
-                EventLog.make_list(job.id, job.job_name)
-            )
+        # for job in query:
+        #     EventLog.opt_create(
+        #         request.user.username, EventLog.job, EventLog.priority,
+        #         EventLog.make_list(job.id, job.job_name)
+        #     )
         return Response()
