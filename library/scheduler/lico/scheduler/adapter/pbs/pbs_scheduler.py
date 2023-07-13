@@ -25,7 +25,8 @@ from lico.scheduler.base.exception.job_exception import (
     JobFileNotExistException, QueryJobFailedException,
     QueryJobRawInfoFailedException, QueryRuntimeException,
     ReleaseJobFailedException, RequeueJobException,
-    SchedulerNotWorkingException, SubmitJobFailedException,
+    SchedulerNotWorkingException, SetPriorityException,
+    SubmitJobFailedException,
 )
 from lico.scheduler.base.job.job import Job
 from lico.scheduler.base.job.queue import Queue
@@ -180,7 +181,6 @@ class Scheduler(IScheduler):
             arr_data = get_job_query_data(cmd, self._config.timeout)
             for jobid, job_info in arr_data.get("Jobs", {}).items():
                 if '[]' not in jobid:
-
                     arr_key = '{0}[]'.format(jobid.split('[')[0])
                     job_info['Submit_Host'] = array_jobs[arr_key]
 
@@ -474,6 +474,7 @@ class Scheduler(IScheduler):
                 "Update job priority failed, Error message is: %s",
                 err.decode()
             )
+            raise SetPriorityException
         return out.decode(), err.decode()
 
     def requeue_job(self, scheduler_ids):
@@ -489,7 +490,7 @@ class Scheduler(IScheduler):
         else:
             rc, out, err = exec_oscmd_with_user(
                 self._operator_username, args, self._config.timeout
-                )
+            )
 
         if err:
             logger.error(

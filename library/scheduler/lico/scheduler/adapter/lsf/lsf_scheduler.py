@@ -31,7 +31,7 @@ from lico.scheduler.base.exception.job_exception import (
     QueryRuntimeException, QueryUserPriorityException,
     ReleaseJobFailedException, RequeueJobException,
     SchedulerConnectTimeoutException, ServerDownException,
-    SubmitJobFailedException,
+    SetPriorityException, SubmitJobFailedException,
 )
 from lico.scheduler.base.exception.manager_exception import (
     GPUConfigurationException, QueryLicenseFeatureException,
@@ -162,7 +162,7 @@ class Scheduler(IScheduler):
         formatter = r"jobid job_name stat user queue job_description " \
                     r"exit_code exec_host alloc_slot run_time slots " \
                     r"avg_mem input_file output_file error_file " \
-                    r"output_dir runtimelimit exec_cwd pend_reason priority"
+                    r"output_dir runtimelimit exec_cwd pend_reason priority "
         if self.is_gpu_new_syntax_extend():
             formatter += r"gpu_alloc "
         cmd = ["bjobs", "-o", formatter + r"delimiter=';'", "-json"]
@@ -205,7 +205,7 @@ class Scheduler(IScheduler):
                     r"job_description exit_code exec_host alloc_slot " \
                     r"run_time slots avg_mem input_file output_file" \
                     r" error_file output_dir runtimelimit exec_cwd " \
-                    r"pend_reason priority"
+                    r"pend_reason priority "
         if self.is_gpu_new_syntax_extend():
             formatter += r"gpu_alloc "
         cmd = ["bjobs", "-o", formatter + r"delimiter=';'", "-json"]
@@ -772,6 +772,7 @@ class Scheduler(IScheduler):
                 "Update job priority failed, Error message is: %s",
                 err.decode()
             )
+            raise SetPriorityException
         return out.decode(), err.decode()
 
     def requeue_job(self, scheduler_ids):
