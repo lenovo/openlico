@@ -23,7 +23,9 @@ from lico.core.contrib.permissions import AsOperatorRole
 from lico.core.contrib.schema import json_schema_validate
 from lico.core.user.models import User
 
-from ..exceptions import InvalidUserRoleException, RequeueJobException
+from ..exceptions import (
+    InvalidJobIDException, InvalidUserRoleException, RequeueJobException,
+)
 from ..models import Job
 from .job_view import JobBaseActionView
 
@@ -64,6 +66,9 @@ class JobRequeueView(JobBaseActionView):
                 delete_flag=False,
                 id__in=job_ids,
             )
+            if (len(job_ids) == 1) and (query.count() != len(job_ids)):
+                raise InvalidJobIDException
+
             if User.ROLE_NAMES.get(current_role) < AsOperatorRole.floor:
                 if query.count() != \
                         query.filter(submitter=user.username).count():
