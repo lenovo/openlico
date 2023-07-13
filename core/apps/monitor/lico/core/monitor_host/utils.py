@@ -14,12 +14,17 @@
 
 import json
 import logging
+import os
 import re
 from collections import defaultdict
 
 import attr
 import requests
+import xmltodict
 from django.conf import settings
+from django.db.models import Q
+
+from lico.core.contrib.client import Client
 
 from .dataclass import ResData, ResUtilization
 from .exceptions import CheckPreferenceException, UsernamePasswordNotSet
@@ -1047,3 +1052,331 @@ def get_allocation_core():
     }
     """
     return node_alloc_dict
+
+
+class NodeSchedulerProcess:
+
+    def get_node_gpus(self, hostname):
+        node = MonitorNode.objects.filter(hostname=hostname)
+        gpus = node[0].gpu.all() if node else []
+        gpus_used_info = defaultdict(defaultdict)
+        for gpu in gpus:
+            gpus_used_info[gpu.index]["type"] = gpu.type
+            gpus_used_info[gpu.index]["util"] = gpu.util
+            for sub_gpu in gpu.gpu_logical_device.filter(
+                    Q(metric="sm") | Q(metric="util") | Q(metric="name")
+            ):
+                dev_info = gpus_used_info[gpu.index].get(sub_gpu.dev_id, {})
+                dev_info.update({sub_gpu.metric: sub_gpu.value})
+                gpus_used_info[gpu.index][sub_gpu.dev_id] = dev_info
+        """
+        {
+            0: {
+                "type": "",
+                "util": 123,
+                "0.1.0": {
+                    "util": None,
+                    "sm": None,
+                    "name": None,
+                }
+            },
+            ...
+        }
+        """
+        return gpus_used_info
+
+    def convert2list(self, obj):
+        if not isinstance(obj, list):
+            obj = [obj, ]
+        return obj
+
+    def calculate_process_gpu_util(
+            self, gpu_index, node_gpus_usage, process_info, pid_on_gpu_info):
+        pid = process_info["pid"]
+
+        process_usage = pid_on_gpu_info.get(pid, None)
+        if process_usage:
+            pid_on_gpu_info[pid]["gpu"].update({
+                gpu_index: {
+                    "type": node_gpus_usage[gpu_index]["type"],
+                    "util": node_gpus_usage[gpu_index]["util"],
+                }
+            })
+            pid_on_gpu_info[pid][
+                "util_total"] += node_gpus_usage[gpu_index]["util"]
+        else:
+            pid_on_gpu_info[pid] = {
+                "gpu": {
+                    gpu_index: {
+                        "type": node_gpus_usage[gpu_index]["type"],
+                        "util": node_gpus_usage[gpu_index]["util"],
+                    }
+                },
+                "util_total": node_gpus_usage[gpu_index]["util"]
+            }
+
+    def calculate_process_gpu_util_with_mig(
+            self, gpu_index, node_gpus_usage, gpu_mig_info, sm_total,
+            process_info, pid_on_gpu_info):
+        gpu_instance_id = process_info["gpu_instance_id"]
+        compute_instance_id = process_info["compute_instance_id"]
+        pid = process_info["pid"]
+        mig_dev = gpu_mig_info.get(
+            gpu_instance_id, {}).get(compute_instance_id, None).get("mig_dev")
+        mig_sm = gpu_mig_info.get(
+            gpu_instance_id, {}).get(compute_instance_id, None).get("sm")
+        gpu_mig_util = round(mig_sm / sm_total, 2) * 100
+
+        process_usage = pid_on_gpu_info.get(pid, None)
+        if not process_usage:
+            pid_on_gpu_info[pid] = {
+                "gpu": {
+                    gpu_index: {
+                        "type": node_gpus_usage[gpu_index]["type"],
+                        "util": gpu_mig_util,
+                        "mig_devs": {
+                            mig_dev: {
+                                "dev_util": "100",
+                                "dev_name": node_gpus_usage[
+                                    gpu_index
+                                ][
+                                    f"{mig_dev}.{gpu_instance_id}."
+                                    f"{compute_instance_id}"
+                                ]["name"]
+                            }
+                        }
+                    }
+                },
+                "util_total": gpu_mig_util
+            }
+        else:
+            gpu_used = pid_on_gpu_info[pid]["gpu"].get(gpu_index)
+            if gpu_used:
+                pass
+            else:
+                pid_on_gpu_info[pid]["gpu"].update({
+                    gpu_index: {
+                        "type": node_gpus_usage[gpu_index]["type"],
+                        "util": gpu_mig_util,
+                        "mig_devs": {
+                            mig_dev: {
+                                "dev_util": "100",
+                                "dev_name": node_gpus_usage[
+                                    gpu_index
+                                ][
+                                    f"{mig_dev}.{gpu_instance_id}."
+                                    f"{compute_instance_id}"
+                                ]["name"]
+                            }
+                        }
+                    }
+                })
+                pid_on_gpu_info[pid]["util_total"] += gpu_mig_util
+
+    def get_nvidia_gpu_sm_total(self, conn, gpu_index):
+        cmd = ["nvidia-smi", "mig", "-lgip", "-i", str(gpu_index)]
+        out = conn.run(cmd).stdout
+        sm_total = out.splitlines()[-3].split()[-4]
+        return int(sm_total)
+
+    def get_nvidia_gpu_process_info(self, hostname, conn):
+        node_gpus_usage = self.get_node_gpus(hostname=hostname)
+
+        cmd = ["nvidia-smi", "-q", "-x"]
+        out = conn.run(cmd).stdout
+        gpu_info = xmltodict.parse(out)
+
+        pid_on_gpu_info = dict()
+        gpus = gpu_info.get("nvidia_smi_log", {}).get("gpu", [])
+        gpus = self.convert2list(gpus)
+        for gpu in gpus:
+            if not gpu.get("processes"):
+                continue
+            gpu_index = int(gpu["minor_number"])
+            gpu_mig_info = defaultdict(defaultdict)
+            sm_total = 0
+            if gpu["mig_mode"]["current_mig"] == "Enabled":
+                mig_devices = gpu.get("mig_devices", {}).get("mig_device", [])
+                mig_devices = self.convert2list(mig_devices)
+                for mig_device in mig_devices:
+                    mig_dev = mig_device["index"]
+                    gi = mig_device["gpu_instance_id"]
+                    ci = mig_device["compute_instance_id"]
+                    sm = int(mig_device[
+                        "device_attributes"]["shared"]["multiprocessor_count"])
+                    gpu_mig_info[gi][ci] = {
+                        "mig_dev": mig_dev,
+                        "sm": sm
+                    }
+                    sm_total = self.get_nvidia_gpu_sm_total(conn, gpu_index)
+            gpu_process_info = gpu.get("processes").get("process_info", [])
+            gpu_process_info = self.convert2list(gpu_process_info)
+            for process_info in gpu_process_info:
+                if gpu["mig_mode"]["current_mig"] == "Enabled":
+                    self.calculate_process_gpu_util_with_mig(
+                        gpu_index, node_gpus_usage, gpu_mig_info, sm_total,
+                        process_info, pid_on_gpu_info)
+                else:
+                    self.calculate_process_gpu_util(
+                        gpu_index, node_gpus_usage, process_info,
+                        pid_on_gpu_info)
+        return pid_on_gpu_info
+
+    def get_intel_xpu_process_info(self, hostname, conn):
+        """
+        {
+            "device_util_by_proc_list": [
+                {
+                    "device_id": 0,
+                    "mem_size": 5726404,
+                    "process_id": 768707,
+                    "process_name": "python",
+                    "shared_mem_size": 0
+                },
+                {
+                    "device_id": 0,
+                    "mem_size": 1507,
+                    "process_id": 5225,
+                    "process_name": "slurmd",
+                    "shared_mem_size": 0
+                },
+                {
+                    "device_id": 0,
+                    "mem_size": 17238523,
+                    "process_id": 4615,
+                    "process_name": "xpumd",
+                    "shared_mem_size": 0
+                }
+            ]
+        }
+        """
+        cmd = "xpumcli ps -j"
+        out = conn.run(cmd.split()).stdout
+        out = json.loads(out)
+
+        node_gpus_usage = self.get_node_gpus(hostname=hostname)
+
+        pid_on_gpu_info = dict()
+        for process_info in out.get("device_util_by_proc_list", []):
+            xpu_index = process_info.get("device_id")
+            pid = str(process_info.get("process_id"))
+
+            process_usage = pid_on_gpu_info.get(pid)
+            if process_usage:
+                pid_on_gpu_info[pid]["gpu"].update({
+                    xpu_index: {
+                        "type": node_gpus_usage[xpu_index]["type"],
+                        "util": node_gpus_usage[xpu_index]["util"],
+                    }
+                })
+                pid_on_gpu_info[pid][
+                    "util_total"] += node_gpus_usage[xpu_index]["util"]
+            else:
+                pid_on_gpu_info[pid] = {
+                    "gpu": {
+                        xpu_index: {
+                            "type": node_gpus_usage[xpu_index]["type"],
+                            "util": node_gpus_usage[xpu_index]["util"],
+                        }
+                    },
+                    "util_total": node_gpus_usage[xpu_index]["util"]
+                }
+
+        return pid_on_gpu_info
+
+    def is_exclude_process(self, process_cmd):
+        exclude_process = {"slurmd", "xpumd"}
+        process_cmd = os.path.basename(process_cmd)
+        return process_cmd in exclude_process
+
+    def get_process_info(
+            self, conn, pid_job_info, gpu_process_info, scheduler_id, pids):
+
+        title = ['pid', 'user', 'cpu_util', 'mem_util', 'runtime', 'cmd']
+        # cmd = ["ps", "-eo", "user,pid,%cpu,%mem,time,args:512"]
+        cmd = ["top", "-b", "-n", "1", "-c", "-w", "512"]
+        out = conn.run(cmd).stdout
+        data = out.splitlines()
+        # PID USER   PR  NI    VIRT    RES    SHR S  %CPU  %MEM  TIME+ COMMAND
+        cmd_title = data[6].split()
+        pid_details = dict()
+        for item in data[7:]:
+            info = item.split()
+            pid_info = dict(zip(cmd_title[:-1], info[:len(cmd_title)]))
+            if pids and pid_info["PID"] not in pids:
+                continue
+            if scheduler_id and pid_info["PID"] not in pid_job_info:
+                continue
+            pid_info[cmd_title[-1]] = " ".join(
+                info[cmd_title.index("COMMAND"):])
+            process_cmd = info[cmd_title.index("COMMAND")]
+            if self.is_exclude_process(process_cmd):
+                logger.info(f"Hidden process: {process_cmd}")
+                continue
+            pid_details[pid_info["PID"]] = dict(zip(title, [
+                pid_info["PID"],
+                pid_info["USER"],
+                pid_info["%CPU"],
+                pid_info["%MEM"],
+                pid_info["TIME+"],
+                pid_info["COMMAND"],
+            ]))
+            pid_details[pid_info["PID"]].update(
+                pid_job_info.get(pid_info["PID"], {}))
+
+            """
+            {
+                "gpu": {
+                    0: {
+                        # "mig_devs": {
+                        #     0: {
+                        #         "dev_name": "3g.20gb",
+                        #         "dev_util": "100"
+                        #     }
+                        # },
+                        "type": "NVIDIA A100-PCIE-40GB",
+                        "util": 40
+                    },
+                    ......
+                },
+                "util_total": 40
+            }
+            """
+            if gpu_process_info:
+                pid_gpu_usage = gpu_process_info.get(pid_info["PID"])
+                pid_details[pid_info["PID"]]["gpu_util"] = pid_gpu_usage
+
+        return pid_details
+
+    def get_process_job_info(self, hostname, conn, scheduler_id):
+        """
+        {
+            pid: {
+                "job_name": "",
+                "scheduler_id": 21
+            }
+        }
+        """
+        scheduler = get_admin_scheduler()
+        # scheduler_id: [pid, ...]
+        funs = scheduler.get_parse_job_pidlist_funs()
+        result = []
+        for i in range(0, len(funs), 2):
+            ret = funs[i](result)
+            cmd_out = conn.run(ret).stdout
+            ret = funs[i + 1](cmd_out, hostname, result)
+            result.append(ret)
+        job_pids = result[-1]
+
+        running_jobs = Client().job_client().query_running_jobs()
+        pid_job_info = dict()
+        for r_job in running_jobs:
+            for pid in job_pids.get(r_job.scheduler_id, []):
+                if scheduler_id and r_job.scheduler_id != scheduler_id:
+                    continue
+                pid_job_info[pid] = {
+                    "job_id": r_job.id,
+                    "job_name": r_job.job_name,
+                    "scheduler_id": r_job.scheduler_id
+                }
+        return pid_job_info

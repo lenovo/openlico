@@ -193,8 +193,6 @@ class LatestMonitorSync:
                                    attr.asdict(nodes_info.node_metric))
                     self.save_gpu(nodes_info.hostname,
                                   attr.asdict(nodes_info.gpu_metric))
-                    self.save_vnc(nodes_info.hostname,
-                                  attr.asdict(nodes_info.node_metric))
                 except IntegrityError as e:
                     self._modify_cluster_metric(nodes_info.hostname)
                     logger.info(e)
@@ -352,27 +350,6 @@ class LatestMonitorSync:
             )
             update_names.append(hardware_health.name)
         node.hardware_health.exclude(name__in=update_names).delete()
-
-    def parse_vnc(self, node_metric):
-        vncs = node_metric.get("vnc_session", {})
-        vnc_dict = self._delete_status(vncs.get("output"))
-
-        return vnc_dict or {}
-
-    @transaction.atomic
-    def save_vnc(self, hostname, node_metric):
-        vnc_dict = self.parse_vnc(node_metric)
-
-        node, _ = MonitorNode.objects.get_or_create(hostname=hostname)
-
-        update_indexs = []
-        for index, vnc_data in vnc_dict.items():
-            node.vnc.update_or_create(
-                index=index,
-                defaults={"detail": vnc_data}
-            )
-            update_indexs.append(index)
-        node.vnc.exclude(index__in=update_indexs).delete()
 
     def parse_gpu(self, gpu_physics_metric):
         gpu_dict = defaultdict(dict)
