@@ -104,3 +104,8 @@ class RequeueJobException(JobException):
 class InvalidUserRoleException(JobException):
     errid = 7016
     message = "Submit an Invalid user role."
+
+
+class InvalidJobIDException(JobException):
+    errid = 7017
+    message = "Submit Invalid job id."
