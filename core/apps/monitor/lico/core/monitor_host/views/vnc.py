@@ -42,6 +42,8 @@ def decode_base64url(s):
 class VncSession:
     username: str = attr.ib(kw_only=True)
     pid: int = attr.ib(kw_only=True)
+    scheduler_id: int = attr.ib(kw_only=True)
+    job_id: int = attr.ib(kw_only=True)
     name: str = attr.ib(kw_only=True)
     port: int = attr.ib(kw_only=True)
     display: int = attr.ib(kw_only=True)
@@ -56,6 +58,8 @@ class VncSession:
             sha256(':'.join([
                 self.username,
                 str(self.pid),
+                str(self.scheduler_id),
+                str(self.job_id),
                 self.name,
                 str(self.port),
                 str(self.display),
@@ -83,11 +87,14 @@ class VNCBaseView(APIView):
             detail = vnc_obj.detail
             vnc_dict['username'] = detail['user']
             vnc_dict['pid'] = detail['pid']
+            vnc_dict['scheduler_id'] = int(detail['scheduler_id'])
+            vnc_dict['job_id'] = int(detail['job_id'])
             vnc_dict['name'] = hostname + ':' + str(vnc_obj.index)
             vnc_dict['port'] = detail['port']
             vnc_dict['host'] = hostname
             vnc_dict['display'] = int(vnc_obj.index)
             sessions.append(VncSession(**vnc_dict))
+
         return sessions
 
 

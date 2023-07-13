@@ -201,7 +201,9 @@ def on_init(self, settings):
 
 
 def on_config_scheduler(self, scheduler, settings):
-    from .tasks import cluster_res_summaries, group_summaries, summaries
+    from .tasks import (
+        cluster_res_summaries, group_summaries, summaries, sync_vnc,
+    )
     tasks = (cluster_res_summaries, summaries, group_summaries)
     scheduler.add_executor(
         'processpool', alias=self.name, max_workers=len(tasks)
@@ -214,3 +216,10 @@ def on_config_scheduler(self, scheduler, settings):
             max_instances=1,
             executor=self.name,
         )
+    scheduler.add_job(
+        func=sync_vnc,
+        trigger='cron',
+        second='*/30',
+        max_instances=1,
+        executor=self.name,
+    )

@@ -15,8 +15,10 @@
 from .node_health import insert_data_to_hardwarehealth
 from .summary import cluster_res_summaries, group_summaries, summaries
 from .sync_latest import sync_latest
+from .sync_vnc import sync_vnc
 
 __all__ = [
     'group_summaries', 'insert_data_to_hardwarehealth',
     'summaries', 'sync_latest', 'cluster_res_summaries',
+    'sync_vnc'
 ]
