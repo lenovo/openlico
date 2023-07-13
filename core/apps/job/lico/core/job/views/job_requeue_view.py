@@ -42,7 +42,7 @@ class JobRequeueView(JobBaseActionView):
             },
             "job_ids": {
                 "type": "array",
-                "items": {"type": ["string"]}
+                "items": {"type": ["integer"]}
             }
         },
         "required": ["role", "job_ids"]
