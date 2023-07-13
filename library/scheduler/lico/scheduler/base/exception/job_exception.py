@@ -117,5 +117,9 @@ class InvalidPriorityException(SchedulerJobBaseException):
     message = "Invalid Priority."
 
 
+class SetPriorityException(SchedulerJobBaseException):
+    message = "Failed to set the job priority."
+
+
 class RequeueJobException(SchedulerJobBaseException):
     message = "Failed to requeue the job."

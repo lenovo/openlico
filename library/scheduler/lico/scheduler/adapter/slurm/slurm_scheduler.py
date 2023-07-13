@@ -26,7 +26,8 @@ from lico.scheduler.base.exception.job_exception import (
     JobFileNotExistException, QueryJobFailedException,
     QueryJobRawInfoFailedException, QueryRuntimeException,
     ReleaseJobFailedException, RequeueJobException,
-    SchedulerConnectTimeoutException, SubmitJobFailedException,
+    SchedulerConnectTimeoutException, SetPriorityException,
+    SubmitJobFailedException,
 )
 from lico.scheduler.base.exception.manager_exception import (
     QueryLicenseFeatureException,
@@ -563,6 +564,7 @@ class Scheduler(IScheduler):
                 "Update job priority failed, Error message is: %s",
                 err.decode()
             )
+            raise SetPriorityException
         return out.decode(), err.decode()
 
     def requeue_job(self, scheduler_ids):
