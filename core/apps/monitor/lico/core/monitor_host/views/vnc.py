@@ -87,8 +87,10 @@ class VNCBaseView(APIView):
             detail = vnc_obj.detail
             vnc_dict['username'] = detail['user']
             vnc_dict['pid'] = detail['pid']
-            vnc_dict['scheduler_id'] = int(detail['scheduler_id'])
-            vnc_dict['job_id'] = int(detail['job_id'])
+            vnc_dict['scheduler_id'] = int(detail['scheduler_id']) if \
+                'scheduler_id' in detail.keys() else 0
+            vnc_dict['job_id'] = int(detail['job_id']) if \
+                'job_id' in detail.keys() else 0
             vnc_dict['name'] = hostname + ':' + str(vnc_obj.index)
             vnc_dict['port'] = detail['port']
             vnc_dict['host'] = hostname
