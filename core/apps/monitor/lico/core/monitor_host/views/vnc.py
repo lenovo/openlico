@@ -42,8 +42,8 @@ def decode_base64url(s):
 class VncSession:
     username: str = attr.ib(kw_only=True)
     pid: int = attr.ib(kw_only=True)
-    scheduler_id: int = attr.ib(kw_only=True)
-    job_id: int = attr.ib(kw_only=True)
+    scheduler_id: int = attr.ib(kw_only=True, default=0)
+    job_id: int = attr.ib(kw_only=True, default=0)
     name: str = attr.ib(kw_only=True)
     port: int = attr.ib(kw_only=True)
     display: int = attr.ib(kw_only=True)
