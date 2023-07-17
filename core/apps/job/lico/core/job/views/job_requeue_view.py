@@ -59,7 +59,8 @@ class JobRequeueView(JobBaseActionView):
             raise InvalidUserRoleException
 
         job_ids = data.get("job_ids")
-        scheduler = self.get_job_scheduler(user, current_role)
+        has_manager_permission = self.is_admin_or_operator(user, current_role)
+        scheduler = self.get_job_scheduler(user, has_manager_permission)
 
         try:
             query = Job.objects.filter(
