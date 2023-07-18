@@ -16,6 +16,7 @@
 
 import base64
 import imghdr
+import json
 import logging
 import os
 import tempfile
@@ -215,6 +216,13 @@ def validate_job_template_params(  # noqa:C901
                 data['logo'] = 'data:image/jpeg;base64,' \
                                + base64.b64encode(f.read()).decode()
             os.remove(tmp_img_file)
+
+    # set default run time if no value was provided
+    params = json.loads(data["parameters_json"])
+    for p in params:
+        if p["id"] == "run_time" and not p["defaultValue"]:
+            p["defaultValue"] = settings.TEMPLATE.DEFAULT_RUN_TIME
+    data["parameters_json"] = json.dumps(params)
     return data
 
 

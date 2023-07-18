@@ -69,3 +69,6 @@ target/
 
 # generate by setuptools_scm
 _version.py
+
+# Temporary files
+.*.swp

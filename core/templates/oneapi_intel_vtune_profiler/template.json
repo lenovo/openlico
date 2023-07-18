@@ -111,7 +111,7 @@
         "en": "Please input run time limit for the job,Format is 'Xd Xh Xm',which 'Xd' represents X days,'Xh' represents X hours and 'Xm' represents X minutes.",
         "zh": "请输入job的运行时间限制，格式为“Xd Xh Xm”，“Xd”表示X天，“Xh”表示X小时，“Xm”表示X分钟。"
       },
-      "defaultValue": "24h",
+      "defaultValue": "",
       "must": false
     },
     {
