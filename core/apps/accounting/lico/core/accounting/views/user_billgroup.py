@@ -17,6 +17,7 @@ import json
 import logging
 
 from django.db import IntegrityError, transaction
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView as BaseAPIView
 
@@ -27,6 +28,8 @@ from lico.core.accounting.models import BillGroup, UserBillGroupMapping
 from lico.core.contrib.permissions import AsAdminRole, AsUserRole
 from lico.core.contrib.schema import json_schema_validate
 from lico.core.contrib.views import APIView, InternalAPIView
+
+from ..serializers import UserBillGroupSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -86,6 +89,26 @@ class BaseUserBillGroupView(BaseAPIView):
 
 class UserBillGroupView(BaseUserBillGroupView, APIView):
     permission_classes = (AsAdminRole,)
+
+    @AsUserRole
+    def get(self, request):
+        try:
+            ubg_mapping = UserBillGroupMapping.objects.get(
+                username=self.request.user.username
+            )
+            return Response(
+                UserBillGroupSerializer(ubg_mapping).data,
+                status=status.HTTP_200_OK
+            )
+        except UserBillGroupMapping.DoesNotExist:
+            # user does not belong to any billing group
+            return Response(
+                {
+                    'username': self.request.user.username,
+                    'bill_group': None,
+                },
+                status=status.HTTP_200_OK
+            )
 
     @AsUserRole
     @json_schema_validate({
