@@ -480,17 +480,14 @@ class Scheduler(IScheduler):
     def requeue_job(self, scheduler_ids):
         logger.debug("requeue_job entry")
         ids = " ".join(scheduler_ids)
-        args = ['bash', '--login', '-c',
-                'job_ids=(%s); for job_id in "${job_ids[@]}";'
+        args = ['job_ids=(%s); for job_id in "${job_ids[@]}";'
                 ' do qrerun $job_id ;done' % ids]
         if self._as_admin:
-            rc, out, err = exec_oscmd_with_login(
-                args, self._config.timeout
-            )
+            args = ['bash', '--login', '-c'] + args
         else:
-            rc, out, err = exec_oscmd_with_user(
-                self._operator_username, args, self._config.timeout
-            )
+            args = ['su', '-', self._operator_username, '-c'] + args
+
+        rc, out, err = exec_oscmd(args, self._config.timeout)
 
         if err:
             logger.error(
