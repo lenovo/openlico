@@ -324,17 +324,25 @@ class ShareUrl(APIView):
         return Response(share_url)
 
 
-class GetUriView(BaseAPIView):
+class ShareView(BaseAPIView):
 
+    @json_schema_validate({
+        "type": "object",
+        "properties": {
+            "uuid": {
+                "type": "string",
+                "minLength": 1
+            }
+        },
+        "required": [
+            "uuid"
+        ]
+    }, is_get=True)
     @atomic
     def get(self, request):
         sharing = ToolSharing.objects.filter(
             sharing_uuid=request.query_params["uuid"]
         ).first()
-        data = {
-            "redirect_url": '',
-            "job_template": ''
-        }
         if sharing:
             tool_id = sharing.tool.id
             project_id = sharing.project.id
@@ -342,12 +350,16 @@ class GetUriView(BaseAPIView):
                 instance = ToolInstance.objects.filter(
                     tool__id=int(tool_id), project__id=int(project_id)
                 ).latest('create_time').as_dict()
-                data = {
+                return Response({
                     "redirect_url": ''
                     if instance['entrance_uri'] is None
                     else instance['entrance_uri'],
                     "job_template": sharing.tool.job_template
-                }
+                })
             except ToolInstance.DoesNotExist:
                 logger.warning("ToolInstance does not exist", exc_info=True)
-        return Response(data)
+
+        return Response({
+            "redirect_url": '',
+            "job_template": ''
+        })

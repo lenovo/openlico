@@ -26,7 +26,7 @@ class Application(AbstractApplication):
 
         super().on_load_urls(urlpatterns, settings)
 
-        from .views.views import GetUriView
+        from .views.views import ShareView
         urlpatterns += [
-            path(f'{self.name}/', GetUriView.as_view())
+            path(f'{self.name}/', ShareView.as_view())
         ]

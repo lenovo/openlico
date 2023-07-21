@@ -20,7 +20,7 @@ from .views.openapi import (
 )
 from .views.views import (
     CloudToolSubmit, InstanceDetail, ProjectDetail, ProjectList, SettingDetail,
-    SettingList, ShareUrl,
+    SettingList, ShareUrl, ShareView,
 )
 
 urlpatterns = [
@@ -31,6 +31,7 @@ urlpatterns = [
     path('', CloudToolSubmit.as_view()),
     path('instance/<int:pk>/', InstanceDetail.as_view()),
     path('shareurl/', ShareUrl.as_view()),
+    path('share/', ShareView.as_view()),
 
     # openapi
     path('openapi/v1/project/', OpenApiProjectList.as_view()),
