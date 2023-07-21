@@ -12,21 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
-
-from django.conf import LazySettings
-
 from lico.core.base.subapp import AbstractApplication
 
 
 class Application(AbstractApplication):
-
-    def on_load_urls(self, urlpatterns: List, settings: LazySettings):
-        from django.urls import path
-
-        super().on_load_urls(urlpatterns, settings)
-
-        from .views.views import ShareView
-        urlpatterns += [
-            path(f'{self.name}/', ShareView.as_view())
-        ]
+    pass
