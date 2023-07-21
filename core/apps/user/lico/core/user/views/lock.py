@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from datetime import timedelta
+from datetime import MAXYEAR, date, timedelta
 
 from django.db.transaction import atomic
 from django.utils.timezone import now
@@ -21,7 +21,9 @@ from rest_framework.response import Response
 from lico.core.contrib.permissions import AsAdminRole
 from lico.core.contrib.schema import json_schema_validate
 
+from ..libuser import Libuser
 from ..models import User
+from ..utils import require_libuser
 from . import APIView
 
 
@@ -63,4 +65,31 @@ class LockView(APIView):
         user.effective_time = now()
         user.fail_chances = 0
         user.save()
+
+        # Ensure ssh access is allowed again
+        Libuser().modify_user_lock(user.username, lock=False)
+
+        return Response()
+
+
+class FullLockView(APIView):
+    permission_classes = (AsAdminRole,)
+
+    @atomic
+    @require_libuser
+    def post(self, request, pk):
+        """Denies access of a certain user to web portal and also
+        denies ssh access to the cluster
+        """
+        user = User.objects.select_for_update().get(
+            role__lt=User.ADMIN_ROLE, id=pk
+        )
+        # Deny web access
+        user.fail_chances = 0
+        user.effective_time = date(year=MAXYEAR, month=12, day=31)
+        user.save()
+
+        # Deny ssh access
+        Libuser().modify_user_lock(user.username, lock=True)
+
         return Response()

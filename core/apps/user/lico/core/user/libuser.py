@@ -182,3 +182,22 @@ class Libuser:
                 "Failed to modify user password"
             )
             raise InvalidOperation
+
+    def modify_user_lock(self, username, lock):
+        """Modifies the expiration date of an user account. Used to deny/allow
+        SSH access of a certain user to HPC cluster
+
+        Args:
+            username (str): The name of the user account
+            lock (bool): True if the user shall lose SSH access
+                         False if the user shall gain SSH access
+        """
+        e = self.a.lookupUserByName(username)
+        if e is None:
+            raise InvalidUser
+        # Sets the user account expiration date to 1 Jan 1970 if lock == True
+        # Clears the user account expiration date if lock == False
+        e[self.libuser.SHADOWEXPIRE] = 0 if lock else -1
+        if not self.a.modifyUser(e, False):
+            logger.exception("Failed to set user account expiration date")
+            raise InvalidOperation

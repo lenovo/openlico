@@ -21,7 +21,7 @@ from lico.core.contrib.permissions import (
 from .views.apikey import ApiKeyGenerateView, ApiKeyTestView, ApiKeyView
 from .views.auth import AuthView
 from .views.group import GroupDetailView, GroupListView
-from .views.lock import LockView
+from .views.lock import FullLockView, LockView
 from .views.passwd import ChangePasswordView, ModifyPasswordView
 from .views.user import (
     UserDataTableView, UserDetailView, UserExportView, UserImportDetailView,
@@ -42,6 +42,7 @@ urlpatterns = [
     path('<int:pk>/password/', ModifyPasswordView.as_view()),
 
     path('<int:pk>/lock/', LockView.as_view()),
+    path('<int:pk>/full-lock/', FullLockView.as_view()),
 
     path('group/', GroupListView.as_view()),
     path('group/<str:name>/', GroupDetailView.as_view()),
