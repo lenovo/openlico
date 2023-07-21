@@ -51,8 +51,8 @@ def save_vnc_into_mariadb(hostname, node_metric):
         # false, it means there is no new vnc data.
         # if error occurs and pid_scheduler is empty, don't update the vnc
         # data in mariadb
-        pid_scheduler = get_scheduler_id_pid(hostname)
-        if pid_scheduler:
+        pid_scheduler, errors = get_scheduler_id_pid(hostname)
+        if not errors:
             for index, vnc_data in vnc_dict.items():
                 pid = str(vnc_data['pid'])
                 if pid in pid_scheduler.keys():
@@ -105,6 +105,7 @@ def delete_closed_vnc(node, vnc_dict):
 
 
 def get_scheduler_id_pid(hostname):
+    errors = False
     conn = RemoteSSH(hostname)
     node_scheduler_process = NodeSchedulerProcess()
     try:
@@ -112,10 +113,14 @@ def get_scheduler_id_pid(hostname):
             hostname, conn, scheduler_id=None)
     except Exception as e:
         logger.error(e)
+        if "No job steps exist on this node" in str(e):
+            errors = False
+        else:
+            errors = True
         pid_job_info = {}
     finally:
         conn.close()
-    return pid_job_info
+    return pid_job_info, errors
 
 
 def parse_vnc(node_metric):
