@@ -29,9 +29,9 @@ from lico.scheduler.base.exception.job_exception import (
     InvalidPriorityException, JobFileNotExistException,
     QueryJobFailedException, QueryJobRawInfoFailedException,
     QueryRuntimeException, QueryUserPriorityException,
-    ReleaseJobFailedException, RequeueJobException,
-    SchedulerConnectTimeoutException, ServerDownException,
-    SetPriorityException, SubmitJobFailedException,
+    ReleaseJobFailedException, SchedulerConnectTimeoutException,
+    SchedulerRequeueJobException, ServerDownException, SetPriorityException,
+    SubmitJobFailedException,
 )
 from lico.scheduler.base.exception.manager_exception import (
     GPUConfigurationException, QueryLicenseFeatureException,
@@ -791,5 +791,5 @@ class Scheduler(IScheduler):
                 "Requeue job failed. Error message is: %s",
                 err.decode()
             )
-            raise RequeueJobException
+            raise SchedulerRequeueJobException
         return out.decode(), err.decode()

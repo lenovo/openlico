@@ -109,3 +109,8 @@ class InvalidUserRoleException(JobException):
 class InvalidJobIDException(JobException):
     errid = 7017
     message = "Submit Invalid job id."
+
+
+class JobOperationNotSupportException(JobException):
+    errid = 7018
+    message = "Requeue job operation is not supported."

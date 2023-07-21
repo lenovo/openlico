@@ -121,5 +121,9 @@ class SetPriorityException(SchedulerJobBaseException):
     message = "Failed to set the job priority."
 
 
-class RequeueJobException(SchedulerJobBaseException):
-    message = "Failed to requeue the job."
+class SchedulerRequeueJobException(SchedulerJobBaseException):
+    message = "Scheduler requeue the job failed."
+
+
+class OperationNotSupportException(SchedulerJobBaseException):
+    message = "Operation is not supported by the scheduler."

@@ -25,8 +25,8 @@ from lico.scheduler.base.exception.job_exception import (
     CancelJobFailedException, HoldJobFailedException, InvalidPriorityException,
     JobFileNotExistException, QueryJobFailedException,
     QueryJobRawInfoFailedException, QueryRuntimeException,
-    ReleaseJobFailedException, RequeueJobException,
-    SchedulerConnectTimeoutException, SetPriorityException,
+    ReleaseJobFailedException, SchedulerConnectTimeoutException,
+    SchedulerRequeueJobException, SetPriorityException,
     SubmitJobFailedException,
 )
 from lico.scheduler.base.exception.manager_exception import (
@@ -587,5 +587,5 @@ class Scheduler(IScheduler):
                 "Requeue job failed. Error message is: %s",
                 err.decode()
             )
-            raise RequeueJobException
+            raise SchedulerRequeueJobException
         return out.decode(), err.decode()

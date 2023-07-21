@@ -22,9 +22,13 @@ from rest_framework.response import Response
 from lico.core.contrib.permissions import AsOperatorRole
 from lico.core.contrib.schema import json_schema_validate
 from lico.core.user.models import User
+from lico.scheduler.base.exception.job_exception import (
+    OperationNotSupportException,
+)
 
 from ..exceptions import (
-    InvalidJobIDException, InvalidUserRoleException, RequeueJobException,
+    InvalidJobIDException, InvalidUserRoleException,
+    JobOperationNotSupportException, RequeueJobException,
 )
 from ..models import Job
 from .job_view import JobBaseActionView
@@ -78,6 +82,8 @@ class JobRequeueView(JobBaseActionView):
             scheduler_ids = query.values_list('scheduler_id', flat=True)
             scheduler.requeue_job(scheduler_ids)
 
+        except OperationNotSupportException:
+            raise JobOperationNotSupportException
         except Exception as e:
             logger.exception('Failed to requeue the job, reason: %s' % e)
             raise RequeueJobException

@@ -22,9 +22,9 @@ from typing import List, Optional
 
 from lico.scheduler.base.exception.job_exception import (
     CancelJobFailedException, HoldJobFailedException, InvalidPriorityException,
-    JobFileNotExistException, QueryJobFailedException,
-    QueryJobRawInfoFailedException, QueryRuntimeException,
-    ReleaseJobFailedException, RequeueJobException,
+    JobFileNotExistException, OperationNotSupportException,
+    QueryJobFailedException, QueryJobRawInfoFailedException,
+    QueryRuntimeException, ReleaseJobFailedException,
     SchedulerNotWorkingException, SetPriorityException,
     SubmitJobFailedException,
 )
@@ -478,21 +478,7 @@ class Scheduler(IScheduler):
         return out.decode(), err.decode()
 
     def requeue_job(self, scheduler_ids):
-        logger.debug("requeue_job entry")
-        ids = " ".join(scheduler_ids)
-        args = ['job_ids=(%s); for job_id in "${job_ids[@]}";'
-                ' do qrerun $job_id ;done' % ids]
-        if self._as_admin:
-            args = ['bash', '--login', '-c'] + args
-        else:
-            args = ['su', '-', self._operator_username, '-c'] + args
-
-        rc, out, err = exec_oscmd(args, self._config.timeout)
-
-        if err:
-            logger.error(
-                "Requeue job failed. Error message is: %s",
-                err.decode()
-            )
-            raise RequeueJobException
-        return out.decode(), err.decode()
+        logger.error(
+            "The requeue operation is not supported by scheduler PBS."
+        )
+        raise OperationNotSupportException
