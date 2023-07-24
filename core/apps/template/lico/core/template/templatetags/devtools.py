@@ -16,24 +16,29 @@ from django import template
 
 from lico.core.contrib.client import Client
 
-from ..exceptions import JupyterImageNotExist, RstudioImageNotExist
+from ..exceptions import (
+    JupyterImageNotExist, JupyterLabImageNotExist, RstudioImageNotExist,
+)
 
 register = template.Library()
 
 
-def get_jupyter_image(lang, arch):
-    try:
-        tags = [lang, arch] if lang else [arch]
-        return Client().container_client(
-        ).search_jupyter_image(tags)
-    except Exception as e:
-        raise JupyterImageNotExist from e
+@register.simple_tag
+def check_image_path(image_path):
+    if image_path == "jupyter-default":
+        raise JupyterImageNotExist
+    elif image_path == "jupyterlab-default":
+        raise JupyterLabImageNotExist
+    else:
+        return image_path
 
 
 @register.simple_tag
 def rstudio_image():
     try:
-        return Client().container_client(
-        )._search_one_image(framework='rstudio')
+        return Client().container_client()._search_one_image(
+            framework='rstudio'
+        )
     except Exception as e:
         raise RstudioImageNotExist from e
+

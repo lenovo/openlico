@@ -141,3 +141,8 @@ class UnknownSchedulerException(TemplateException):
 class IntelTensorFlowImageNotExist(TemplateException):
     message = 'Intel TensorFlow image not exist.'
     errid = 4041
+
+
+class JupyterLabImageNotExist(TemplateException):
+    message = 'JupyterLab image not exist.'
+    errid = 4042

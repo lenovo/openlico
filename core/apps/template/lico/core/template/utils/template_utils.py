@@ -26,8 +26,8 @@ from lico.core.container.singularity.models import SingularityImage
 
 from ..exceptions import (
     ImportChecksumException, ImportSchedulerException, ImportVersionException,
-    IntelTensorFlowImageNotExist, JupyterImageNotExist, RstudioImageNotExist,
-    TemplateRenderException,
+    IntelTensorFlowImageNotExist, JupyterImageNotExist,
+    JupyterLabImageNotExist, RstudioImageNotExist, TemplateRenderException,
 )
 
 logger = logging.getLogger(__name__)
@@ -41,6 +41,8 @@ def template_render(user, template_content, param_vals):
         )
         return script
     except JupyterImageNotExist as e:
+        raise e
+    except JupyterLabImageNotExist as e:
         raise e
     except IntelTensorFlowImageNotExist as e:
         raise e
