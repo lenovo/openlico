@@ -77,3 +77,9 @@ class UsernamePasswordNotSet(Exception):
     def __int__(self, serivce):
         self.err = f"{serivce} username or password not set"
         super().__init__(self, self.err)
+
+
+class InvalidDeviceIdException(MonitorException):
+    status_code = HTTP_400_BAD_REQUEST
+    errid = 3012
+    message = 'Invalid device id!'

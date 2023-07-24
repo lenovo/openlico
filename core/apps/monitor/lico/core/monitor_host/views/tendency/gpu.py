@@ -22,7 +22,9 @@ from rest_framework.response import Response
 from lico.core.contrib.permissions import AsOperatorRole, AsUserRole
 from lico.core.contrib.schema import json_schema_validate
 from lico.core.contrib.views import APIView
-from lico.core.monitor_host.exceptions import InfluxDBException
+from lico.core.monitor_host.exceptions import (
+    InfluxDBException, InvalidDeviceIdException,
+)
 from lico.core.monitor_host.models import Gpu, MonitorNode
 from lico.core.monitor_host.utils import (
     ClusterClient, InfluxClient, convert_value, cut_list, get_new_time_rule,
@@ -47,7 +49,8 @@ class NodeHistoryGpuView(APIView):
     }
 
     def get(self, request, hostname, index, time_unit, category):
-        if not MonitorNode.objects.filter(hostname=hostname).exists():
+        node_obj = MonitorNode.objects.filter(hostname=hostname)
+        if not node_obj.exists():
             return Response({})
         dev_id = request.query_params.get('dev_id', None)
         limit_time, span = get_new_time_rule(
@@ -72,6 +75,13 @@ class NodeHistoryGpuView(APIView):
             }
             logger.info("gpu history sql: %s", sql)
         else:  # logical dev
+            # Get device id detail for gpu or xpu
+            dev_unique_id_dict = \
+                self.get_dev_unique_id(node_obj.first(), index)
+            dev_unique_id = dev_unique_id_dict.get(dev_id, None)
+            if dev_unique_id is None:
+                raise InvalidDeviceIdException
+
             metric_mapping = {
                 "util": "gpu_dev_util",
                 "memory": "gpu_dev_mem_usage",
@@ -85,7 +95,7 @@ class NodeHistoryGpuView(APIView):
             bind_params = {
                 "host": hostname,
                 "gpu_id": index,
-                "dev_id": dev_id,
+                "dev_id": dev_unique_id,
                 "metric": metric_mapping.get(category)
             }
             logger.info("logical device history sql: %s", sql)
@@ -102,6 +112,29 @@ class NodeHistoryGpuView(APIView):
             data = cut_list(data, end=len(data) - 1, max_len=span,
                             cut_from_start=False)
         return self.return_success(data)
+
+    def get_dev_unique_id(self, node_obj, index):
+        dev_unique_id_dict = dict()
+        gpu_obj = node_obj.gpu.filter(index=int(index))
+        if not gpu_obj.exists():
+            return dev_unique_id_dict
+        dev_ids = gpu_obj.first().gpu_logical_device.values_list(
+            'dev_id', flat=True
+        )
+        for dev_gi_ci in set(dev_ids):
+            dev_unique_id_dict[dev_gi_ci.split('.')[0]] = dev_gi_ci
+        """
+        Format for dev_unique_id_dict:
+            {
+                "device_id": "dev_unique_id",
+                ...
+            }
+
+        Format for dev_unique_id:
+            For nvidia GPU: <device_id.gi_id.ci_id>
+            For intel XPU: <title_id>
+        """
+        return dev_unique_id_dict
 
     def get_sql(self):
         sql = "select last(value) as value from \"{categ}\".gpu_metric \
