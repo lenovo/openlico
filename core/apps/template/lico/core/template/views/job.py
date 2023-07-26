@@ -29,7 +29,9 @@ from lico.core.contrib.client import Client
 from lico.core.contrib.schema import json_schema_validate
 from lico.core.contrib.views import APIView, InternalAPIView
 
-from ..exceptions import TemplateNotExist
+from ..exceptions import (
+    JobFileNotExist, SubmitJobException, TemplateException, TemplateNotExist,
+)
 from ..helpers.fs_operator_helper import get_fs_operator
 from ..models import JobComp, Template, TemplateJob, UserTemplate
 from ..tasks import notice
@@ -248,6 +250,12 @@ class RerunJobView(APIView):
         ret = job_client.rerun_job(
             jobid
         )
+        if 'errid' in ret:
+            err_mapping = {
+                '2001': JobFileNotExist,
+                '7004': SubmitJobException
+            }
+            raise err_mapping.get(ret['errid'], TemplateException)
         new_job_id = ret["id"]
         # Save template info
         if template_job:
