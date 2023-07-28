@@ -29,7 +29,7 @@ module try-load singularity
 {% if jupyterlab_cmd == '' %}
     singularity exec -B {{ lico.user.workspace }} {% bind_user_share_folder %} \
         {% if gpu_per_node %}--nv {% endif %} \
-        {% check_image_path image_path %} /opt/start \
+        {% jupyterlab_image image_path %} /opt/start \
         --port $port \
         --workdir {{ project_workspace }} \
         --password $mypassword \
@@ -41,7 +41,7 @@ module try-load singularity
 {% else %}
     singularity exec -B {{ lico.user.workspace }} {% bind_user_share_folder %} \
         {% if gpu_per_node %}--nv{% endif %} \
-        {% check_image_path image_path %} {{ jupyterlab_cmd }} \
+        {% jupyterlab_image image_path %} {{ jupyterlab_cmd }} \
         --ip=0.0.0.0 \
         --port=$port \
         --ServerApp.port_retries=0 \

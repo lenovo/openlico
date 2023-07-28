@@ -24,13 +24,27 @@ register = template.Library()
 
 
 @register.simple_tag
-def check_image_path(image_path):
+def jupyter_image(image_path):
     if image_path == "jupyter-default":
-        raise JupyterImageNotExist
-    elif image_path == "jupyterlab-default":
-        raise JupyterLabImageNotExist
-    else:
-        return image_path
+        try:
+            image_path = Client().container_client()._search_one_image(
+                image_name=image_path
+            )
+        except Exception as e:
+            raise JupyterImageNotExist from e
+    return image_path
+
+
+@register.simple_tag
+def jupyterlab_image(image_path):
+    if image_path == "jupyterlab-default":
+        try:
+            image_path = Client().container_client()._search_one_image(
+                image_name=image_path
+            )
+        except Exception as e:
+            raise JupyterLabImageNotExist from e
+    return image_path
 
 
 @register.simple_tag
