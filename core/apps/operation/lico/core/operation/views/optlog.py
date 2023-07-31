@@ -207,7 +207,7 @@ class OptDownloadView(APIView):
     @staticmethod
     def _get_datetime(data):
         start_time = datetime.datetime.fromtimestamp(
-                int(data["start_time"]), tz=tzutc())
+            int(data["start_time"]), tz=tzutc())
         end_time = datetime.datetime.fromtimestamp(
             int(data["end_time"]), tz=tzutc())
         return start_time, end_time
@@ -222,17 +222,18 @@ class OptDownloadView(APIView):
             return ','.join(
                 [item_target.name for item_target in target if len(target)]
             )
+
         return [(
             '{0:%Y-%m-%d %H:%M:%S}'.format(
                 item.operate_time.astimezone(fixed_offset)
             ),
-            _('operation.'+item.module),
+            _('operation.' + item.module),
             item.operator,
-            _('operation.'+item.operation),
+            _('operation.' + item.operation),
             ' '.join([
                 item.operator,
-                _('operation.'+item.operation),
-                _('operation.'+item.module),
+                _('operation.' + item.operation),
+                _('operation.' + item.module),
                 _get_operationlog_target(item.target.all())
             ])
         ) for item in instances_list if len(instances_list)]

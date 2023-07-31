@@ -106,43 +106,58 @@ class Scheduler(IScheduler):
                          "Error message is: %s", err.decode())
             raise SubmitJobFailedException(err.decode())
 
-    def job_action(self, job_identity: JobIdentity, command: List[str]):
-        jobid = job_identity.scheduler_id
-        jobid = get_job_alter_id(jobid, self._config.timeout)
-        logger.debug("%s job entry", " ".join(command))
+    def job_action(self, scheduler_ids, command: List[str], action: str):
+        logger.debug("%s job entry, scheduler_ids: %s", action, scheduler_ids)
         if self._as_admin:
             rc, out, err = exec_oscmd(
-                [*command, jobid],
-                self._config.timeout
+                command,
+                timeout=self._config.timeout
             )
         else:
             rc, out, err = exec_oscmd_with_user(
                 self._operator_username,
-                [*command, jobid],
-                self._config.timeout
+                command,
+                timeout=self._config.timeout
             )
         if rc != 0:
             logger.error(
-                "Job %s %s failed, Error message is: %s",
-                jobid, " ".join(command), err.decode()
+                "Failed to %s the jobs, Error message is: %s",
+                action, err.decode()
             )
-            return False, err.decode()
-        return True, None
+        status = self.batch_command_status(len(scheduler_ids),
+                                           len(err.decode().splitlines()))
+        return status
 
-    def cancel_job(self, job_identity: JobIdentity) -> None:
-        success, err = self.job_action(job_identity, ["scancel"])
-        if not success:
-            raise CancelJobFailedException(err)
+    def cancel_job(self, scheduler_ids):
+        new_scheduler_ids = []
+        for scheduler_id in scheduler_ids:
+            scheduler_id = get_job_alter_id(scheduler_id, self._config.timeout)
+            new_scheduler_ids.append(scheduler_id)
+        ids = ",".join(new_scheduler_ids)
+        args = ["scancel", ids]
+        status = self.job_action(new_scheduler_ids, args, 'cancel')
 
-    def hold_job(self, job_identity: JobIdentity) -> None:
-        success, err = self.job_action(job_identity, ["scontrol", "hold"])
-        if not success:
-            raise HoldJobFailedException(err)
+        if status == "fail":
+            raise CancelJobFailedException
+        return status
 
-    def release_job(self, job_identity: JobIdentity) -> None:
-        success, err = self.job_action(job_identity, ["scontrol", "release"])
-        if not success:
-            raise ReleaseJobFailedException(err)
+    def hold_job(self, scheduler_ids):
+        ids = ",".join(scheduler_ids)
+        args = ['scontrol', 'hold', ids]
+        status = self.job_action(scheduler_ids, args, 'hold')
+
+        if status == "fail":
+            raise HoldJobFailedException
+        return status
+
+    def release_job(self, scheduler_ids):
+        ids = ",".join(scheduler_ids)
+        args = ['scontrol', 'release', ids]
+        status = self.job_action(scheduler_ids, args, 'release')
+
+        if status == "fail":
+            raise ReleaseJobFailedException
+        return status
 
     def query_job(self, job_identity: JobIdentity) -> Job:
         jobid = job_identity.scheduler_id
@@ -550,42 +565,20 @@ class Scheduler(IScheduler):
         return priority_dict
 
     def update_job_priority(self, scheduler_ids, priority_value):
-        logger.debug("Update job priority, scheduler_ids: %s" % scheduler_ids)
         if int(priority_value) > 4294967293 or int(priority_value) < 1:
             raise InvalidPriorityException
         ids = ",".join(scheduler_ids)
         args = ["scontrol", "update", "job=%s" % ids,
                 "Priority=%s" % priority_value]
-        rc, out, err = exec_oscmd(
-            args, timeout=self._config.timeout
-        )
-        if err:
-            logger.error(
-                "Update job priority failed, Error message is: %s",
-                err.decode()
-            )
+        status = self.job_action(scheduler_ids, args, 'priority')
+        if status == "fail":
             raise SetPriorityException
-        return out.decode(), err.decode()
+        return status
 
     def requeue_job(self, scheduler_ids):
-        logger.debug("requeue_job entry")
         ids = ",".join(scheduler_ids)
-        if self._as_admin:
-            rc, out, err = exec_oscmd(
-                ['scontrol', 'requeue', 'Incomplete', ids],
-                timeout=self._config.timeout
-            )
-        else:
-            rc, out, err = exec_oscmd_with_user(
-                self._operator_username,
-                ['scontrol', 'requeue', 'Incomplete', ids],
-                timeout=self._config.timeout
-            )
-
-        if err:
-            logger.error(
-                "Requeue job failed. Error message is: %s",
-                err.decode()
-            )
+        args = ['scontrol', 'requeue', 'Incomplete', ids]
+        status = self.job_action(scheduler_ids, args, 'requeue')
+        if status == "fail":
             raise SchedulerRequeueJobException
-        return out.decode(), err.decode()
+        return status

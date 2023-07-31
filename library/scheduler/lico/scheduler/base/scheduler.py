@@ -41,23 +41,24 @@ class IScheduler(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def cancel_job(self, job_identity: IJobIdentity) -> None:
+    def cancel_job(self, scheduler_ids: list) -> None:
         pass
 
     @abstractmethod
     def job_action(
             self,
-            job_identity: IJobIdentity,
-            command: List[str]
+            scheduler_ids: list,
+            command: List[str],
+            action: str
     ):
         pass
 
     @abstractmethod
-    def hold_job(self, job_identity: IJobIdentity) -> None:
+    def hold_job(self, scheduler_ids: list) -> None:
         pass
 
     @abstractmethod
-    def release_job(self, job_identity: IJobIdentity) -> None:
+    def release_job(self, scheduler_ids: list) -> None:
         pass
 
     @abstractmethod
@@ -116,3 +117,11 @@ class IScheduler(metaclass=ABCMeta):
     @abstractmethod
     def requeue_job(self, scheduler_ids: list) -> str:
         pass
+
+    def batch_command_status(self, scheduler_nums: int, err_nums: int) -> str:
+        if err_nums == 0:
+            return "success"
+        elif err_nums < scheduler_nums:
+            return "partial"
+        else:
+            return "fail"

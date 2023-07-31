@@ -18,6 +18,7 @@ from dateutil.tz import tzoffset
 
 from lico.core.contrib.client import Client
 
+from .exceptions import JobOperationException
 from .helpers.scheduler_helper import get_admin_scheduler, get_scheduler
 
 
@@ -150,3 +151,14 @@ def get_resource_num(tres, code):
             count = int(float(value))
             break
     return count
+
+
+def batch_status(target_nums, err_nums):
+    # batch operation returned status
+    if err_nums == 0:
+        return "success"
+    elif err_nums < target_nums:
+        return "partial"
+    else:
+        raise JobOperationException
+

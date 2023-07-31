@@ -17,10 +17,9 @@ import logging
 from django.db.transaction import atomic
 from rest_framework.response import Response
 
-# from lico.core.contrib.eventlog import EventLog
+from lico.core.contrib.eventlog import EventLog
 from lico.core.contrib.permissions import AsOperatorRole
 from lico.core.contrib.schema import json_schema_validate
-from lico.core.contrib.views import APIView
 from lico.scheduler.base.exception.job_exception import (
     InvalidPriorityException,
 )
@@ -30,12 +29,12 @@ from ..exceptions import (
     QueryJobPriorityException,
 )
 from ..helpers.scheduler_helper import get_admin_scheduler
-from ..models import Job
+from .job_view import JobBaseActionView
 
 logger = logging.getLogger(__name__)
 
 
-class PriorityView(APIView):
+class PriorityView(JobBaseActionView):
     permission_classes = (AsOperatorRole,)
 
     def get(self, request):
@@ -49,38 +48,40 @@ class PriorityView(APIView):
     @json_schema_validate({
         "type": "object",
         "properties": {
-            "scheduler_ids": {
+            "job_ids": {
                 "type": "array",
-                "items": {"type": ["string"]}
+                "items": {"type": ["integer"]}
             },
             "priority_value": {
                 "type": "string",
                 'pattern': r'^-?\d+$'
             }
         },
-        "required": ["scheduler_ids", "priority_value"]
+        "required": ["job_ids", "priority_value"]
     })
     @atomic
     def post(self, request, *args, **kwargs):
-        data = request.data
-        scheduler_ids = data["scheduler_ids"]
-        priority_value = data["priority_value"]
-        scheduler = get_admin_scheduler()
+        priority_value = request.data["priority_value"]
+        if request.user.is_operator:
+            role = "operator"
+        else:
+            role = "user"
+        job_query, scheduler = self.get_jobs_and_scheduler(
+            request.data['job_ids'], request.user, role
+        )
+        exec_jobs_dict = self.get_exec_jobs_dict(job_query)
         try:
-            query = Job.objects.filter(
-                delete_flag=False, scheduler_id__in=scheduler_ids
+            status = scheduler.update_job_priority(
+                exec_jobs_dict.keys(), priority_value
             )
-            scheduler.update_job_priority(scheduler_ids, priority_value)
         except InvalidPriorityException:
             raise InvalidJobPriorityException
         except Exception as e:
             logger.exception('Failed to set the job priority, reason: %s' % e)
             raise AdjustJobPriorityException
-        else:
-            query.update(priority=priority_value)
-        # for job in query:
-        #     EventLog.opt_create(
-        #         request.user.username, EventLog.job, EventLog.priority,
-        #         EventLog.make_list(job.id, job.job_name)
-        #     )
-        return Response()
+        job_query.update(priority=priority_value)
+        EventLog.opt_create(
+            request.user.username, EventLog.job, EventLog.priority,
+            exec_jobs_dict.values()
+        )
+        return Response({"batch_status": status})

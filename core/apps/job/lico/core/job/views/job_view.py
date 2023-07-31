@@ -43,7 +43,7 @@ from ..helpers.scheduler_helper import (
     get_admin_scheduler, get_scheduler, parse_job_identity,
 )
 from ..models import Job
-from ..utils import get_users_from_filter
+from ..utils import batch_status, get_users_from_filter
 
 logger = logging.getLogger(__name__)
 
@@ -152,7 +152,7 @@ class JobView(APIView):
         try:
             with transaction.atomic():
                 query = self.get_job_query_set(
-                    is_admin=operator.is_admin,
+                    is_admin=operator.is_operator,
                     submitter=operator.username
                 )
                 job = query.get(id=pk)
@@ -174,14 +174,12 @@ class JobView(APIView):
 
             if job.submitter == operator.username:
                 scheduler = get_scheduler(operator)
-            elif operator.is_admin:
+            elif operator.is_operator:
                 scheduler = get_admin_scheduler()
             else:
                 raise Unauthorized
 
-            scheduler.cancel_job(
-                job_identity=parse_job_identity(job.identity_str)
-            )
+            scheduler.cancel_job([job.scheduler_id])
         except Exception as e:
             logger.exception("Cancel Job error.")
             if job_operator_status:
@@ -245,6 +243,20 @@ class JobRawInfoView(APIView):
 
 class JobBaseActionView(APIView):
     @staticmethod
+    def get_jobs_and_scheduler(job_ids, user, role):
+        job_query = Job.objects.filter(id__in=job_ids, delete_flag=False)
+        if role in ['admin', 'operator']:
+            if user.role < AsOperatorRole.floor:
+                raise PermissionDenied
+            scheduler = get_admin_scheduler()
+        else:
+            scheduler = get_scheduler(user)
+            job_query = job_query.filter(submitter=user.username)
+        if not job_query.exists():
+            raise Job.DoesNotExist
+        return job_query, scheduler
+
+    @staticmethod
     def is_admin_or_operator(user, role):
         if role in ['admin', 'operator'] and \
                 user.role >= AsOperatorRole.floor:
@@ -276,82 +288,170 @@ class JobBaseActionView(APIView):
             "state": state
         }
 
+    @staticmethod
+    def get_exec_jobs_dict(job_query):
+        exec_jobs_dict = dict()
+        for job in job_query:
+            exec_jobs_dict[job.scheduler_id] = (job.id, job.scheduler_id)
+        return exec_jobs_dict
+
 
 class JobHoldView(JobBaseActionView):
     @json_schema_validate({
         "type": "object",
         "properties": {
-            "job_id": {
-                "type": "integer",
+            "job_ids": {
+                "type": "array",
+                "items": {"type": ["integer"]}
             },
             "role": {
                 "type": "string",
                 "enum": ["admin", "operator", "user"],
             },
         },
-        "required": ["job_id"]
+        "required": ["job_ids"]
     })
     @atomic()
     def post(self, request):
-        user = request.user
-        pk = request.data['job_id']
-        role = request.data.get('role', None)
+        job_query, scheduler = self.get_jobs_and_scheduler(
+            request.data['job_ids'],
+            request.user,
+            request.data.get('role', None)
+        )
+        exec_jobs_dict = self.get_exec_jobs_dict(job_query)
         try:
-            has_manager_permission = self.is_admin_or_operator(user, role)
-            job = self.get_job_object(pk, user, has_manager_permission)
-            res = self.get_action_response(job, JobState.HOLD.value)
-            if job.state == JobState.HOLD.value:
-                return Response(res)
-            if job.state != JobState.QUEUING.value:
-                logger.exception('Only support hold queuing job, '
-                                 'job state is: %s', job.state)
-                raise HoldJobException
-            scheduler = self.get_job_scheduler(user, has_manager_permission)
-            scheduler.hold_job(
-                job_identity=parse_job_identity(job.identity_str))
-            return Response(res)
+            status = scheduler.hold_job(exec_jobs_dict.keys())
         except HoldJobFailedException:
             raise HoldJobException
         except Exception as e:
             logger.exception('Failed to hold the job, reason: %s' % e)
             raise HoldJobException
+        EventLog.opt_create(
+            request.user.username, EventLog.job, EventLog.hold,
+            exec_jobs_dict.values()
+        )
+        return Response({"batch_status": status})
 
 
 class JobReleaseView(JobBaseActionView):
     @json_schema_validate({
         "type": "object",
         "properties": {
-            "job_id": {
-                "type": "integer",
+            "job_ids": {
+                "type": "array",
+                "items": {"type": ["integer"]}
             },
             "role": {
                 "type": "string",
                 "enum": ["admin", "operator", "user"],
             },
         },
-        "required": ["job_id"]
+        "required": ["job_ids"]
     })
     @atomic()
     def post(self, request):
-        user = request.user
-        pk = request.data['job_id']
-        role = request.data.get('role', None)
+        job_query, scheduler = self.get_jobs_and_scheduler(
+            request.data['job_ids'],
+            request.user,
+            request.data.get('role'))
+        exec_jobs_dict = self.get_exec_jobs_dict(job_query)
         try:
-            has_manager_permission = self.is_admin_or_operator(user, role)
-            job = self.get_job_object(pk, user, has_manager_permission)
-            res = self.get_action_response(job, JobState.QUEUING.value)
-            if job.state == JobState.QUEUING.value:
-                return Response(res)
-            if job.state != JobState.HOLD.value:
-                logger.exception('Only support release held job, '
-                                 'job state is: %s', job.state)
-                raise ReleaseJobException
-            scheduler = self.get_job_scheduler(user, has_manager_permission)
-            scheduler.release_job(
-                job_identity=parse_job_identity(job.identity_str))
-            return Response(res)
+            status = scheduler.release_job(exec_jobs_dict.keys())
         except ReleaseJobFailedException:
             raise ReleaseJobException
         except Exception as e:
-            logger.exception('Failed to release the job, reason: %s' % e)
+            logger.exception('Failed to release the job, reason: %s', e)
             raise ReleaseJobException
+        EventLog.opt_create(
+            request.user.username, EventLog.job, EventLog.release,
+            exec_jobs_dict.values()
+        )
+        return Response({"batch_status": status})
+
+
+class CancelView(JobBaseActionView):
+    authentication_classes = (
+        RemoteJWTWebAuthentication,
+        RemoteJWTInternalAuthentication,
+        RemoteApiKeyAuthentication
+    )
+
+    @json_schema_validate({
+        "type": "object",
+        "properties": {
+            "job_ids": {
+                "type": "array",
+                "items": {"type": ["integer"]}
+            }
+        },
+        "required": ["job_ids"]
+    })
+    @atomic
+    def put(self, request):
+        if request.user.is_operator:
+            role = "operator"
+        else:
+            role = "user"
+        job_query, scheduler = self.get_jobs_and_scheduler(
+            request.data['job_ids'], request.user, role
+        )
+        exec_jobs_dict = self.get_exec_jobs_dict(job_query)
+        try:
+            status = scheduler.cancel_job(exec_jobs_dict.keys())
+        except Exception as e:
+            logger.exception("Cancel Job error.")
+            raise JobException from e
+        if status == "success":
+            job_query = job_query.exclude(
+                state__in=JobState.get_final_state_values()
+            )
+            job_query.update(operate_state=JobOperateState.CANCELLING.value)
+        EventLog.opt_create(
+            request.user.username, EventLog.job, EventLog.cancel,
+            exec_jobs_dict.values()
+        )
+        return Response({"batch_status": status})
+
+
+class DeleteView(JobBaseActionView):
+    authentication_classes = (
+        RemoteJWTWebAuthentication,
+        RemoteJWTInternalAuthentication,
+        RemoteApiKeyAuthentication
+    )
+
+    @json_schema_validate({
+        "type": "object",
+        "properties": {
+            "job_ids": {
+                "type": "array",
+                "items": {"type": ["integer"]}
+            }
+        },
+        "required": ["job_ids"]
+    })
+    @atomic
+    def delete(self, request):
+        job_ids = request.data["job_ids"]
+        err_nums = 0
+        jobs = Job.objects.filter(
+            submitter=request.user.username,
+            delete_flag=False,
+            id__in=job_ids
+        )
+        event_details = []
+        for job in jobs:
+            if job.state in JobState.get_waiting_state_values():
+                err_nums += 1
+                continue
+            job.delete_flag = True
+            job.save()
+            event_details.append((job.id, job.job_name))
+
+        status = batch_status(len(job_ids), err_nums)
+        if event_details:
+            EventLog.opt_create(
+                request.user.username, EventLog.job, EventLog.delete,
+                event_details
+            )
+        return Response({"batch_status": status})

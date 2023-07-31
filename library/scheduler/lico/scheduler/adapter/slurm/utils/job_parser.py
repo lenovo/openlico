@@ -276,7 +276,7 @@ def convert_tres_gres_count(gres: str) -> Dict:
         gres_dict = parse_gres_str(gres)
         for k, v in gres_dict.items():
             gres_dict[k] = {
-                gres_type: round(gres_total/node_num, 2)
+                gres_type: round(gres_total / node_num, 2)
                 for gres_type, gres_total in v.items()
             }
     # gres_host example:
@@ -541,10 +541,10 @@ def parse_job_info(  # noqa: C901
         ave_mem = 0
         if query_memory or job.state in JobState.get_final_state():
             ave_mem = get_job_memory(
-                    jobid,
-                    retry_count=config.memory_retry_count,
-                    retry_interval=config.memory_retry_interval_second
-                )
+                jobid,
+                retry_count=config.memory_retry_count,
+                retry_interval=config.memory_retry_interval_second
+            )
 
         if node_lists and node_lists != '(null)':
             hosts = expand_host_list(node_lists)
@@ -604,6 +604,8 @@ def get_job_alter_id(job_id, timeout):
     job_info_msg = 'JobId={0}'.format(str(job_id))
     job_info = [s for s in out.decode().splitlines()
                 if s.strip().startswith(job_info_msg)]
+    # Fixed an issue where subjobs in array jobs
+    # could not be cancelled individually.
     if len(job_info) == 1 and 'ArrayJobId' in job_info[0]:
         array_job_id = None
         array_task_id = None
