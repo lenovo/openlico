@@ -114,3 +114,8 @@ class InvalidJobIDException(JobException):
 class JobOperationNotSupportException(JobException):
     errid = 7018
     message = "Requeue job operation is not supported."
+
+
+class JobOperationException(JobException):
+    errid = 7019
+    message = "Job operation exception."

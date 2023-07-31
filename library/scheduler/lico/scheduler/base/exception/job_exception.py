@@ -127,3 +127,7 @@ class SchedulerRequeueJobException(SchedulerJobBaseException):
 
 class OperationNotSupportException(SchedulerJobBaseException):
     message = "Operation is not supported by the scheduler."
+
+
+class SchedulerOperationException(SchedulerJobBaseException):
+    message = "Scheduler operation exception."

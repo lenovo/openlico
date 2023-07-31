@@ -15,22 +15,15 @@
 import logging
 
 from django.db.transaction import atomic
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
-# from lico.core.contrib.eventlog import EventLog
-from lico.core.contrib.permissions import AsOperatorRole
+from lico.core.contrib.eventlog import EventLog
 from lico.core.contrib.schema import json_schema_validate
-from lico.core.user.models import User
 from lico.scheduler.base.exception.job_exception import (
     OperationNotSupportException,
 )
 
-from ..exceptions import (
-    InvalidJobIDException, InvalidUserRoleException,
-    JobOperationNotSupportException, RequeueJobException,
-)
-from ..models import Job
+from ..exceptions import JobOperationNotSupportException, RequeueJobException
 from .job_view import JobBaseActionView
 
 logger = logging.getLogger(__name__)
@@ -55,44 +48,24 @@ class JobRequeueView(JobBaseActionView):
     })
     @atomic
     def post(self, request):
-        user = request.user
-        data = request.data
-        current_role = data.get("role")
-        if (not current_role) or \
-                (User.ROLE_NAMES.get(current_role) > user.role):
-            raise InvalidUserRoleException
-
-        job_ids = data.get("job_ids")
-        has_manager_permission = self.is_admin_or_operator(user, current_role)
-        scheduler = self.get_job_scheduler(user, has_manager_permission)
-
+        job_query, scheduler = self.get_jobs_and_scheduler(
+            request.data['job_ids'],
+            request.user,
+            request.data.get('role', None)
+        )
+        exec_jobs_dict = self.get_exec_jobs_dict(job_query)
         try:
-            query = Job.objects.filter(
-                delete_flag=False,
-                id__in=job_ids,
-            )
-            if (len(job_ids) == 1) and (query.count() != len(job_ids)):
-                raise InvalidJobIDException
-
-            if User.ROLE_NAMES.get(current_role) < AsOperatorRole.floor:
-                if query.count() != \
-                        query.filter(submitter=user.username).count():
-                    raise PermissionDenied
-
-            scheduler_ids = query.values_list('scheduler_id', flat=True)
-            scheduler.requeue_job(scheduler_ids)
-
+            status = scheduler.requeue_job(exec_jobs_dict.keys())
         except OperationNotSupportException:
             raise JobOperationNotSupportException
         except Exception as e:
             logger.exception('Failed to requeue the job, reason: %s' % e)
             raise RequeueJobException
 
-        # for job in query:
-        #     EventLog.opt_create(
-        #         request.user.username,
-        #         EventLog.job,
-        #         EventLog.requeue,
-        #         EventLog.make_list(job.id, job.job_name)
-        #     )
-        return Response()
+        EventLog.opt_create(
+            request.user.username,
+            EventLog.job,
+            EventLog.requeue,
+            exec_jobs_dict.values()
+        )
+        return Response({"batch_status": status})

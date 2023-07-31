@@ -67,7 +67,8 @@ class OperationLog(models.Model):
         (RELEASE, 'release'),
         (RERUN, 'rerun'),
         (COMMENT, 'comment'),
-        (PRIORITY, 'priority')
+        (PRIORITY, 'priority'),
+        (REQUEUE, 'requeue')
     )
 
     module = models.CharField(
