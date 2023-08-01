@@ -12,14 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from lico.core.contrib.exceptions import LicoError
 
-
-class ImageFileNotExist(LicoError):
-    message = 'Image file is not exist.'
-    errid = 9003
-
-
-class GetEntranceException(LicoError):
-    message = 'Get TensorBoard URL failed.'
-    errid = 9100
+def convert_myfolder(fopr, user, origin_path):
+    if not origin_path.startswith('MyFolder'):
+        return origin_path
+    return fopr.path_abspath(
+        fopr.path_join(
+            user.workspace,
+            fopr.path_relpath(
+                origin_path,
+                start='MyFolder'
+            )
+        )
+    )
