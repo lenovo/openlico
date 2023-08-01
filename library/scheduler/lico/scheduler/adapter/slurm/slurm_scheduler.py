@@ -25,9 +25,9 @@ from lico.scheduler.base.exception.job_exception import (
     CancelJobFailedException, HoldJobFailedException, InvalidPriorityException,
     JobFileNotExistException, QueryJobFailedException,
     QueryJobRawInfoFailedException, QueryRuntimeException,
-    ReleaseJobFailedException, SchedulerConnectTimeoutException,
-    SchedulerRequeueJobException, SetPriorityException,
-    SubmitJobFailedException,
+    ReleaseJobFailedException, ResumeJobFailedException,
+    SchedulerConnectTimeoutException, SchedulerRequeueJobException,
+    SetPriorityException, SubmitJobFailedException, SuspendJobFailedException,
 )
 from lico.scheduler.base.exception.manager_exception import (
     QueryLicenseFeatureException,
@@ -157,6 +157,24 @@ class Scheduler(IScheduler):
 
         if status == "fail":
             raise ReleaseJobFailedException
+        return status
+
+    def suspend_job(self, scheduler_ids):
+        ids = ",".join(scheduler_ids)
+        args = ['scontrol', 'suspend', ids]
+        status = self.job_action(scheduler_ids, args, 'suspend')
+
+        if status == "fail":
+            raise SuspendJobFailedException
+        return status
+
+    def resume_job(self, scheduler_ids):
+        ids = ",".join(scheduler_ids)
+        args = ['scontrol', 'resume', ids]
+        status = self.job_action(scheduler_ids, args, 'resume')
+
+        if status == "fail":
+            raise ResumeJobFailedException
         return status
 
     def query_job(self, job_identity: JobIdentity) -> Job:

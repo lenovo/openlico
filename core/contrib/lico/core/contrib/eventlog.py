@@ -42,6 +42,8 @@ class EventLog(object):
     cancel = OperationLog.CANCEL
     hold = OperationLog.HOLD
     release = OperationLog.RELEASE
+    suspend = OperationLog.SUSPEND
+    resume = OperationLog.RESUME
     rerun = OperationLog.RERUN
     comment = OperationLog.COMMENT
     priority = OperationLog.PRIORITY

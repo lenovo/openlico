@@ -45,6 +45,14 @@ class ReleaseJobFailedException(SchedulerJobBaseException):
     message = 'Release job failed.'
 
 
+class SuspendJobFailedException(SchedulerJobBaseException):
+    message = 'Suspend job failed.'
+
+
+class ResumeJobFailedException(SchedulerJobBaseException):
+    message = 'Resume job failed.'
+
+
 class RecycleResourceFailedException(SchedulerJobBaseException):
     message = 'Recycle resource failed.'
 

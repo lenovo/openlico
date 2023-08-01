@@ -62,12 +62,8 @@ class PriorityView(JobBaseActionView):
     @atomic
     def post(self, request, *args, **kwargs):
         priority_value = request.data["priority_value"]
-        if request.user.is_operator:
-            role = "operator"
-        else:
-            role = "user"
         job_query, scheduler = self.get_jobs_and_scheduler(
-            request.data['job_ids'], request.user, role
+            request.data['job_ids'], request.user, 'admin'
         )
         exec_jobs_dict = self.get_exec_jobs_dict(job_query)
         try:
@@ -84,4 +80,4 @@ class PriorityView(JobBaseActionView):
             request.user.username, EventLog.job, EventLog.priority,
             exec_jobs_dict.values()
         )
-        return Response({"batch_status": status})
+        return Response({"action_status": status})

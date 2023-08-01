@@ -119,3 +119,13 @@ class JobOperationNotSupportException(JobException):
 class JobOperationException(JobException):
     errid = 7019
     message = "Job operation exception."
+
+
+class SuspendJobException(JobException):
+    errid = 7020
+    message = "Failed to suspend the job"
+
+
+class ResumeJobException(JobException):
+    errid = 7021
+    message = "Failed to resume the job"

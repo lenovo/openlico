@@ -29,9 +29,10 @@ from lico.scheduler.base.exception.job_exception import (
     InvalidPriorityException, JobFileNotExistException,
     QueryJobFailedException, QueryJobRawInfoFailedException,
     QueryRuntimeException, QueryUserPriorityException,
-    ReleaseJobFailedException, SchedulerConnectTimeoutException,
-    SchedulerRequeueJobException, ServerDownException, SetPriorityException,
-    SubmitJobFailedException,
+    ReleaseJobFailedException, ResumeJobFailedException,
+    SchedulerConnectTimeoutException, SchedulerRequeueJobException,
+    ServerDownException, SetPriorityException, SubmitJobFailedException,
+    SuspendJobFailedException,
 )
 from lico.scheduler.base.exception.manager_exception import (
     GPUConfigurationException, QueryLicenseFeatureException,
@@ -155,6 +156,26 @@ class Scheduler(IScheduler):
         status = self.job_action(scheduler_ids, args, 'release')
         if status == "fail":
             raise ReleaseJobFailedException
+        return status
+
+    def suspend_job(self, scheduler_ids) -> None:
+        logger.debug("suspend_job entry")
+        ids = " ".join(scheduler_ids)
+        args = ['job_ids=(%s); for job_id in "${job_ids[@]}";'
+                ' do bstop $job_id ;done' % ids]
+        status = self.job_action(scheduler_ids, args, 'suspend')
+        if status == "fail":
+            raise SuspendJobFailedException
+        return status
+
+    def resume_job(self, scheduler_ids) -> None:
+        logger.debug("resume_job entry")
+        ids = " ".join(scheduler_ids)
+        args = ['job_ids=(%s); for job_id in "${job_ids[@]}";'
+                ' do bresume $job_id ;done' % ids]
+        status = self.job_action(scheduler_ids, args, 'resume')
+        if status == "fail":
+            raise ResumeJobFailedException
         return status
 
     def query_job(self, job_identity: JobIdentity) -> Job:

@@ -31,13 +31,15 @@ from lico.core.contrib.schema import json_schema_validate
 from lico.core.contrib.views import APIView, DataTableView, InternalAPIView
 from lico.scheduler.base.exception.job_exception import (
     HoldJobFailedException, ReleaseJobFailedException,
+    ResumeJobFailedException, SuspendJobFailedException,
 )
 
 from ..base.job_operate_state import JobOperateState
 from ..base.job_state import JobState
 from ..exceptions import (
     DeleteRunningJobException, HoldJobException, JobException,
-    QueryJobDetailException, ReleaseJobException,
+    QueryJobDetailException, ReleaseJobException, ResumeJobException,
+    SuspendJobException,
 )
 from ..helpers.scheduler_helper import (
     get_admin_scheduler, get_scheduler, parse_job_identity,
@@ -330,7 +332,7 @@ class JobHoldView(JobBaseActionView):
             request.user.username, EventLog.job, EventLog.hold,
             exec_jobs_dict.values()
         )
-        return Response({"batch_status": status})
+        return Response({"action_status": status})
 
 
 class JobReleaseView(JobBaseActionView):
@@ -366,7 +368,75 @@ class JobReleaseView(JobBaseActionView):
             request.user.username, EventLog.job, EventLog.release,
             exec_jobs_dict.values()
         )
-        return Response({"batch_status": status})
+        return Response({"action_status": status})
+
+
+class JobSuspendView(JobBaseActionView):
+    permission_classes = (AsOperatorRole,)
+
+    @json_schema_validate({
+        "type": "object",
+        "properties": {
+            "job_ids": {
+                "type": "array",
+                "items": {"type": ["integer"]}
+            },
+        },
+        "required": ["job_ids"]
+    })
+    @atomic()
+    def post(self, request):
+        job_query, scheduler = self.get_jobs_and_scheduler(
+            request.data['job_ids'],
+            request.user,
+            'admin')
+        exec_jobs_dict = self.get_exec_jobs_dict(job_query)
+        try:
+            status = scheduler.suspend_job(exec_jobs_dict.keys())
+        except SuspendJobFailedException:
+            raise SuspendJobException
+        except Exception as e:
+            logger.exception('Failed to suspend the job, reason: %s' % e)
+            raise SuspendJobException
+        EventLog.opt_create(
+            request.user.username, EventLog.job, EventLog.suspend,
+            exec_jobs_dict.values()
+        )
+        return Response({"action_status": status})
+
+
+class JobResumeView(JobBaseActionView):
+    permission_classes = (AsOperatorRole,)
+
+    @json_schema_validate({
+        "type": "object",
+        "properties": {
+            "job_ids": {
+                "type": "array",
+                "items": {"type": ["integer"]}
+            },
+        },
+        "required": ["job_ids"]
+    })
+    @atomic()
+    def post(self, request):
+        job_query, scheduler = self.get_jobs_and_scheduler(
+            request.data['job_ids'],
+            request.user,
+            'admin')
+        exec_jobs_dict = self.get_exec_jobs_dict(job_query)
+        try:
+            status = scheduler.resume_job(exec_jobs_dict.keys())
+        except ResumeJobFailedException:
+            raise ResumeJobException
+        except Exception as e:
+            logger.exception('Failed to resume the job, reason: %s' % e)
+            raise ResumeJobException
+        EventLog.opt_create(
+            request.user.username, EventLog.job, EventLog.resume,
+            exec_jobs_dict.values()
+        )
+        return Response({"action_status": status})
 
 
 class CancelView(JobBaseActionView):
@@ -410,7 +480,7 @@ class CancelView(JobBaseActionView):
             request.user.username, EventLog.job, EventLog.cancel,
             exec_jobs_dict.values()
         )
-        return Response({"batch_status": status})
+        return Response({"action_status": status})
 
 
 class DeleteView(JobBaseActionView):
@@ -454,4 +524,4 @@ class DeleteView(JobBaseActionView):
                 request.user.username, EventLog.job, EventLog.delete,
                 event_details
             )
-        return Response({"batch_status": status})
+        return Response({"action_status": status})
