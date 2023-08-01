@@ -64,7 +64,7 @@ def parse_job_info(  # noqa: C901
         'M': JobState.REQUEUED,  # moved to another server
         'Q': JobState.PENDING,  # queued
         'R': JobState.RUNNING,  # running
-        'S': JobState.PENDING,  # suspended
+        'S': JobState.SUSPENDED,  # suspended
         'T': JobState.REQUEUED,  # being moved to new location
         'U': JobState.PENDING,  # job suspended due to keyboard activity
         # waiting for its submitter assigned start time to be reached

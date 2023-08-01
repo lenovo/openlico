@@ -68,4 +68,4 @@ class JobRequeueView(JobBaseActionView):
             EventLog.requeue,
             exec_jobs_dict.values()
         )
-        return Response({"batch_status": status})
+        return Response({"action_status": status})

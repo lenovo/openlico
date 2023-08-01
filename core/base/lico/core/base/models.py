@@ -36,6 +36,8 @@ class OperationLog(models.Model):
     CANCEL = 'cancel'
     HOLD = 'hold'
     RELEASE = 'release'
+    SUSPEND = 'suspend'
+    RESUME = 'resume'
     RERUN = 'rerun'
     COMMENT = 'comment'
     PRIORITY = 'priority'
@@ -65,6 +67,8 @@ class OperationLog(models.Model):
         (CANCEL, 'cancel'),
         (HOLD, 'hold'),
         (RELEASE, 'release'),
+        (SUSPEND, 'suspend'),
+        (RESUME, 'resume'),
         (RERUN, 'rerun'),
         (COMMENT, 'comment'),
         (PRIORITY, 'priority'),

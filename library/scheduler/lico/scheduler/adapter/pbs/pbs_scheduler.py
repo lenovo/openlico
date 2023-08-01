@@ -24,9 +24,9 @@ from lico.scheduler.base.exception.job_exception import (
     CancelJobFailedException, HoldJobFailedException, InvalidPriorityException,
     JobFileNotExistException, OperationNotSupportException,
     QueryJobFailedException, QueryJobRawInfoFailedException,
-    QueryRuntimeException, ReleaseJobFailedException,
+    QueryRuntimeException, ReleaseJobFailedException, ResumeJobFailedException,
     SchedulerNotWorkingException, SetPriorityException,
-    SubmitJobFailedException,
+    SubmitJobFailedException, SuspendJobFailedException,
 )
 from lico.scheduler.base.job.job import Job
 from lico.scheduler.base.job.queue import Queue
@@ -139,6 +139,26 @@ class Scheduler(IScheduler):
         status = self.job_action(scheduler_ids, args, 'release')
         if status == "fail":
             raise ReleaseJobFailedException
+        return status
+
+    def suspend_job(self, scheduler_ids):
+        logger.debug("suspend_job entry")
+        ids = " ".join(scheduler_ids)
+        args = ['job_ids=(%s); for job_id in "${job_ids[@]}";'
+                ' do qsig -s suspend $job_id ;done' % ids]
+        status = self.job_action(scheduler_ids, args, 'suspend')
+        if status == "fail":
+            raise SuspendJobFailedException
+        return status
+
+    def resume_job(self, scheduler_ids):
+        logger.debug("resume_job entry")
+        ids = " ".join(scheduler_ids)
+        args = ['job_ids=(%s); for job_id in "${job_ids[@]}";'
+                ' do qsig -s resume $job_id ;done' % ids]
+        status = self.job_action(scheduler_ids, args, 'resume')
+        if status == "fail":
+            raise ResumeJobFailedException
         return status
 
     def query_job(self, job_identity: JobIdentity) -> Job:
