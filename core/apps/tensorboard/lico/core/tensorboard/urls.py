@@ -14,9 +14,12 @@
 
 from django.urls import path
 
+from .views.entrance_url_view import EntranceURLView
 from .views.tensorboard_view import HeartBeatView, TensorBoardView
 
 urlpatterns = [
     path('', TensorBoardView.as_view()),
-    path('<str:uuid>/', HeartBeatView.as_view())
+
+    path('entrance_url/<int:job_id>/', EntranceURLView.as_view()),
+    path('<str:uuid>/', HeartBeatView.as_view()),
 ]

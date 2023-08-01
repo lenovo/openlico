@@ -15,6 +15,7 @@
 import json
 import logging
 import os
+import uuid
 
 from django.db import transaction
 from django.db.models import Q
@@ -117,6 +118,11 @@ class SubmitJobView(JobViewMixin, APIView):
 
         if template_id == 'linpack_hpl':
             param_vals['wdir'] = os.path.dirname(param_vals['benchmark_file'])
+
+        if template_id == 'tensorboard':
+            job_uuid = f'le-{uuid.uuid4()}'
+            param_vals['job_uuid'] = job_uuid
+            raw_param_vals["job_uuid"] = job_uuid
 
         # Render job content
         if template_id != 'general':
