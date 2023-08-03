@@ -58,6 +58,17 @@ class JobState(Enum):
         return cls.get_state_value(cls.get_waiting_states())
 
     @classmethod
+    def get_running_states(cls):
+        return [
+            JobState.RUNNING,
+            JobState.SUSPENDED,
+        ]
+
+    @classmethod
+    def get_running_state_values(cls):
+        return cls.get_state_value(cls.get_running_states())
+
+    @classmethod
     def get_allocating_states(cls):
         return [
             JobState.QUEUING,

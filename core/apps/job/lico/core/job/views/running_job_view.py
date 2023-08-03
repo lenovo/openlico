@@ -27,7 +27,7 @@ class RunningJobDetailView(APIView):
     def get(self, request, hostname):
         runing_joblist = []
         query = JobRunning.objects.filter(
-            job__state=JobState.RUNNING.value)
+            job__state__in=JobState.get_running_state_values())
 
         for running_job in query:
             job_dict = {
