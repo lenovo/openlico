@@ -15,6 +15,7 @@
 import json
 from abc import ABCMeta, abstractmethod
 
+from django.conf import settings
 from django.http import FileResponse
 from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
@@ -169,3 +170,8 @@ class TemplateResourceView(FileDownloadView):
     @staticmethod
     def get_content_type():
         return 'application/zip'
+
+
+class TemplateDefaultRunTimeView(APIView):
+    def get(self, request):
+        return Response(settings.TEMPLATE.DEFAULT_RUN_TIME)

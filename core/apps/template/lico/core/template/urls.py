@@ -28,8 +28,9 @@ from .views.runtime import (
 )
 from .views.template_job import TemplateJobInternalView, TemplateJobView
 from .views.templates import (
-    TemplateDetailView, TemplateHelpView, TemplateListView, TemplateLogoView,
-    TemplateResourceView, TemplatesDescView,
+    TemplateDefaultRunTimeView, TemplateDetailView, TemplateHelpView,
+    TemplateListView, TemplateLogoView, TemplateResourceView,
+    TemplatesDescView,
 )
 from .views.user_templates import (
     UserTemplateDetailView, UserTemplateExportView, UserTemplateImportView,
@@ -100,4 +101,7 @@ urlpatterns = [
     path('alltemplates/', AllTemplatesView.as_view()),
     path('categories/', CategoriesView.as_view()),
     path('templatesdesc/', TemplatesDescView.as_view()),
+
+    # Fixtures
+    path('default-run-time/', TemplateDefaultRunTimeView.as_view()),
 ]
