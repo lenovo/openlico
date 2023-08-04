@@ -101,7 +101,7 @@ class HardwareHealth(Model):
     )
     health = CharField(null=False, max_length=100)
     name = CharField(null=False, max_length=100)
-    states = CharField(null=False, max_length=100)
+    states = TextField(null=False, blank=True, default='')
     units = CharField(null=True, max_length=100)
     value = CharField(null=True, default='', max_length=100)
     type = CharField(max_length=100)
@@ -228,3 +228,4 @@ class NodeSchedulableRes(Model):
     gres = TextField(null=False, default='{}')
     create_time = DateTimeField(auto_now_add=True)
     update_time = DateTimeField(auto_now=True)
+
