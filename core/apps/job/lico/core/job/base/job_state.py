@@ -73,7 +73,6 @@ class JobState(Enum):
         return [
             JobState.QUEUING,
             JobState.HOLD,
-            JobState.SUSPENDED,
         ]
 
     @classmethod

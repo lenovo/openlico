@@ -32,7 +32,7 @@ class RecentJobListView(InternalAPIView):
 
     def get(self, request):
         end_time_offset = int(request.query_params.get('end_time_offset', 300))
-        q = Q(state=JobState.RUNNING.value)
+        q = Q(state__in=JobState.get_running_state_values())
 
         if end_time_offset:
             q |= Q(end_time__gte=(
@@ -52,7 +52,7 @@ class UserRecentJobListView(InternalAPIView):
 
     def get(self, request):
         end_time_offset = int(request.query_params.get('end_time_offset', 300))
-        q = Q(state=JobState.RUNNING.value)
+        q = Q(state__in=JobState.get_running_state_values())
 
         if end_time_offset:
             q |= Q(end_time__gte=(
