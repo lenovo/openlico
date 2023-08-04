@@ -72,7 +72,7 @@ class JobHistoryView(APIView):
     @staticmethod
     def running_count_at_moment(moment, job_source):
         running_jobs = job_source.filter(
-            state=JobState.RUNNING.value)
+            state__in=JobState.get_running_state_values())
         completed_jobs = job_source.filter(
             state=JobState.COMPLETED.value)
 
@@ -94,7 +94,7 @@ class JobHistoryView(APIView):
             start_time__gt=moment)
 
         running_jobs = filter_jobs.filter(
-            state=JobState.RUNNING.value,
+            state__in=JobState.get_running_state_values(),
             submit_time__lt=moment,
             start_time__gt=moment)
 

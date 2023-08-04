@@ -31,7 +31,7 @@ class RunningJobResourceView(InternalAPIView):
 
     def get(self, request):
         running_jobs_tres_list = Job.objects.filter(
-            state=JobState.RUNNING.value
+            state__in=JobState.get_running_state_values()
         ).values_list('tres', flat=True)
         tres_list = list(map(convert_tres, running_jobs_tres_list))
         data = reduce(lambda x, y: x + y, tres_list) \
@@ -46,7 +46,7 @@ class HostResourceUsedView(InternalAPIView):
     def get(self, request):
         response_value = defaultdict(Counter)
         running_jobs_tres_list = JobRunning.objects.filter(
-            job__state=JobState.RUNNING.value
+            job__state__in=JobState.get_running_state_values()
         ).values("hosts", "per_host_tres")
         for job_tres in running_jobs_tres_list:
             tres_counter = convert_tres(job_tres['per_host_tres'])
@@ -90,7 +90,7 @@ class RunningJobsDetailView(InternalAPIView):
                 "update_time",
             ]
         running_jobs = Job.objects.filter(
-            state=JobState.RUNNING.value,
+            state__in=JobState.get_running_state_values(),
             delete_flag=False
         ).as_dict(include=field_list)
         return Response(running_jobs)
