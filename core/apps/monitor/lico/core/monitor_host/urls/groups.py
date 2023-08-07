@@ -15,7 +15,7 @@
 from django.urls import re_path
 
 from ..views.tendency import (
-    cpu, disk, energy, job, load, memory, network, temperature,
+    cpu, disk, energy, gpu, job, load, memory, network, temperature,
 )
 
 category = r'(?P<category>hour|day|week|month)'
@@ -72,4 +72,10 @@ urlpatterns = [
 
     re_path(r'^{0}/heat/latest/job/$'.format(groupname),
             job.GroupHeatJob.as_view()),
+
+    re_path(r'^{0}/heat/latest/gpu/memory/$'.format(groupname),
+            gpu.GroupHeatMemoryView.as_view()),
+
+    re_path(r'^{0}/heat/latest/gpu/util/$'.format(groupname),
+            gpu.GroupHeatUtilView.as_view()),
 ]
