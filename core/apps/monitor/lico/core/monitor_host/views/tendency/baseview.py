@@ -297,6 +297,45 @@ class GroupHeatBaseView(APIView, metaclass=ABCMeta):  # pragma: no cover
         return Response({"heat": data})
 
 
+class GroupHeatGpuBaseView(GroupHeatBaseView):  # pragma: no cover
+
+    def get_sql(self):
+        sql = "select {field_sql} from hour.{table} where  host=$host \
+         and metric=$metric and index=$index and time > now() - {period}"
+        return sql
+
+    def get(self, request, groupname):
+        gpu_heat_data = []
+        nodesdata = ClusterClient().get_group_nodelist(groupname)
+        # nodesdata = list(groupobject.nodes.values("id", "hostname"))
+        metric = self.get_db_metric()
+        _params = {"metric": metric}
+        try:
+            for item in nodesdata:
+                hostname = item['hostname']
+                gpu_number = MonitorNode.objects.get(
+                    hostname=hostname).gpu.count()
+                for index in range(gpu_number):
+                    _params['index'] = str(index)
+                    sql = self.get_sql().format(
+                        field_sql=self.get_scale_data['sql'],
+                        table=self.get_db_table(),
+                        period=self.LAST_VALUE_PERIOD
+                    )
+                    logger.info("sql:%s", sql)
+                    data = InfluxClient().get(sql,
+                                              bind_params=dict({
+                                                  "host": hostname
+                                              }, **_params))
+                    data = self.handle_query_data(data)
+                    gpu_heat_data.append({"hostname": hostname,
+                                          "gpu_index": index,
+                                          "value": data['value']})
+        except InfluxDBServerError or InfluxDBClientError as e:
+            raise InfluxDBException from e
+        return self.return_success(gpu_heat_data)
+
+
 class ClusterTendencyBaseView(APIView, metaclass=ABCMeta):  # pragma: no cover
     TENDENCY_INTERVAL_TIME = {
         'hour': '30s',

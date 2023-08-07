@@ -31,7 +31,9 @@ from lico.core.monitor_host.utils import (
     parse_gpu_logical_info,
 )
 
-from .baseview import CATEGORY_MAPPING, ClusterTendencyBaseView
+from .baseview import (
+    CATEGORY_MAPPING, ClusterTendencyBaseView, GroupHeatGpuBaseView,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -522,3 +524,19 @@ class ClusterTendencyGpuMemView(ClusterTendencyBaseView):
 
     def get_db_metric(self):
         return 'gpu_mem_usage'
+
+
+class GroupHeatMemoryView(GroupHeatGpuBaseView):
+    def get_db_table(self):
+        return "gpu_metric"
+
+    def get_db_metric(self):
+        return 'gpu_mem_usage'
+
+
+class GroupHeatUtilView(GroupHeatGpuBaseView):
+    def get_db_table(self):
+        return "gpu_metric"
+
+    def get_db_metric(self):
+        return 'gpu_util'
