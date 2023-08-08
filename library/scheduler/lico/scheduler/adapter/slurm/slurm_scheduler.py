@@ -43,7 +43,7 @@ from .slurm_acct_parser import query_events_by_time
 from .slurm_config import SchedulerConfig
 from .slurm_job_identity import JobIdentity
 from .utils.job_parser import (
-    get_job_alter_id, get_job_submit_datetime, parse_job_info,
+    get_job_alter_ids, get_job_submit_datetime, parse_job_info,
 )
 from .utils.queue_parser import ignore_non_slurm_output, parse_queue_info
 
@@ -109,16 +109,10 @@ class Scheduler(IScheduler):
     def job_action(self, scheduler_ids, command: List[str], action: str):
         logger.debug("%s job entry, scheduler_ids: %s", action, scheduler_ids)
         if self._as_admin:
-            rc, out, err = exec_oscmd(
-                command,
-                timeout=self._config.timeout
-            )
+            args = ['bash', '-c'] + command
         else:
-            rc, out, err = exec_oscmd_with_user(
-                self._operator_username,
-                command,
-                timeout=self._config.timeout
-            )
+            args = ['su', '-', self._operator_username, '-c'] + command
+        rc, out, err = exec_oscmd(args, self._config.timeout)
         if rc != 0:
             logger.error(
                 "Failed to %s the jobs, Error message is: %s",
@@ -129,12 +123,11 @@ class Scheduler(IScheduler):
         return status
 
     def cancel_job(self, scheduler_ids):
-        new_scheduler_ids = []
-        for scheduler_id in scheduler_ids:
-            scheduler_id = get_job_alter_id(scheduler_id, self._config.timeout)
-            new_scheduler_ids.append(scheduler_id)
-        ids = ",".join(new_scheduler_ids)
-        args = ["scancel", ids]
+        new_scheduler_ids = get_job_alter_ids(scheduler_ids,
+                                              self._config.timeout)
+        ids = " ".join(new_scheduler_ids)
+        args = ['job_ids=(%s); for job_id in "${job_ids[@]}";'
+                ' do scancel $job_id ;done' % ids]
         status = self.job_action(new_scheduler_ids, args, 'cancel')
 
         if status == "fail":
@@ -142,8 +135,9 @@ class Scheduler(IScheduler):
         return status
 
     def hold_job(self, scheduler_ids):
-        ids = ",".join(scheduler_ids)
-        args = ['scontrol', 'hold', ids]
+        ids = " ".join(scheduler_ids)
+        args = ['job_ids=(%s); for job_id in "${job_ids[@]}";'
+                ' do scontrol hold $job_id ;done' % ids]
         status = self.job_action(scheduler_ids, args, 'hold')
 
         if status == "fail":
@@ -151,8 +145,9 @@ class Scheduler(IScheduler):
         return status
 
     def release_job(self, scheduler_ids):
-        ids = ",".join(scheduler_ids)
-        args = ['scontrol', 'release', ids]
+        ids = " ".join(scheduler_ids)
+        args = ['job_ids=(%s); for job_id in "${job_ids[@]}";'
+                ' do scontrol release $job_id ;done' % ids]
         status = self.job_action(scheduler_ids, args, 'release')
 
         if status == "fail":
@@ -160,8 +155,9 @@ class Scheduler(IScheduler):
         return status
 
     def suspend_job(self, scheduler_ids):
-        ids = ",".join(scheduler_ids)
-        args = ['scontrol', 'suspend', ids]
+        ids = " ".join(scheduler_ids)
+        args = ['job_ids=(%s); for job_id in "${job_ids[@]}";'
+                ' do scontrol suspend $job_id ;done' % ids]
         status = self.job_action(scheduler_ids, args, 'suspend')
 
         if status == "fail":
@@ -169,8 +165,9 @@ class Scheduler(IScheduler):
         return status
 
     def resume_job(self, scheduler_ids):
-        ids = ",".join(scheduler_ids)
-        args = ['scontrol', 'resume', ids]
+        ids = " ".join(scheduler_ids)
+        args = ['job_ids=(%s); for job_id in "${job_ids[@]}";'
+                ' do scontrol resume $job_id ;done' % ids]
         status = self.job_action(scheduler_ids, args, 'resume')
 
         if status == "fail":
@@ -585,17 +582,19 @@ class Scheduler(IScheduler):
     def update_job_priority(self, scheduler_ids, priority_value):
         if int(priority_value) > 4294967293 or int(priority_value) < 1:
             raise InvalidPriorityException
-        ids = ",".join(scheduler_ids)
-        args = ["scontrol", "update", "job=%s" % ids,
-                "Priority=%s" % priority_value]
+        ids = " ".join(scheduler_ids)
+        args = ['job_ids=(%s); for job_id in "${job_ids[@]}";'
+                ' do scontrol update job=$job_id Priority=%s ;'
+                ' done' % (ids, priority_value)]
         status = self.job_action(scheduler_ids, args, 'priority')
         if status == "fail":
             raise SetPriorityException
         return status
 
     def requeue_job(self, scheduler_ids):
-        ids = ",".join(scheduler_ids)
-        args = ['scontrol', 'requeue', 'Incomplete', ids]
+        ids = " ".join(scheduler_ids)
+        args = ['job_ids=(%s); for job_id in "${job_ids[@]}";'
+                ' do scontrol requeue $job_id ;done' % ids]
         status = self.job_action(scheduler_ids, args, 'requeue')
         if status == "fail":
             raise SchedulerRequeueJobException

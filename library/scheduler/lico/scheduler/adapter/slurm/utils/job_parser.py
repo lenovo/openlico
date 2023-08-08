@@ -390,8 +390,8 @@ def get_job_memory(
             all_step_raw_info = check_output(sacct_args)  # nosec B603
         except CalledProcessError as e:
             logger.warning(
-                'Get job memory failed, the cmd is {0}, the error is {1}'
-                .format(e.cmd, e.stderr))
+                'Get job memory failed, the cmd is {0}, '
+                'the error is {1}'.format(e.cmd, e.stderr))
             return 0
         all_step_info = parse_slurm_mem_info(all_step_raw_info)
         running_step_info = parse_slurm_mem_info(running_step_raw_info)
@@ -596,29 +596,40 @@ def get_job_submit_datetime(job_id, timeout):
     return convert_timestr_2_datetime(submit_time_dt_str)
 
 
-def get_job_alter_id(job_id, timeout):
+def get_job_alter_ids(scheduler_ids, timeout):
+    re_ids = "|".join(scheduler_ids)
+    args = ["bash", "-c",
+            "scontrol show jobs | grep -E '^JobId=(%s)'" % re_ids]
+    # out example:
+    # JobId=1342 JobName=command_testjob4_71
+    # JobId=1540 ArrayJobId=1539 ArrayTaskId=0 JobName=command_array_job1
     rc, out, err = exec_oscmd(
-        args=["scontrol", "show", "jobs", str(job_id)],
-        timeout=timeout
+        args, timeout=timeout
     )
-    job_info_msg = 'JobId={0}'.format(str(job_id))
-    job_info = [s for s in out.decode().splitlines()
-                if s.strip().startswith(job_info_msg)]
-    # Fixed an issue where subjobs in array jobs
-    # could not be cancelled individually.
-    if len(job_info) == 1 and 'ArrayJobId' in job_info[0]:
-        array_job_id = None
-        array_task_id = None
-        split_re = re.compile(r'(?<= |\t)(\S+?)=')
-        params = re.split(split_re, job_info[0])
-        for index in range(1, len(params), 2):
-            key = params[index].strip()
-            value = params[index + 1].strip()
-            if key == 'ArrayJobId':
-                array_job_id = value
-            elif key == 'ArrayTaskId':
-                array_task_id = value
-                break
-        if array_job_id and array_task_id and '-' not in array_task_id:
-            return f'{array_job_id}_{array_task_id}'
-    return job_id
+    jobs_info = [s.strip() for s in out.decode().splitlines()]
+    split_re = re.compile(r'(\w+)=(\S+)')
+    new_scheduler_ids = []
+    for job_info in jobs_info:
+        result = split_re.findall(job_info)
+        if 'ArrayJobId' in job_info:
+            job_id = None
+            array_job_id = None
+            array_task_id = None
+            for key, value in result:
+                if key == 'JobId':
+                    job_id = value
+                elif key == 'ArrayJobId':
+                    array_job_id = value
+                elif key == 'ArrayTaskId':
+                    array_task_id = value
+                    break
+            if job_id == array_job_id:
+                new_scheduler_ids.append(job_id)
+            if array_job_id and array_task_id and '-' not in array_task_id:
+                new_scheduler_ids.append(f'{array_job_id}_{array_task_id}')
+        else:
+            for key, value in result:
+                if key == 'JobId':
+                    new_scheduler_ids.append(value)
+                    break
+    return new_scheduler_ids
