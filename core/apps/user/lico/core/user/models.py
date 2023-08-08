@@ -101,6 +101,10 @@ class User(Model):
     def role_name(self) -> str:
         return self.ROLES[self.role]
 
+    @staticmethod
+    def get_full_name(first_name, last_name) -> str:
+        return f"{first_name} {last_name}".strip()
+
 
 class ApiKey(Model):
     api_key = CharField(max_length=50, null=True, unique=True)

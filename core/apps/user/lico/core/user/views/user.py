@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import logging
 import re
 from datetime import datetime
@@ -20,6 +21,8 @@ import attr
 from dateutil.tz import tzutc
 from django.conf import settings
 from django.db import IntegrityError
+from django.db.models import Case, CharField, F, Q, Value, When
+from django.db.models.functions import Concat, Lower
 from django.db.transaction import atomic
 from django.http import StreamingHttpResponse
 from django.utils import timezone
@@ -71,11 +74,51 @@ class UserDataTableView(DataTableView):
         user_dict = result.as_dict(
             inspect_related=False
         )
+        user_dict["full_name"] = User.get_full_name(
+            user_dict["first_name"], user_dict["last_name"]
+        )
         user_dict["is_locked"] = not result.is_activate
         return user_dict
 
     def get_query(self, request, *args, **kwargs):
-        return User.objects
+        param_args = json.loads(request.query_params["args"])
+        query = User.objects
+        if (
+            param_args.get('sort', {}).get('prop', '') != "full_name" and
+            "full_name" not in param_args.get('search', {}).get('props', [])
+        ):
+            return query
+
+        return query.annotate(full_name=Case(
+            When(first_name='', then=Lower(F('last_name'))),
+            When(first_name=None, then=Lower(F('last_name'))),
+            When(last_name='', then=Lower(F('first_name'))),
+            When(last_name=None, then=Lower(F('first_name'))),
+            default=Lower(
+                Concat(F('first_name'), Value(' '), F('last_name'))
+            ),
+            output_field=CharField(),
+        ))
+
+    def global_search(self, query, param_args):
+        if "search" not in param_args:
+            return query
+
+        filters = Q()
+        for prop in param_args['search']['props']:
+            if prop != "full_name":
+                prop += '_lower'
+                # icontains is not case-insensitive for some reason so we need
+                # to adnotate for case-insensitive search
+                query = query.annotate(
+                    **{prop: Lower(F(prop[:-6]))}
+                )
+            prop += '__icontains'
+            filters |= Q(
+                **{prop: param_args['search']['keyword'].lower()}
+            )
+        query = query.filter(filters)
+        return query
 
     @json_schema_validate({
         'type': 'object',
@@ -209,7 +252,10 @@ class UserDetailView(APIView):
         )
         user_dict.update(
             is_admin=user.is_admin,
-            is_activate=user.is_activate
+            is_activate=user.is_activate,
+            full_name=User.get_full_name(
+                user_dict["first_name"], user_dict["last_name"]
+            ),
         )
 
         from lico.core.contrib.client import Client
