@@ -14,6 +14,7 @@
 
 from datetime import MAXYEAR, date, timedelta
 
+from django.conf import settings
 from django.db.transaction import atomic
 from django.utils.timezone import now
 from rest_framework.response import Response
@@ -66,8 +67,9 @@ class LockView(APIView):
         user.fail_chances = 0
         user.save()
 
-        # Ensure ssh access is allowed again
-        Libuser().modify_user_lock(user.username, lock=False)
+        if settings.USER.USE_LIBUSER:
+            # Ensure ssh access is allowed again
+            Libuser().modify_user_lock(user.username, lock=False)
 
         return Response()
 
