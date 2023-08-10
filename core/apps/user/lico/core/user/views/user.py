@@ -322,20 +322,19 @@ class UserDetailView(APIView):
         self._is_other_admin(request, other_user)
         self._is_user_self(request, other_user)
 
-        # Only admin can modify role info
-        if 'role' in request.data and \
-                not request.user.is_admin and \
-                request.data['role'] != request.user.role:
-            raise PermissionDenied(
-                "Unable to modify role information."
-            )
-
-        data = request.data
+        if request.user.is_admin:
+            data = request.data
+        else:
+            data = {
+                key: request.data[key]
+                for key in ['email', 'last_name', 'first_name']
+                if key in request.data
+            }
         DataBase().update_user(pk=pk, data=data)
 
         # Only admin can modify group info
-        if 'group' in data and \
-                request.user.is_admin:
+        if request.user.is_admin and \
+                'group' in data:
             try:
                 Libuser().modify_user_group(
                     other_user.username, data['group']
