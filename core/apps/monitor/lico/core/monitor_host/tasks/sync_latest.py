@@ -338,16 +338,30 @@ class LatestMonitorSync:
 
         update_names = []
         for sensor in health.get("badreadings", []):
-            hardware_health, _ = node.hardware_health.update_or_create(
-                name=sensor.get("name"),
-                defaults={
-                    'health': sensor.get('health', ''),
-                    'states': sensor.get('states', ''),
-                    'units': sensor.get('units', ''),
-                    'value': sensor.get('value', ''),
-                    'type': sensor.get('type', '')
-                }
-            )
+            # ipmi
+            if sensor.get("name"):
+                hardware_health, _ = node.hardware_health.update_or_create(
+                    name=sensor.get("name"),
+                    defaults={
+                        'health': sensor.get('health', ''),
+                        'states': sensor.get('states', ''),
+                        'units': sensor.get('units', ''),
+                        'value': sensor.get('value', ''),
+                        'type': sensor.get('type', '')
+                    }
+                )
+            # redfish
+            elif sensor.get("SensorName"):
+                hardware_health, _ = node.hardware_health.update_or_create(
+                    name=sensor.get("SensorName"),
+                    defaults={
+                        'health': sensor.get('Severity', ''),
+                        'states': sensor.get('Message', ''),
+                        'units': sensor.get('units', ''),
+                        'value': sensor.get('value', ''),
+                        'type': sensor.get('type', '')
+                    }
+                )
             update_names.append(hardware_health.name)
         node.hardware_health.exclude(name__in=update_names).delete()
 
