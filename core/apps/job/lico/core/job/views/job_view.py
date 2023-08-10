@@ -516,7 +516,7 @@ class DeleteView(JobBaseActionView):
                 continue
             job.delete_flag = True
             job.save()
-            event_details.append((job.id, job.job_name))
+            event_details.append((job.id, job.scheduler_id))
 
         status = batch_status(len(job_ids), err_nums)
         if event_details:
