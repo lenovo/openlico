@@ -314,29 +314,38 @@ class UserDetailView(APIView):
             'group': {
                 'type': 'string'
             },
-        },
-        'required': ['role']
+        }
     })
-    @AsAdminRole
     @atomic
     def patch(self, request, pk):
         other_user = DataBase().get_user(pk, lock=True)
         self._is_other_admin(request, other_user)
         self._is_user_self(request, other_user)
+
+        # Only admin can modify role info
+        if 'role' in request.data and \
+                not request.user.is_admin and \
+                request.data['role'] != request.user.role:
+            raise PermissionDenied(
+                "Unable to modify role information."
+            )
+
         data = request.data
         DataBase().update_user(pk=pk, data=data)
-        new_group = data.get("group")
-        try:
-            if new_group:
+
+        # Only admin can modify group info
+        if 'group' in data and \
+                request.user.is_admin:
+            try:
                 Libuser().modify_user_group(
-                    other_user.username, new_group
+                    other_user.username, data['group']
                 )
-        except InvalidOperation as e:
-            raise InvalidLibuserOperation from e
-        except InvalidUser as e:
-            raise UserNotExists from e
-        except InvalidGroup as e:
-            raise GroupNotExists from e
+            except InvalidOperation as e:
+                raise InvalidLibuserOperation from e
+            except InvalidUser as e:
+                raise UserNotExists from e
+            except InvalidGroup as e:
+                raise GroupNotExists from e
         EventLog.opt_create(
             request.user.username, EventLog.user, EventLog.update,
             EventLog.make_list(other_user.id, other_user.username)
