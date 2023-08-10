@@ -317,6 +317,7 @@ class UserDetailView(APIView):
         },
         'required': ['role']
     })
+    @AsAdminRole
     @atomic
     def patch(self, request, pk):
         other_user = DataBase().get_user(pk, lock=True)
