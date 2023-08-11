@@ -49,8 +49,13 @@ urlpatterns = [
 
     path('', UserDataTableView.as_view()),
     path('list/', UserListView.as_view()),
-    path('<int:pk>/', UserDetailView.as_view()),
     path('export/', UserExportView.as_view()),
     path('import/', UserImportView.as_view()),
     path('import/detail/', UserImportDetailView.as_view()),
+    path('<int:pk>/', UserDetailView.as_view(), name="user-detail-id"),
+    path(
+        '<str:username>/',
+        UserDetailView.as_view(),
+        name="user-detail-username",
+    ),
 ]

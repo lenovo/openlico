@@ -245,8 +245,11 @@ class UserDetailView(APIView):
                 "Unable to modify other user information."
             )
 
-    def get(self, request, pk):
-        user = DataBase().get_user(pk)
+    def get(self, request, pk=None, username=None):
+        if pk:
+            user = DataBase().get_user(pk)
+        elif username:
+            user = DataBase().get_user(username)
         user_dict = user.as_dict(
             inspect_related=False
         )
