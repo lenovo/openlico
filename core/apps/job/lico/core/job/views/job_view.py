@@ -244,12 +244,15 @@ class JobRawInfoView(APIView):
 
 
 class JobBaseActionView(APIView):
+    authentication_classes = (
+        RemoteJWTWebAuthentication,
+        RemoteApiKeyAuthentication
+    )
+
     @staticmethod
-    def get_jobs_and_scheduler(job_ids, user, role):
+    def get_jobs_and_scheduler(job_ids, user):
         job_query = Job.objects.filter(id__in=job_ids, delete_flag=False)
-        if role in ['admin', 'operator']:
-            if user.role < AsOperatorRole.floor:
-                raise PermissionDenied
+        if user.is_operator:
             scheduler = get_admin_scheduler()
         else:
             scheduler = get_scheduler(user)
@@ -257,38 +260,6 @@ class JobBaseActionView(APIView):
         if not job_query.exists():
             raise Job.DoesNotExist
         return job_query, scheduler
-
-    @staticmethod
-    def is_admin_or_operator(user, role):
-        if role in ['admin', 'operator'] and \
-                user.role >= AsOperatorRole.floor:
-            return True
-        return False
-
-    @staticmethod
-    def get_job_object(pk, user, has_manager_permission=False):
-        job = Job.objects.get(id=pk, delete_flag=False)
-        if has_manager_permission:
-            return job
-        if job.submitter != user.username:
-            raise PermissionDenied
-        return job
-
-    @staticmethod
-    def get_job_scheduler(user, has_manager_permission=False):
-        if has_manager_permission:
-            return get_admin_scheduler()
-        else:
-            return get_scheduler(user)
-
-    @staticmethod
-    def get_action_response(job, state):
-        return {
-            "id": job.id,
-            "scheduler_id": job.scheduler_id,
-            "job_name": job.job_name,
-            "state": state
-        }
 
     @staticmethod
     def get_exec_jobs_dict(job_query):
@@ -306,20 +277,13 @@ class JobHoldView(JobBaseActionView):
                 "type": "array",
                 "items": {"type": ["integer"]}
             },
-            "role": {
-                "type": "string",
-                "enum": ["admin", "operator", "user"],
-            },
         },
         "required": ["job_ids"]
     })
     @atomic()
     def post(self, request):
         job_query, scheduler = self.get_jobs_and_scheduler(
-            request.data['job_ids'],
-            request.user,
-            request.data.get('role', None)
-        )
+            request.data['job_ids'], request.user)
         exec_jobs_dict = self.get_exec_jobs_dict(job_query)
         try:
             status = scheduler.hold_job(exec_jobs_dict.keys())
@@ -343,19 +307,13 @@ class JobReleaseView(JobBaseActionView):
                 "type": "array",
                 "items": {"type": ["integer"]}
             },
-            "role": {
-                "type": "string",
-                "enum": ["admin", "operator", "user"],
-            },
         },
         "required": ["job_ids"]
     })
     @atomic()
     def post(self, request):
         job_query, scheduler = self.get_jobs_and_scheduler(
-            request.data['job_ids'],
-            request.user,
-            request.data.get('role'))
+            request.data['job_ids'], request.user)
         exec_jobs_dict = self.get_exec_jobs_dict(job_query)
         try:
             status = scheduler.release_job(exec_jobs_dict.keys())
@@ -387,9 +345,7 @@ class JobSuspendView(JobBaseActionView):
     @atomic()
     def post(self, request):
         job_query, scheduler = self.get_jobs_and_scheduler(
-            request.data['job_ids'],
-            request.user,
-            'admin')
+            request.data['job_ids'], request.user)
         exec_jobs_dict = self.get_exec_jobs_dict(job_query)
         try:
             status = scheduler.suspend_job(exec_jobs_dict.keys())
@@ -421,9 +377,7 @@ class JobResumeView(JobBaseActionView):
     @atomic()
     def post(self, request):
         job_query, scheduler = self.get_jobs_and_scheduler(
-            request.data['job_ids'],
-            request.user,
-            'admin')
+            request.data['job_ids'], request.user)
         exec_jobs_dict = self.get_exec_jobs_dict(job_query)
         try:
             status = scheduler.resume_job(exec_jobs_dict.keys())
@@ -439,12 +393,7 @@ class JobResumeView(JobBaseActionView):
         return Response({"action_status": status})
 
 
-class CancelView(JobBaseActionView):
-    authentication_classes = (
-        RemoteJWTWebAuthentication,
-        RemoteJWTInternalAuthentication,
-        RemoteApiKeyAuthentication
-    )
+class BatchCancelView(JobBaseActionView):
 
     @json_schema_validate({
         "type": "object",
@@ -457,14 +406,9 @@ class CancelView(JobBaseActionView):
         "required": ["job_ids"]
     })
     @atomic
-    def put(self, request):
-        if request.user.is_operator:
-            role = "operator"
-        else:
-            role = "user"
+    def post(self, request):
         job_query, scheduler = self.get_jobs_and_scheduler(
-            request.data['job_ids'], request.user, role
-        )
+            request.data['job_ids'], request.user)
         exec_jobs_dict = self.get_exec_jobs_dict(job_query)
         try:
             status = scheduler.cancel_job(exec_jobs_dict.keys())
@@ -483,12 +427,7 @@ class CancelView(JobBaseActionView):
         return Response({"action_status": status})
 
 
-class DeleteView(JobBaseActionView):
-    authentication_classes = (
-        RemoteJWTWebAuthentication,
-        RemoteJWTInternalAuthentication,
-        RemoteApiKeyAuthentication
-    )
+class BatchDeleteView(JobBaseActionView):
 
     @json_schema_validate({
         "type": "object",

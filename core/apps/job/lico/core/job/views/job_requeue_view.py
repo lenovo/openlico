@@ -34,25 +34,17 @@ class JobRequeueView(JobBaseActionView):
     @json_schema_validate({
         "type": "object",
         "properties": {
-            "role": {
-                "type": "string",
-                "enum": ["admin", "operator", "user"],
-                "default": "user"
-            },
             "job_ids": {
                 "type": "array",
                 "items": {"type": ["integer"]}
             }
         },
-        "required": ["role", "job_ids"]
+        "required": ["job_ids"]
     })
     @atomic
     def post(self, request):
         job_query, scheduler = self.get_jobs_and_scheduler(
-            request.data['job_ids'],
-            request.user,
-            request.data.get('role', None)
-        )
+            request.data['job_ids'], request.user)
         exec_jobs_dict = self.get_exec_jobs_dict(job_query)
         try:
             status = scheduler.requeue_job(exec_jobs_dict.keys())

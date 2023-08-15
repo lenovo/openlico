@@ -63,8 +63,7 @@ class PriorityView(JobBaseActionView):
     def post(self, request, *args, **kwargs):
         priority_value = request.data["priority_value"]
         job_query, scheduler = self.get_jobs_and_scheduler(
-            request.data['job_ids'], request.user, 'admin'
-        )
+            request.data['job_ids'], request.user)
         exec_jobs_dict = self.get_exec_jobs_dict(job_query)
         try:
             status = scheduler.update_job_priority(

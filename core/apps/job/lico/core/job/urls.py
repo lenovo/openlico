@@ -31,8 +31,9 @@ from .views.job_resource_view import (
 from .views.job_statistic import JobHistoryStatisticView, JobStatisticView
 from .views.job_submit_view import JobSubmitView
 from .views.job_view import (
-    CancelView, DeleteView, InternalJobView, JobHoldView, JobListView,
-    JobRawInfoView, JobReleaseView, JobResumeView, JobSuspendView, JobView,
+    BatchCancelView, BatchDeleteView, InternalJobView, JobHoldView,
+    JobListView, JobRawInfoView, JobReleaseView, JobResumeView, JobSuspendView,
+    JobView,
 )
 from .views.priority import PriorityView
 from .views.queue import QueueListView
@@ -96,12 +97,19 @@ urlpatterns = [
 
     # openapi
     path('openapi/v1/<int:pk>/', JobView.as_view()),
+    path('openapi/v1/cancel/', BatchCancelView.as_view()),
+    path('openapi/v1/priority/', PriorityView.as_view()),
+    path('openapi/v1/requeue/', JobRequeueView.as_view()),
+    path('openapi/v1/hold/', JobHoldView.as_view()),
+    path('openapi/v1/release/', JobReleaseView.as_view()),
+    path('openapi/v1/suspend/', JobSuspendView.as_view()),
+    path('openapi/v1/resume/', JobResumeView.as_view()),
 
     path('tag/', TagView.as_view()),
     path('<int:pk>/comment/', JobCommentView.as_view()),
 
-    path('cancel/', CancelView.as_view()),
-    path('delete/', DeleteView.as_view()),
+    path('cancel/', BatchCancelView.as_view()),
+    path('delete/', BatchDeleteView.as_view()),
     path('priority/', PriorityView.as_view()),
     path('requeue/', JobRequeueView.as_view()),
     path('hold/', JobHoldView.as_view()),
