@@ -198,23 +198,26 @@ class BuildJobManager:
                 b"Finished to work environment preparation\n", "ab"
             )
             # run
+            conn = None
             log_stream = local(log_path).open('a')
 
             def run():
+                nonlocal conn
                 from tempfile import TemporaryFile
                 with TemporaryFile("w+") as tf:
                     tf.write(kwargs.get('input', b'').decode())
                     tf.seek(0)
-                    with RemoteSSH(
-                            host=self.builder, port=self.port,
-                            username=self.username, password=self.password
-                    ) as conn:
-                        with conn.cd(workspace):
-                            res = conn.run(
-                                [kwargs.get("args")], in_stream=tf,
-                                out_stream=log_stream, err_stream=log_stream
-                            )
-                            return res.return_code
+
+                    conn = RemoteSSH(
+                        host=self.builder, port=self.port,
+                        username=self.username, password=self.password
+                    )
+                    with conn.cd(workspace):
+                        res = conn.run(
+                            [kwargs.get("args")], in_stream=tf,
+                            out_stream=log_stream, err_stream=log_stream
+                        )
+                        return res.return_code
 
             from concurrent.futures import ThreadPoolExecutor
             with ThreadPoolExecutor(max_workers=1) as executor:
@@ -222,6 +225,8 @@ class BuildJobManager:
                 while future.running():
                     time.sleep(1)
                     if self.ensure_cancel(workspace):
+                        if conn is not None:
+                            conn.close()
                         future.cancel()
                         return
                 result = future.result()
@@ -256,6 +261,9 @@ class BuildJobManager:
 
             if timer is not None:
                 timer.cancel()
+
+            if conn is not None:
+                conn.close()
 
             if os.path.exists(workspace):
                 shutil.rmtree(workspace, ignore_errors=True)
