@@ -252,13 +252,15 @@ class JobBaseActionView(APIView):
     @staticmethod
     def get_jobs_and_scheduler(job_ids, user):
         job_query = Job.objects.filter(id__in=job_ids, delete_flag=False)
+        if not job_query.exists():
+            raise Job.DoesNotExist
         if user.is_operator:
             scheduler = get_admin_scheduler()
         else:
             scheduler = get_scheduler(user)
             job_query = job_query.filter(submitter=user.username)
-        if not job_query.exists():
-            raise Job.DoesNotExist
+            if not job_query.exists():
+                raise PermissionDenied
         return job_query, scheduler
 
     @staticmethod
