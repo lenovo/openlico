@@ -31,7 +31,8 @@ from lico.core.contrib.schema import json_schema_validate
 from lico.core.contrib.views import APIView, InternalAPIView
 
 from ..exceptions import (
-    JobFileNotExist, SubmitJobException, TemplateException, TemplateNotExist,
+    CreateJobWorkspaceException, JobFileNotExist, SubmitJobException,
+    TemplateException, TemplateNotExist,
 )
 from ..helpers.fs_operator_helper import get_fs_operator
 from ..models import JobComp, Template, TemplateJob, UserTemplate
@@ -116,6 +117,11 @@ class SubmitJobView(JobViewMixin, APIView):
             raw_param_vals["nodes"] = 1
         param_vals = self._preprocess_path(user, params, raw_param_vals)
 
+        # Check if the workspace folder exists;
+        # create it if it does not.
+        if 'job_workspace' in param_vals:
+            self._check_workspace(param_vals['job_workspace'], user)
+
         if template_id == 'linpack_hpl':
             param_vals['wdir'] = os.path.dirname(param_vals['benchmark_file'])
 
@@ -168,6 +174,16 @@ class SubmitJobView(JobViewMixin, APIView):
             'job_file': job['job_file'],
             'template_job_id': template_obj.id
         })
+
+    def _check_workspace(self, workspace, user):
+        fopr = get_fs_operator(user)
+        if fopr.path_exists(workspace) is not True:
+            workspace_dir = os.path.abspath(os.path.dirname(workspace))
+            if not fopr.path_isexecutable(workspace_dir, user.uid, user.gid):
+                logger.error('No write permission: %s', workspace)
+                raise CreateJobWorkspaceException
+            fopr.makedirs(workspace)
+            fopr.chown(workspace, user.uid, user.gid)
 
 
 class PreviewJobView(JobViewMixin, APIView):
