@@ -29,7 +29,7 @@
       },
       "class": "base",
       "dataType": "folder",
-      "defaultValue": "MyFolder",
+      "defaultValue": "MyFolder/tensorboard",
       "must": true,
       "type": "system"
     },

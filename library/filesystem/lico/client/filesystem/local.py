@@ -72,6 +72,17 @@ class LocalFileSystem(FileSystemBaseBackend):
         else:
             return mode & stat.S_IROTH > 0
 
+    def path_isexecutable(self, path, uid, gid):
+        s = os.stat(path)
+        mode = s[stat.ST_MODE]
+
+        if s[stat.ST_UID] == uid:
+            return mode & stat.S_IXUSR > 0
+        elif s[stat.ST_GID] == gid:
+            return mode & stat.S_IRGRP > 0
+        else:
+            return mode & stat.S_IROTH > 0
+
     def lchown(self, path, uid, gid):
         os.lchown(path, uid, gid)
 

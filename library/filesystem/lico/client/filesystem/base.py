@@ -67,6 +67,10 @@ class FileSystemBaseBackend(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def path_isexecutable(self, path, uid, gid):
+        pass
+
+    @abstractmethod
     def lchown(self, path, uid, gid):
         pass
 

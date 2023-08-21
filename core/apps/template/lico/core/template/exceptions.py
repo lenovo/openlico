@@ -146,3 +146,8 @@ class IntelTensorFlowImageNotExist(TemplateException):
 class JupyterLabImageNotExist(TemplateException):
     message = 'JupyterLab image not exist.'
     errid = 4042
+
+
+class CreateJobWorkspaceException(TemplateException):
+    message = "Failed to create the job workspace."
+    errid = 4043
