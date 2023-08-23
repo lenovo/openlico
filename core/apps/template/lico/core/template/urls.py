@@ -15,6 +15,7 @@
 from django.urls import path
 
 from .views.alltemplates import AllTemplatesView, CategoriesView
+from .views.entrance_url_view import EntranceURLView
 from .views.favorite import (
     FavoriteTemplateListView, FavoriteTemplateView, RecentTemplateView,
 )
@@ -104,4 +105,7 @@ urlpatterns = [
 
     # Fixtures
     path('default-run-time/', TemplateDefaultRunTimeView.as_view()),
+
+    # Entrance URL
+    path('entrance_url/<int:job_id>/', EntranceURLView.as_view()),
 ]

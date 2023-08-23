@@ -20,8 +20,8 @@ from rest_framework.response import Response
 
 from lico.core.contrib.views import APIView
 
-from ..exceptions import GetEntranceException
-from ..utils import convert_myfolder
+from ..models.template_job import TemplateJob
+from ..utils.common import convert_myfolder
 
 logger = logging.getLogger(__name__)
 
@@ -30,12 +30,14 @@ class EntranceURLView(APIView):
     def get(self, request, job_id):
         user = request.user
         try:
-            from lico.core.contrib.client import Client
-            client = Client()
-            template_client = client.template_client(username=user.username)
-            job_info = template_client.query_template_job(job_id)
+            job_info = TemplateJob.objects.get(
+                username=user.username,
+                job_id=job_id
+            ).as_dict()
             job_json = json.loads(job_info['json_body'])
 
+            from lico.core.contrib.client import Client
+            client = Client()
             fopr = client.filesystem_client(user=user)
             entrance_uri_path = convert_myfolder(
                 fopr,
@@ -48,6 +50,10 @@ class EntranceURLView(APIView):
             job_content, _ = fopr.read_content(entrance_uri_path)
 
             return Response(json.loads(job_content))
+        except KeyError as e:
+            logger.warning('Failed to get job_uuid from job template '
+                           'parameters, reason: %s' % e)
+            return Response({"entrance_uri": ''})
         except Exception as e:
             logger.exception('Failed to get entrance_url, reason: %s' % e)
-            raise GetEntranceException from e
+            return Response({"entrance_uri": ''})

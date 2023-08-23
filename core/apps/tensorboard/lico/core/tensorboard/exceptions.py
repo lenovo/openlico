@@ -18,8 +18,3 @@ from lico.core.contrib.exceptions import LicoError
 class ImageFileNotExist(LicoError):
     message = 'Image file is not exist.'
     errid = 9003
-
-
-class GetEntranceException(LicoError):
-    message = 'Get TensorBoard URL failed.'
-    errid = 9100
