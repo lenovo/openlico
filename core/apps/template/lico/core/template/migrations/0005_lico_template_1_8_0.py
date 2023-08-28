@@ -17,30 +17,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+
     dependencies = [
-        ('template', '0003_lico_template_1_3_0'),
+        ('template', '0004_lico_template_1_5_0'),
     ]
 
     operations = [
-        migrations.AlterField(
-            model_name='usertemplate',
-            name='category',
-            field=models.CharField(default='General', max_length=128),
-        ),
         migrations.AddField(
-            model_name='usertemplate',
-            name='index',
-            field=models.IntegerField(default=99999),
-        ),
-        migrations.AlterField(
-            model_name='jobcomp',
-            name='notice_type',
-            field=models.CharField(
-                choices=[
-                    ('rest', 'restapi'),
-                    ('email', 'email'),
-                    ('lico_restapi', 'lico_restapi')
-                ],
-                default='rest', max_length=20),
+            model_name='template',
+            name='entrance',
+            field=models.CharField(default='false', max_length=16),
         ),
     ]

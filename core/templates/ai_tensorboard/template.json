@@ -6,6 +6,7 @@
   "category": "AI",
   "featureCode": "ai",
   "display": true,
+  "entrance": "true",
   "type": "system",
   "params": [
     {

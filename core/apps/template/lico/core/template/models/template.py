@@ -32,6 +32,7 @@ class Template(Model):
     backend = CharField(
         default='common', null=False, max_length=128
     )  # unused
+    entrance = CharField(null=False, default='false', max_length=16)
     display = BooleanField(default=True)
     subtemplate = TextField(null=True)
     location = TextField(null=False)
@@ -100,6 +101,7 @@ class Template(Model):
         self.type = content["type"]
         self.description = content["description"]
         self.enable = content.get("enable", True)
+        self.entrance = content.get("entrance", "false")
         self.display = content["display"]
         if 'backend' in content:
             self.backend = content["backend"]
