@@ -107,7 +107,7 @@ class Node:
             immip, hostip, machine_type,
             ipmi_user, ipmi_pwd,
             belonging_rack, belonging_chassis,
-            location_u, groups, *args, **argv
+            location_u, groups, manage_method=None, vendor=None, *args, **argv
     ):
         self.name = name.strip()
         self.nodetype = nodetype.strip()
@@ -117,6 +117,9 @@ class Node:
         self.machine_type = machine_type.strip()
         self.ipmi_user = _filter_encrypt(ipmi_user.strip())
         self.ipmi_pwd = _filter_encrypt(ipmi_pwd.strip())
+        self.manage_method = manage_method \
+            if manage_method is None else manage_method.strip()
+        self.vendor = vendor if vendor is None else vendor.strip()
         self.belonging_rack = belonging_rack.strip() \
             if len(belonging_rack.strip()) > 0 else None
         self.belonging_chassis = belonging_chassis.strip() \

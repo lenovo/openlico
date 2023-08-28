@@ -54,9 +54,11 @@ chassis,name,belonging_rack,location_u_in_rack,machine_type,,,,,,,,,,
 "# machine_type: Node type or product code, refere to the "Supported servers and chassis models" part in installation guide."
 "# ipmi_user: Account of the node's BMC system."
 "# ipmi_pwd: Password of the node's BMC system."
+"# vendor: Server vendor. Eg. Lenovo, Dell, Hpe .etc"
+"# manage_method: Hardware management method of server, ipmi or redfish."
 "# belonging_rack: Name of the rack where the node belongs. The rack must be entered into the rack table before."
 "# belonging_chassis: Name of the chassis where the node belongs. The chassis must be entered into the rack table before. Make this field empty, if the node does not locate in any chassis)."
 "# location_u: Node location. If the node is located in the chassis, enter the slot in the chassis in which the node is located. If the node is located in a rack, enter the location of the node base in the rack (Unit is U)."
 "# groups: Name of the node location logic group. One node can belong to multiple logic groups. Group names should be separated by ;. The logic groups must be entered into the logic group table before."
-node,name,nodetype,immip,hostip,machine_type,ipmi_user,ipmi_pwd,belonging_rack,belonging_chassis,location_u,groups
-,head,head,10.240.212.13,127.0.0.1,7X05,<ipmi_user>,<ipmi_pwd>,rack1,,2,login
+node,name,nodetype,immip,hostip,machine_type,ipmi_user,ipmi_pwd,vendor,manage_method,belonging_rack,belonging_chassis,location_u,groups
+,head,head,10.240.212.13,127.0.0.1,7X05,<ipmi_user>,<ipmi_pwd>,,,rack1,,2,login
