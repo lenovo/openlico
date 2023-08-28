@@ -33,6 +33,13 @@ class Node(Model):
         'Rack', null=False, on_delete=PROTECT, related_name='nodes'
     )
     chassis = ForeignKey('Chassis', null=True, on_delete=PROTECT)
+    manage_method = CharField(
+        null=True, default=None, max_length=128, choices=(
+            ("ipmi", "ipmi"),
+            ("redfish", "redfish")
+        )
+    )
+    vendor = CharField(null=True, max_length=255)
 
     @property
     def location(self):

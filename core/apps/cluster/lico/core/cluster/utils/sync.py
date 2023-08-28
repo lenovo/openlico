@@ -171,7 +171,9 @@ def _sync_nodes(configure):
                 bmc_address=node.immip,
                 location_u=node.location_u,
                 rack=rack,
-                chassis=chassis
+                chassis=chassis,
+                manage_method=node.manage_method,
+                vendor=node.vendor
             )
         )[0]
 
@@ -256,6 +258,7 @@ def add_confluent_node(node):
         request_json.update({
             'console.method': 'ipmi',
             'hardwaremanagement.manager': node.immip,
+            'hardwaremanagement.method': node.manage_method,
         })
         if node.ipmi_user is not None and len(node.ipmi_user) > 0:
             request_json['secret.hardwaremanagementuser'] = node.ipmi_user
@@ -288,6 +291,7 @@ def modify_confluent_node(node):
         request_json = {
             'console.method': 'ipmi',
             'hardwaremanagement.manager': node.immip,
+            'hardwaremanagement.method': node.manage_method,
         }
         if node.ipmi_user is not None and len(node.ipmi_user) > 0:
             request_json['secret.hardwaremanagementuser'] = node.ipmi_user
