@@ -96,7 +96,7 @@ class AlertReportDownload(APIView):
                 "Alert Source",
                 "Alert Level",
                 "Alert Status",
-                "remark"
+                "Remark"
             ],
             "title": "Alert Detailed Report"
         }
