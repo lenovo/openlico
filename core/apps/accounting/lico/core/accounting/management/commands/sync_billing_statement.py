@@ -21,6 +21,7 @@ from subprocess import CalledProcessError  # nosec B404
 
 from dateutil.parser import parse
 from django.core.management import BaseCommand
+from django.db.models import Sum
 
 from lico.core.accounting.charge_job import charge_job
 from lico.core.accounting.charge_storage import StorageBilling
@@ -143,8 +144,8 @@ class Command(BaseCommand):
         charge_jobs = []
         tmp_stdout_msg = \
             "{time} " \
-            "Already charged jobs: {already_charged_jobs_count}; " \
-            "New charged jobs: {charged_jobs_count}; " \
+            "Already charged jobs records: {already_charged_jobs_count}; " \
+            "New charged jobs records: {charged_jobs_count}; " \
             "No user-billing mapping jobs: {no_user_billing_mapping_count}; " \
             "Charge jobs failed: {failed_charged_jobs_count}"
         tmp_stdout_jobids = {
@@ -159,7 +160,11 @@ class Command(BaseCommand):
                 job = job_client.query_job(job_id)
                 job_bill_state = \
                     JobBillingStatement.objects.filter(job_id=job_id)
-                if not job_bill_state.exists():
+                total_runtime = job_bill_state.aggregate(
+                    total_runtime=Sum('billing_runtime'))['total_runtime'] \
+                    if job_bill_state else 0
+                billing_runtime = job['runtime'] - total_runtime
+                if not job_bill_state.exists() or billing_runtime > 0:
                     charge_job(job)
                     charge_jobs.append(job_id)
                     tmp_stdout_jobids["charged_jobs_count"] += 1
@@ -169,7 +174,8 @@ class Command(BaseCommand):
                         "Job id: %d, Scheduler id: %s",
                         job["id"], job["identity_str"]
                     )
-                    tmp_stdout_jobids["already_charged_jobs_count"] += 1
+                    tmp_stdout_jobids["already_charged_jobs_count"] += \
+                        job_bill_state.count()
             except UserBillGroupNotExistException:
                 tmp_stdout_jobids["no_user_billing_mapping_count"] += 1
             except Exception:
