@@ -55,6 +55,9 @@ def save_slurm_conf():
         slurm_conf_path = path.splitext(new_config_path)[0]
         shutil.copyfile(slurm_conf_path, slurm_conf_path + '.bk')
 
+        if is_enabled_hybird_HPC(slurm_conf_path):
+            sync_slurm_for_hybird_HPC(new_config_path)
+
         with open(new_config_path, "r") as f, \
                 open(slurm_conf_path, 'w') as f2:
             for line in f:
@@ -295,4 +298,32 @@ def check_gres_available(gres_codes):
     for lico_gres in gres_codes:
         if lico_gres.lower() not in slurm_gres:
             raise GresNotAvailableException(lico_gres)
+
+
+HYBIRD_SLURM_CONF = "/opt/lico/cloud/azure/slurm.conf"
+
+
+def is_enabled_hybird_HPC(slurm_conf):
+
+    with open(slurm_conf, 'r') as f:
+        content = f.read()
+    pattern = re.compile(r'[^#]include\s+/opt/lico/cloud/azure/slurm.conf')
+    result = pattern.search(content)
+    if result:
+        return True
+    return False
+
+
+def sync_slurm_for_hybird_HPC(slurm_conf):
+    with open(slurm_conf, 'r') as f:
+        content = f.read()
+
+    with open(HYBIRD_SLURM_CONF, "r") as hybird_file:
+        for line in hybird_file:
+            if not line.startswith('#') and line.strip():
+                kw = line.strip().split()[0]
+                content = re.sub(r'{}.*'.format(kw), '', content)
+    content = content + '\n' + 'include /opt/lico/cloud/azure/slurm.conf\n'
+    with open(slurm_conf, 'w') as f:
+        f.write(content)
 
