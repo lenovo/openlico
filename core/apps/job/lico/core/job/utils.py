@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import time
 from collections import Counter
 from datetime import timedelta
 
@@ -161,4 +162,10 @@ def batch_status(target_nums, err_nums):
         return "partial"
     else:
         raise JobOperationException
+
+
+def get_display_runtime(runtime, start_time):
+    if not start_time:
+        return runtime
+    return max([runtime, int(time.time()) - start_time])
 

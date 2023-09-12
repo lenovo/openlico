@@ -45,7 +45,7 @@ from ..helpers.scheduler_helper import (
     get_admin_scheduler, get_scheduler, parse_job_identity,
 )
 from ..models import Job
-from ..utils import batch_status, get_users_from_filter
+from ..utils import batch_status, get_display_runtime, get_users_from_filter
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +85,10 @@ class JobListView(DataTableView):
         )
 
     def trans_result(self, result):
-        return result.as_dict(exclude=['job_content', 'delete_flag'])
+        res = result.as_dict(exclude=['job_content', 'delete_flag'])
+        res['display_runtime'] = get_display_runtime(
+            res['runtime'], res['start_time'])
+        return res
 
     def global_sort_fields(self, param_args):
         sort = param_args.get("sort")
@@ -137,14 +140,13 @@ class JobView(APIView):
             submitter=request.user.username
         )
         job = query.get(id=pk)
-        return Response(
-            job.as_dict(
-                on_finished_options={
-                    "password": "get_job_password",
-                    "entrance_uri": "get_entrance_uri"
-                }
-            )
-        )
+        res = job.as_dict(on_finished_options={
+            "password": "get_job_password",
+            "entrance_uri": "get_entrance_uri"
+        })
+        res['display_runtime'] = get_display_runtime(
+            res['runtime'], res['start_time'])
+        return Response(res)
 
     def put(self, request, pk):
         # Function Usage: cancel job
