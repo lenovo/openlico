@@ -325,5 +325,6 @@ def sync_slurm_for_hybird_HPC(slurm_conf):
                 content = re.sub(r'{}.*'.format(kw), '', content)
     content = content + '\n' + 'include /opt/lico/cloud/azure/slurm.conf\n'
     with open(slurm_conf, 'w') as f:
+        content = re.sub(r'MaxNodeCount=.*', '', content)
         f.write(content)
 
