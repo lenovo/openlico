@@ -216,7 +216,6 @@ class AcctEvent(object):
 
 
 def query_events_by_time(start_timestamp, end_timestamp):  # noqa: C901
-    events = []
     time_range = 3600 * 24
     from datetime import datetime
     try:
@@ -234,31 +233,55 @@ def query_events_by_time(start_timestamp, end_timestamp):  # noqa: C901
             "--noheader", "--format", ','.join(SLURM_SACCT_FIELDS)
         ]
 
-        out = check_output(cmd)  # nosec B603
-        lines = out.decode().splitlines()
-
-        line_num = 0
-        for line in lines:
-            line_num += 1
-
-            try:
-                line_reader = AcctLineReader(line)
-                event = AcctEvent(line_reader)
-                if event.is_job_terminated():
-                    term_time = int(event.term_time.timestamp())
-                    if start_timestamp <= term_time <= end_timestamp:
-                        if event.is_sub_event():
-                            for main_event in events:
-                                main_event.merge_sub_event(event)
-                        else:
-                            events.insert(0, event)
-                else:
-                    logging.info(
-                        "The job %s end time is unknown, "
-                        "don't process the job.", event.job_id)
-            except Exception:
-                logger.warning('Line %s', line_num, exc_info=True)
+        events = _get_acct_job_event(cmd, start_timestamp, end_timestamp)
     except Exception as e:
         logger.exception("slurm acct parser failed.")
         raise AcctException from e
     return events
+
+
+def _get_acct_job_event(cmd, start_timestamp=0, end_timestamp=0):
+    events = []
+    out = check_output(cmd)  # nosec B603
+    lines = out.decode().splitlines()
+
+    line_num = 0
+    for line in lines:
+        line_num += 1
+
+        try:
+            line_reader = AcctLineReader(line)
+            event = AcctEvent(line_reader)
+            if event.is_job_terminated():
+                term_time = int(event.term_time.timestamp())
+                if (start_timestamp == 0 and end_timestamp == 0) or \
+                        (start_timestamp <= term_time <= end_timestamp):
+                    if event.is_sub_event():
+                        for main_event in events:
+                            main_event.merge_sub_event(event)
+                    else:
+                        events.insert(0, event)
+            else:
+                logging.info(
+                    "The job %s end time is unknown, "
+                    "don't process the job.", event.job_id)
+        except Exception:
+            logger.warning('Line %s', line_num, exc_info=True)
+    return events
+
+
+def query_events_by_job(scheduler_id):
+    job_list = []
+    args = ["sacct", "-P", "--noheader",
+            "--format", ",".join(SLURM_SACCT_FIELDS), "-j", scheduler_id]
+    new_args = args
+    while new_args:
+        events = _get_acct_job_event(new_args)
+        if events:
+            job = events[0].get_acct_job()
+            job_list.append(job)
+            submit_time = job.submit_time.strftime("%Y-%m-%dT%H:%M:%S")
+            new_args = args + ["-E", "%s" % submit_time]
+        else:
+            new_args = []
+    return job_list

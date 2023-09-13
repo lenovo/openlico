@@ -45,3 +45,4 @@ class Job:
     time_limit: int = attr.ib(default=None)  # 0 means unlimited
     comment: str = attr.ib(default=None)
     priority: str = attr.ib(default=None)
+    requeued: bool = attr.ib(default=False)

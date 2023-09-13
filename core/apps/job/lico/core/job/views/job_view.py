@@ -161,7 +161,7 @@ class JobView(APIView):
                 )
                 job = query.get(id=pk)
                 if job.state in JobState.get_final_state_values() or \
-                    job.operate_state in [
+                        job.operate_state in [
                     JobOperateState.CANCELLING.value,
                     JobOperateState.CREATING.value
                 ]:

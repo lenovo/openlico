@@ -72,6 +72,7 @@ class Job(Model):
     tags = ManyToManyField(Tag, through="JobTags")
     user_comment = TextField(null=True, blank=True, default="")
     priority = CharField(null=True, max_length=16, blank=True, default="")
+    requeued = BooleanField(null=False, blank=True, default=False)
 
     @property
     def get_job_password(self):

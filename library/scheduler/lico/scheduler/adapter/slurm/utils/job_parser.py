@@ -478,6 +478,9 @@ def parse_job_info(  # noqa: C901
                 job.state = JobState[value]
             elif key == "Reason":
                 job.reason = value
+            elif key == 'Restarts':
+                if try_int(value):
+                    job.requeued = True
             elif key == "RunTime":
                 job.runtime = convert_runtime_2_seconds(value)
             elif key == "SubmitTime":

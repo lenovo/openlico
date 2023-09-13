@@ -24,6 +24,10 @@ from django.db import transaction
 from django.db.models import Sum
 from django.utils.timezone import now
 
+from lico.core.job.helpers.scheduler_helper import (
+    get_admin_scheduler, parse_job_identity,
+)
+
 from .exceptions import UserBillGroupNotExistException
 from .models import (
     BillGroup, BillGroupQueuePolicy, Deposit, Gresource, JobBillingStatement,
@@ -70,6 +74,12 @@ def charge_job(job):
             raise UserBillGroupNotExistException
 
         billstatement = JobBillingStatement.objects.filter(job_id=job['id'])
+
+        scheduler = get_admin_scheduler()
+        job_list = scheduler.query_job(
+            parse_job_identity(job["identity_str"]), include_history=True
+        )
+        job['runtime'] = get_job_all_runtime(job_list)
 
         total_runtime = billstatement.aggregate(
             total_runtime=Sum('billing_runtime'))['total_runtime'] \
@@ -202,3 +212,10 @@ def get_charge_rate(bill_group, queue):
         memory_charge_rate = bill_group.memory_charge_rate
 
         return charge_rate, gres_charge_rate, memory_charge_rate
+
+
+def get_job_all_runtime(job_list):
+    job_total_time = 0
+    for job in job_list:
+        job_total_time += job.runtime
+    return job_total_time

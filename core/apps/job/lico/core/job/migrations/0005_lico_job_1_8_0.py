@@ -27,4 +27,9 @@ class Migration(migrations.Migration):
             name='priority',
             field=models.CharField(blank=True, default='', max_length=16, null=True),
         ),
+        migrations.AddField(
+            model_name='job',
+            name='requeued',
+            field=models.BooleanField(blank=True, default=False),
+        ),
     ]
