@@ -21,6 +21,7 @@ from rest_framework.response import Response
 from lico.core.contrib.views import APIView
 
 from ..models import Job
+from ..utils import get_display_runtime
 
 logger = logging.getLogger(__name__)
 
@@ -46,10 +47,11 @@ class JobLatestViewUser(APIView):
             username=request.user.username,
             count=job_count,
             states=json.loads(job_states),
-        )
-        return Response(jobs.as_dict(
-            exclude=['job_content', 'delete_flag']
-        ))
+        ).as_dict(exclude=['job_content', 'delete_flag'])
+        for job in jobs:
+            job['display_runtime'] = get_display_runtime(
+                job['runtime'], job['start_time'])
+        return Response(jobs)
 
 
 class JobLatestView(JobLatestViewUser):
