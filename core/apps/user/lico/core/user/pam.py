@@ -30,6 +30,7 @@ def auth(username: str, password: str):
         check_account(username, service=settings.USER.PAM.SERVICE)
     except PAMError:
         logger.exception('Fail to call pam service "check_account"')
+        raise
 
     try:
         open_session(username, service=settings.USER.PAM.SERVICE)
