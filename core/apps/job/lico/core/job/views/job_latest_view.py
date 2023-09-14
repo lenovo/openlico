@@ -50,7 +50,7 @@ class JobLatestViewUser(APIView):
         ).as_dict(exclude=['job_content', 'delete_flag'])
         for job in jobs:
             job['display_runtime'] = get_display_runtime(
-                job['runtime'], job['start_time'])
+                job['runtime'], job['start_time'], job['state'])
         return Response(jobs)
 
 

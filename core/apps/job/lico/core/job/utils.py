@@ -19,6 +19,7 @@ from dateutil.tz import tzoffset
 
 from lico.core.contrib.client import Client
 
+from .base.job_state import JobState
 from .exceptions import JobOperationException
 from .helpers.scheduler_helper import get_admin_scheduler, get_scheduler
 
@@ -164,7 +165,9 @@ def batch_status(target_nums, err_nums):
         raise JobOperationException
 
 
-def get_display_runtime(runtime, start_time):
+def get_display_runtime(runtime, start_time, state):
+    if state in JobState.get_final_state_values():
+        return runtime
     if not start_time:
         return runtime
     return max([runtime, int(time.time()) - start_time])

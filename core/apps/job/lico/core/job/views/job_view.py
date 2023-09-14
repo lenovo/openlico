@@ -87,7 +87,7 @@ class JobListView(DataTableView):
     def trans_result(self, result):
         res = result.as_dict(exclude=['job_content', 'delete_flag'])
         res['display_runtime'] = get_display_runtime(
-            res['runtime'], res['start_time'])
+            res['runtime'], res['start_time'], res['state'])
         return res
 
     def global_sort_fields(self, param_args):
@@ -145,7 +145,7 @@ class JobView(APIView):
             "entrance_uri": "get_entrance_uri"
         })
         res['display_runtime'] = get_display_runtime(
-            res['runtime'], res['start_time'])
+            res['runtime'], res['start_time'], res['state'])
         return Response(res)
 
     def put(self, request, pk):
