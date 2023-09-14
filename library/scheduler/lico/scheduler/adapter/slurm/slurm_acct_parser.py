@@ -15,6 +15,7 @@
 
 import logging
 from collections import defaultdict
+from datetime import timedelta
 from subprocess import check_output  # nosec B404
 
 from dateutil.parser import parse
@@ -280,7 +281,11 @@ def query_events_by_job(scheduler_id):
         if events:
             job = events[0].get_acct_job()
             job_list.append(job)
-            submit_time = job.submit_time.strftime("%Y-%m-%dT%H:%M:%S")
+            # Slurm 20.11 requires subtracting 1 second to get the run time
+            # before the required job is requeued;
+            # Slurm version 22.05 does not have this problem
+            submit_time = (job.submit_time - timedelta(seconds=1)).strftime(
+                "%Y-%m-%dT%H:%M:%S")
             new_args = args + ["-E", "%s" % submit_time]
         else:
             new_args = []
