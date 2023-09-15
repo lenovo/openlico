@@ -64,6 +64,9 @@ def create_scheduler(user=None):
             config=LsfConfig(
                 acct_file_path=settings.JOB.LSF.get(
                     'ACCT_FILE_PATH', ""
+                ),
+                events_file_path=settings.JOB.LSF.get(
+                    'EVENTS_FILE_PATH', ""
                 )
             )
         )

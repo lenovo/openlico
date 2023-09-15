@@ -73,6 +73,10 @@ class QueryJobRawInfoFailedException(SchedulerJobBaseException):
     message = 'Query job raw info failed.'
 
 
+class QueryJobHistoryInfoFailedException(SchedulerJobBaseException):
+    message = 'Query job history info failed.'
+
+
 class NodeListParseException(SchedulerJobBaseException):
     message = 'Parse node list failed.'
 
@@ -139,3 +143,11 @@ class OperationNotSupportException(SchedulerJobBaseException):
 
 class SchedulerOperationException(SchedulerJobBaseException):
     message = "Scheduler operation exception."
+
+
+class LsbEventsFileException(SchedulerJobBaseException):
+    message = "LSB EVENTS File not exist or format error."
+
+
+class JobHistoryInfoParseException(SchedulerJobBaseException):
+    message = 'Parse job history info failed.'

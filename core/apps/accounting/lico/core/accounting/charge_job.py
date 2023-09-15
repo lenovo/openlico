@@ -75,11 +75,17 @@ def charge_job(job):
 
         billstatement = JobBillingStatement.objects.filter(job_id=job['id'])
 
-        scheduler = get_admin_scheduler()
-        job_list = scheduler.query_job(
-            parse_job_identity(job["identity_str"]), include_history=True
-        )
-        job['runtime'] = get_job_all_runtime(job_list)
+        try:
+            scheduler = get_admin_scheduler()
+            job_list = scheduler.query_job(
+                parse_job_identity(job["identity_str"]), include_history=True
+            )
+            job['runtime'] = get_job_all_runtime(job_list)
+        except Exception as e:
+            logger.exception(
+                'Failed to query the historical running time of a job.'
+                'Job id: %d, Scheduler id: %s, Reason: %s',
+                job['id'], job['scheduler_id'], e)
 
         total_runtime = billstatement.aggregate(
             total_runtime=Sum('billing_runtime'))['total_runtime'] \

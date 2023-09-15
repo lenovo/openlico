@@ -23,3 +23,4 @@ class SchedulerConfig(BaseSchedulerConfig):
     dayfirst: bool = attr.ib(default=None)
     yearfirst: bool = attr.ib(default=None)
     acct_file_path: str = attr.ib(default=None)
+    events_file_path: str = attr.ib(default=None)
