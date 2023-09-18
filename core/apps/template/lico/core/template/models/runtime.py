@@ -35,6 +35,7 @@ class ModuleItem(Model):
     category = CharField(null=True, max_length=255)
     description = CharField(null=True, max_length=255)
     parents = CharField(null=True, max_length=255)
+    location = TextField(null=True)
 
     @property
     def parents_list(self):

@@ -12,25 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from lico.core.base.subapp import AbstractApplication
 
-from django.db import migrations, models
 
-
-class Migration(migrations.Migration):
-
-    dependencies = [
-        ('template', '0004_lico_template_1_5_0'),
-    ]
-
-    operations = [
-        migrations.AddField(
-            model_name='template',
-            name='entrance',
-            field=models.CharField(default='false', max_length=16),
-        ),
-        migrations.AddField(
-            model_name='moduleitem',
-            name='location',
-            field=models.TextField(null=True),
-        ),
-    ]
+class Application(AbstractApplication):
+    pass

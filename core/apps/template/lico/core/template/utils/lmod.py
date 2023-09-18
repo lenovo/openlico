@@ -52,6 +52,8 @@ def _process_module_item(module, item_name, item):
     if parents is not None:
         parents = ','.join(parents[0])
 
+    location = _process_module_location(module, item)
+
     ModuleItem.objects.create(
         module=module,
         path=item_name,
@@ -59,8 +61,58 @@ def _process_module_item(module, item_name, item):
         name=item['fullName'],
         category=item.get('Category'),
         description=item.get('Description'),
-        parents=parents
+        parents=parents,
+        location=location
     )
+
+
+def _process_module_location(module, item):
+    """
+        item example:
+        "/opt/ohpc/pub/modulefiles/EasyBuild/4.6.2": {
+            "lpathA": {
+                "/opt/ohpc/easybuild/4.6.2/software/EasyBuild/4.6.2/lib": 1
+            },
+            "whatis": [
+                "Name: easybuild",
+                "Version: 4.6.2",
+                "Category: system tool",
+                "Description: Software build and installation framework",
+                "URL: https://easybuilders.github.io/easybuild/"
+            ],
+            "help": " \nThis module loads easybuild\n\nVersion 4.6.2\n\n",
+            "Description": "Software build and installation framework",
+            "hidden": false,
+            "mpath": "/opt/ohpc/pub/modulefiles",
+            "fullName": "EasyBuild/4.6.2",
+            "URL": "https://easybuilders.github.io/easybuild/",
+            "Version": "4.6.2",
+            "pathA": {
+                "/opt/ohpc/admin/lmod/lmod/libexec": 1,
+                "/opt/ohpc/easybuild/4.6.2/software/EasyBuild/4.6.2/bin": 1
+            },
+            "Category": "system tool"
+        }
+
+        - lpathA: library path
+        - mpath: module file path
+        - pathA: binary path
+    """
+    binary_path = item.get("pathA", dict())
+    location = "Binary Path:\n" + ";".join(list(binary_path.keys()))
+
+    library_path = item.get("lpathA", dict())
+    location += "\n\nLibrary Path:\n" + ";".join(list(library_path.keys()))
+
+    """
+        location example:
+            Binary Path:
+            xxx;xxx
+
+            Library Path:
+            xxx;xxx
+    """
+    return location
 
 
 def _process_module_item_for_ubuntu(module, item_name, item):

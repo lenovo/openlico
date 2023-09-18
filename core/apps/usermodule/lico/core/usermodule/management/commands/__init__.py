@@ -11,26 +11,3 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
-from django.db import migrations, models
-
-
-class Migration(migrations.Migration):
-
-    dependencies = [
-        ('template', '0004_lico_template_1_5_0'),
-    ]
-
-    operations = [
-        migrations.AddField(
-            model_name='template',
-            name='entrance',
-            field=models.CharField(default='false', max_length=16),
-        ),
-        migrations.AddField(
-            model_name='moduleitem',
-            name='location',
-            field=models.TextField(null=True),
-        ),
-    ]
