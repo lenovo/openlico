@@ -13,7 +13,9 @@
 # limitations under the License.
 
 from rest_framework.exceptions import APIException
-from rest_framework.status import HTTP_400_BAD_REQUEST
+from rest_framework.status import (
+    HTTP_400_BAD_REQUEST, HTTP_500_INTERNAL_SERVER_ERROR,
+)
 
 
 class LicoError(APIException):
@@ -26,6 +28,17 @@ class LicoError(APIException):
         self.detail = {
             'msg': (msg or self.message),
             'errid': str(self.errid)
+        }
+
+
+class LicoInternalError(APIException):
+    status_code = HTTP_500_INTERNAL_SERVER_ERROR
+    message = 'lico internal server error'
+
+    def __init__(self, msg=None):
+        super().__init__(msg)
+        self.detail = {
+            'msg': (msg or self.message),
         }
 
 

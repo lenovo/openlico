@@ -43,3 +43,7 @@ class ModulepathNotExistedException(Exception):
 
 class SpiderToolNotAvailableException(Exception):
     message = 'Spider tool is not available.'
+
+
+class UserModulePermissionDenied(Exception):
+    message = 'The current user has no permission to perform operations.'

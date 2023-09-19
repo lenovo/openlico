@@ -56,16 +56,22 @@ def get_eb_prefix(workspace):
     return os.path.join(workspace, settings.USERMODULE.WORK_PATH)
 
 
-def get_eb_module_file_dir(workspace):
-    return os.path.join(get_eb_prefix(workspace), MODULE_FILE_DIR)
+def get_eb_module_file_path(workspace, module_name=None):
+    file_path = os.path.join(get_eb_prefix(workspace), MODULE_FILE_DIR)
+    if module_name is not None:
+        file_path = os.path.join(file_path, f"{module_name}.lua")
+    return file_path
 
 
-def get_eb_software_dir(workspace):
-    return os.path.join(get_eb_prefix(workspace), SOFTWARE_DIR)
+def get_eb_software_path(workspace, module_name=None):
+    software_path = os.path.join(get_eb_prefix(workspace), SOFTWARE_DIR)
+    if module_name is not None:
+        software_path = os.path.join(software_path, module_name)
+    return software_path
 
 
 def get_private_module(spider, workspace):
-    module_path = get_eb_module_file_dir(workspace)
+    module_path = get_eb_module_file_path(workspace)
 
     if not os.path.exists(module_path):
         raise ModulepathNotExistedException
@@ -88,7 +94,7 @@ def get_private_module(spider, workspace):
 
 
 def process_module(content, workspace):
-    software_path = get_eb_software_dir(workspace)
+    software_path = get_eb_software_path(workspace)
     module_list = list()
     for name, modules in content.items():
         module_dict = {

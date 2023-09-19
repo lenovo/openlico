@@ -18,12 +18,16 @@ from django.conf import settings
 from django.db.transaction import atomic
 from rest_framework.response import Response
 
+from lico.core.contrib.exceptions import LicoInternalError
 from lico.core.contrib.schema import json_schema_validate
 from lico.core.contrib.views import APIView
 from lico.core.template.models import Module
 
-from ..exceptions import UserModuleSubmitException
-from ..utils import MODULE_FILE_DIR, UserModuleJobHelper, get_private_module
+from ..exceptions import UserModulePermissionDenied, UserModuleSubmitException
+from ..utils import (
+    MODULE_FILE_DIR, UserModuleJobHelper, get_eb_module_file_path,
+    get_eb_software_path, get_fs_operator, get_private_module,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -75,6 +79,64 @@ class ModuleListView(APIView):
         except Exception as e:
             logger.exception(e)
         return modules
+
+    @json_schema_validate({
+        "type": "object",
+        "properties": {
+            "fullname": {
+                "type": "string",
+                "minimum": 1,
+            },
+        },
+        "required": [
+            "fullname"
+        ]
+    }, is_get=True)
+    def delete(self, request):
+        module_name = request.query_params.get('fullname')
+
+        modulefile_path = get_eb_module_file_path(
+            request.user.workspace, module_name)
+        software_path = get_eb_software_path(
+            request.user.workspace, module_name)
+
+        try:
+            # delete software
+            self.delete_path(request.user, software_path)
+
+            # delete modelefile
+            self.delete_path(request.user, modulefile_path)
+        except Exception as e:
+            logger.exception(e)
+            raise LicoInternalError
+
+        # remove module dir when module dir empty
+        try:
+            if len(os.listdir(os.path.dirname(software_path))) == 0:
+                self.delete_path(request.user, os.path.dirname(software_path))
+        except Exception as e:
+            logger.exception(e)
+        try:
+            if len(os.listdir(os.path.dirname(modulefile_path))) == 0:
+                self.delete_path(
+                    request.user, os.path.dirname(modulefile_path))
+        except Exception as e:
+            logger.exception(e)
+
+        return Response({
+            "status": "ok"
+        })
+
+    def delete_path(self, user, path):
+        fopr = get_fs_operator(user)
+        if not fopr.path_exists(path):
+            return
+        if not fopr.path_isreadable(path, user.uid, user.gid):
+            raise UserModulePermissionDenied
+        if fopr.path_isfile(path):
+            fopr.remove(path)
+        elif fopr.path_isdir(path):
+            fopr.rmtree(path)
 
 
 class UserModuleSubmit(APIView):
