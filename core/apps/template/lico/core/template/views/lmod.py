@@ -63,9 +63,11 @@ class ModuleVerifyView(APIView):
         ]
     })
     def post(self, request):
+        role = request.query_params.get('role')
         verify_modules(
             user=request.user,
-            modules=request.data['modules']
+            modules=request.data['modules'],
+            role=role
         )
 
         return Response()

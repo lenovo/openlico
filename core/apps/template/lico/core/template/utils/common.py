@@ -18,6 +18,8 @@ import pwd
 
 from django.conf import settings
 
+from lico.core.usermodule.utils import get_eb_module_file_dir
+
 logger = logging.getLogger(__name__)
 
 
@@ -35,7 +37,16 @@ def convert_myfolder(fopr, user, origin_path):
     )
 
 
-def set_user_env(user):
+def set_user_env(user, role="admin"):
+    if role == 'admin':
+        os.putenv('MODULEPATH', settings.TEMPLATE.MODULE_PATH)
+    else:
+        private_modulepath = get_eb_module_file_dir(user.workspace)
+        os.putenv(
+            'MODULEPATH',
+            f"{settings.TEMPLATE.MODULE_PATH}:{private_modulepath}"
+        )
+
     os.chdir(user.workspace)
     os.setgid(user.gid)
     os.setuid(user.uid)

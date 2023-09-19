@@ -135,13 +135,13 @@ def _process_module_item_for_ubuntu(module, item_name, item):
     )
 
 
-def verify_modules(user, modules):
+def verify_modules(user, modules, role="admin"):
     try:
         run(  # nosec B603 B607
             ['lico-lmod-verify'],
             input=('\n'.join(modules)).encode(),
             stdout=PIPE, stderr=PIPE,
-            preexec_fn=lambda: set_user_env(user),
+            preexec_fn=lambda: set_user_env(user, role),
             # env={
             #    'LMOD_DIR': settings.TEMPLATE.LMOD_DIR,
             #    'MODULEPATH': settings.TEMPLATE.MODULE_PATH
