@@ -25,7 +25,7 @@ from lico.core.contrib.client import Client
 
 from .exceptions import (
     ModulepathNotExistedException, SpiderToolNotAvailableException,
-    UserModuleGetPrivateModuleException,
+    UserModuleFailToGetJobException, UserModuleGetPrivateModuleException,
 )
 
 logger = logging.getLogger(__name__)
@@ -111,7 +111,7 @@ def process_module(content, workspace):
                 version=version,
                 category=item.get("Category"),
                 description=item.get("Description"),
-                parents=item.get('parentAA'),
+                parents=item.get('parentAA', list()),
                 location=location
             )
             item_dict = asdict(module)
@@ -207,3 +207,12 @@ class UserModuleJobHelper(object):
             template_id, template_param_vals
         )
         return template_job
+
+    def query_job(self, job_id):
+        try:
+            job = self._job_client.query_job(job_id)
+            return job
+        except Exception:
+            raise UserModuleFailToGetJobException(
+                "Failed to get job. Job id = {}".format(job_id)
+            )

@@ -47,3 +47,7 @@ class SpiderToolNotAvailableException(Exception):
 
 class UserModulePermissionDenied(Exception):
     message = 'The current user has no permission to perform operations.'
+
+
+class UserModuleFailToGetJobException(Exception):
+    message = 'Failed to get job.'

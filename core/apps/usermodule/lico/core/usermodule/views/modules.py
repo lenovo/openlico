@@ -145,8 +145,7 @@ class UserModuleSubmit(APIView):
         "properties": {
             "easyconfig_path": {
                 "type": "string",
-                "minimum": 1,
-                "maxLength": 64
+                "minimum": 1
             },
             "job_queue": {
                 "type": "string"
@@ -188,6 +187,9 @@ class UserModuleSubmit(APIView):
         param = self._prepare_param(data)
         try:
             ret = helper.submit_module_job(data["template_id"], param)
+            job_id = ret['id']
+            job = helper.query_job(job_id)
+            ret['scheduler_id'] = job["scheduler_id"]
             return ret
         except Exception:
             raise UserModuleSubmitException

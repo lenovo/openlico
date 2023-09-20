@@ -99,19 +99,12 @@ def _process_module_location(module, item):
         - pathA: binary path
     """
     binary_path = item.get("pathA", dict())
-    location = "Binary Path:\n" + ";".join(list(binary_path.keys()))
+    location_list = list(binary_path.keys())
 
     library_path = item.get("lpathA", dict())
-    location += "\n\nLibrary Path:\n" + ";".join(list(library_path.keys()))
+    location_list += list(library_path.keys())
 
-    """
-        location example:
-            Binary Path:
-            xxx;xxx
-
-            Library Path:
-            xxx;xxx
-    """
+    location = "\n".join(location_list)
     return location
 
 
