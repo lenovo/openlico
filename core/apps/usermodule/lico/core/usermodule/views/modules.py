@@ -189,7 +189,7 @@ class UserModuleSubmit(APIView):
             ret = helper.submit_module_job(data["template_id"], param)
             job_id = ret['id']
             job = helper.query_job(job_id)
-            ret['scheduler_id'] = job["scheduler_id"]
+            ret.update(job)
             return ret
         except Exception:
             raise UserModuleSubmitException
