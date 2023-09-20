@@ -1,4 +1,4 @@
-# Copyright 2015-2023 Lenovo
+# Copyright 2015-present Lenovo
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -246,3 +246,4 @@ class QueueLimitation:
             params = add_gres(params, gres_name, gres_list)
 
         return params
+

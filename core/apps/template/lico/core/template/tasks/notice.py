@@ -1,4 +1,4 @@
-# Copyright 2015-2023 Lenovo
+# Copyright 2015-present Lenovo
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -141,3 +141,4 @@ def get_job_status(job):
     if op_state.lower() in op_state_mapping:
         status = op_state_mapping[op_state.lower()]
     return status
+

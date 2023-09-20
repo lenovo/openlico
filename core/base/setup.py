@@ -1,4 +1,4 @@
-# Copyright 2015-2023 Lenovo
+# Copyright 2015-present Lenovo
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ from setuptools_scm.version import guess_next_version
 now = datetime.utcnow().strftime('%Y%m%d%H')
 
 TEMPLATE = """\
-# Copyright 2015-2023 Lenovo
+# Copyright 2015-present Lenovo
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -74,3 +74,4 @@ setup(
         write_to_template = TEMPLATE
     ),
 )
+

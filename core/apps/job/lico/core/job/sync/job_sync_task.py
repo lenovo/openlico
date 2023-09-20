@@ -1,4 +1,4 @@
-# Copyright 2015-2023 Lenovo
+# Copyright 2015-present Lenovo
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -183,3 +183,4 @@ class JobSyncTask(metaclass=ABCMeta):
             Client().template_client().notify_job(job.as_dict())
         except Exception:
             logger.warning("Notify job failed. Job id: %s", job.id)
+
