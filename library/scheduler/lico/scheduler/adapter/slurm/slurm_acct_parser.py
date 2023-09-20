@@ -241,7 +241,7 @@ def query_events_by_time(start_timestamp, end_timestamp):  # noqa: C901
     return events
 
 
-def _get_acct_job_event(cmd, start_timestamp=0, end_timestamp=0):
+def _get_acct_job_event(cmd, start_timestamp=0, end_timestamp=0, charge=False):
     events = []
     out = check_output(cmd)  # nosec B603
     lines = out.decode().splitlines()
@@ -262,6 +262,8 @@ def _get_acct_job_event(cmd, start_timestamp=0, end_timestamp=0):
                             main_event.merge_sub_event(event)
                     else:
                         events.insert(0, event)
+            elif charge and not event.is_sub_event():
+                events.insert(0, event)
             else:
                 logging.info(
                     "The job %s end time is unknown, "
@@ -277,7 +279,7 @@ def query_events_by_job(scheduler_id):
             "--format", ",".join(SLURM_SACCT_FIELDS), "-j", scheduler_id]
     new_args = args
     while new_args:
-        events = _get_acct_job_event(new_args)
+        events = _get_acct_job_event(new_args, charge=True)
         if events:
             job = events[0].get_acct_job()
             job_list.append(job)
