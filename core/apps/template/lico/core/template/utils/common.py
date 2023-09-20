@@ -18,8 +18,6 @@ import pwd
 
 from django.conf import settings
 
-from lico.core.usermodule.utils import get_eb_module_file_dir
-
 logger = logging.getLogger(__name__)
 
 
@@ -41,7 +39,8 @@ def set_user_env(user, role="admin"):
     if role == 'admin':
         os.putenv('MODULEPATH', settings.TEMPLATE.MODULE_PATH)
     else:
-        private_modulepath = get_eb_module_file_dir(user.workspace)
+        from lico.core.usermodule.utils import get_eb_module_file_path
+        private_modulepath = get_eb_module_file_path(user.workspace)
         os.putenv(
             'MODULEPATH',
             f"{settings.TEMPLATE.MODULE_PATH}:{private_modulepath}"
