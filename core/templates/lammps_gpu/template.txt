@@ -1,4 +1,6 @@
 {% include "scheduler/lammps.sh.in" %}
+{% settings as settings %}
+module use {{ lico.user.workspace }}/{{ settings.USERMODULE.WORK_PATH }}/modules/all
 {% include "runtime.sh.in" %}
 echo job start time is `date`
 echo `hostname`
