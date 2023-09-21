@@ -23,7 +23,10 @@ from lico.core.contrib.schema import json_schema_validate
 from lico.core.contrib.views import APIView
 from lico.core.template.models import Module
 
-from ..exceptions import UserModulePermissionDenied, UserModuleSubmitException
+from ..exceptions import (
+    UserModuleDeleteFailed, UserModulePermissionDenied,
+    UserModuleSubmitException,
+)
 from ..utils import (
     MODULE_FILE_DIR, UserModuleJobHelper, get_eb_module_file_path,
     get_eb_software_path, get_fs_operator, get_private_module,
@@ -106,6 +109,9 @@ class ModuleListView(APIView):
 
             # delete modelefile
             self.delete_path(request.user, modulefile_path)
+        except UserModulePermissionDenied as e:
+            logger.exception(e)
+            raise UserModuleDeleteFailed
         except Exception as e:
             logger.exception(e)
             raise LicoInternalError
@@ -131,7 +137,8 @@ class ModuleListView(APIView):
         fopr = get_fs_operator(user)
         if not fopr.path_exists(path):
             return
-        if not fopr.path_isreadable(path, user.uid, user.gid):
+        if not fopr.path_iswriteable(
+                fopr.path_dirname(path), user.uid, user.gid):
             raise UserModulePermissionDenied
         if fopr.path_isfile(path):
             fopr.remove(path)

@@ -28,6 +28,11 @@ class EasyconfigNotFoundException(UserModuleException):
     message = 'Easyconfig not found.'
 
 
+class UserModuleDeleteFailed(UserModuleException):
+    errid = 16002
+    message = 'User module delete failed.'
+
+
 # =============== HTTP_500 ===============
 class UserModuleSubmitException(Exception):
     message = 'Usermodule submit job failed.'

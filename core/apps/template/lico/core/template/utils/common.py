@@ -50,6 +50,5 @@ def set_user_env(user, role="admin"):
     os.setgid(user.gid)
     os.setuid(user.uid)
     os.putenv('LMOD_DIR', settings.TEMPLATE.LMOD_DIR)
-    os.putenv('MODULEPATH', settings.TEMPLATE.MODULE_PATH)
     home_dir = pwd.getpwnam(user.username).pw_dir
     os.putenv('HOME', home_dir)
