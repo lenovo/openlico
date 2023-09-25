@@ -1,0 +1,22 @@
+{% include "scheduler/hpl.sh.in" %}
+{% settings as settings %}
+
+module purge
+
+module load EasyBuild
+export EASYBUILD_PREFIX={{ lico.user.workspace }}/{{ settings.USERMODULE.WORK_PATH }}
+export EASYBUILD_LOGTOSTDOUT=True
+
+{% if settings.LICO.SCHEDULER == "slurm" %}
+ENV_JOB_ID=$SLURM_JOB_ID
+{% elif settings.LICO.SCHEDULER == "lsf" %}
+ENV_JOB_ID=$LSB_JOBID
+{% elif settings.LICO.SCHEDULER == "pbs" %}
+ENV_JOB_ID=$(echo $PBS_JOBID | cut -d "." -f1)
+{% endif %}
+
+export EASYBUILD_LOGFILE_FORMAT="easybuildlog,{{ job_name }}-{{ settings.LICO.SCHEDULER }}-${ENV_JOB_ID}.log"
+
+module use {{ lico.user.workspace }}/{{ settings.USERMODULE.WORK_PATH }}/{{ module_file_dir }}
+
+eb {{ easyconfig_path }} --rebuild --robot --tmp-logdir={{ job_workspace }}/easybuildlog

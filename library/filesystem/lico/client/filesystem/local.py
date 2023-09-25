@@ -1,4 +1,4 @@
-# Copyright 2015-2023 Lenovo
+# Copyright 2015-present Lenovo
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -71,6 +71,17 @@ class LocalFileSystem(FileSystemBaseBackend):
             return mode & stat.S_IRGRP > 0
         else:
             return mode & stat.S_IROTH > 0
+
+    def path_iswriteable(self, path, uid, gid):
+        s = os.stat(path)
+        mode = s[stat.ST_MODE]
+
+        if s[stat.ST_UID] == uid:
+            return mode & stat.S_IWUSR > 0
+        elif s[stat.ST_GID] == gid:
+            return mode & stat.S_IWGRP > 0
+        else:
+            return mode & stat.S_IWOTH > 0
 
     def path_isexecutable(self, path, uid, gid):
         s = os.stat(path)

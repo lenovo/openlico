@@ -1,4 +1,4 @@
-# Copyright 2015-2023 Lenovo
+# Copyright 2015-present Lenovo
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,11 +35,20 @@ def convert_myfolder(fopr, user, origin_path):
     )
 
 
-def set_user_env(user):
+def set_user_env(user, role="admin"):
+    if role == 'admin':
+        os.putenv('MODULEPATH', settings.TEMPLATE.MODULE_PATH)
+    else:
+        from lico.core.usermodule.utils import get_eb_module_file_path
+        private_modulepath = get_eb_module_file_path(user.workspace)
+        os.putenv(
+            'MODULEPATH',
+            f"{settings.TEMPLATE.MODULE_PATH}:{private_modulepath}"
+        )
+
     os.chdir(user.workspace)
     os.setgid(user.gid)
     os.setuid(user.uid)
     os.putenv('LMOD_DIR', settings.TEMPLATE.LMOD_DIR)
-    os.putenv('MODULEPATH', settings.TEMPLATE.MODULE_PATH)
     home_dir = pwd.getpwnam(user.username).pw_dir
     os.putenv('HOME', home_dir)

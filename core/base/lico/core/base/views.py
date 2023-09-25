@@ -1,4 +1,4 @@
-# Copyright 2015-2023 Lenovo
+# Copyright 2015-present Lenovo
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -55,3 +55,4 @@ class ApplicationConfigView(APIView):
             self.app.on_show_config(settings)
             if self.app is not None else {}
         )
+

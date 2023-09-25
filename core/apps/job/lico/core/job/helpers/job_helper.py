@@ -1,4 +1,4 @@
-# Copyright 2015-2023 Lenovo
+# Copyright 2015-present Lenovo
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -53,6 +53,7 @@ def job_changed(job_pair):
         scheduler_job.runtime - job.runtime >
         settings.JOB.JOB_SYNC_RUNTIME_INTERVAL,
         job.priority != scheduler_job.priority,
+        job.requeued != scheduler_job.requeued,
     ]
 
     if any(conditions):
@@ -132,6 +133,9 @@ def update_job_by_scheduler_job(job, scheduler_job):  # noqa: C901
     if scheduler_job.priority:
         job.priority = scheduler_job.priority
         append('priority')
+    if job.requeued != scheduler_job.requeued:
+        job.requeued = scheduler_job.requeued
+        append('requeued')
 
     # job.raw_info = ''
     # job.reason = ''

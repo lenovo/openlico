@@ -1,4 +1,4 @@
-# Copyright 2015-2023 Lenovo
+# Copyright 2015-present Lenovo
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import time
 from collections import Counter
 from datetime import timedelta
 
@@ -18,6 +19,7 @@ from dateutil.tz import tzoffset
 
 from lico.core.contrib.client import Client
 
+from .base.job_state import JobState
 from .exceptions import JobOperationException
 from .helpers.scheduler_helper import get_admin_scheduler, get_scheduler
 
@@ -161,4 +163,12 @@ def batch_status(target_nums, err_nums):
         return "partial"
     else:
         raise JobOperationException
+
+
+def get_display_runtime(runtime, start_time, state):
+    if state in JobState.get_final_state_values():
+        return runtime
+    if not start_time:
+        return runtime
+    return max([runtime, int(time.time()) - start_time])
 

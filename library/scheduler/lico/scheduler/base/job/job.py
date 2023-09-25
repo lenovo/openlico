@@ -1,4 +1,4 @@
-# Copyright 2015-2023 Lenovo
+# Copyright 2015-present Lenovo
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -45,3 +45,4 @@ class Job:
     time_limit: int = attr.ib(default=None)  # 0 means unlimited
     comment: str = attr.ib(default=None)
     priority: str = attr.ib(default=None)
+    requeued: bool = attr.ib(default=False)

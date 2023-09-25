@@ -1,4 +1,4 @@
-# Copyright 2015-2023 Lenovo
+# Copyright 2015-present Lenovo
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -197,3 +197,4 @@ billing_type_translate_code = {
 def trans_billing_type(billing_type):
     trans_code = billing_type_translate_code[billing_type]
     return ugettext(trans_code)
+

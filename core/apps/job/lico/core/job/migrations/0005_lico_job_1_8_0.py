@@ -1,4 +1,4 @@
-# Copyright 2015-2023 Lenovo
+# Copyright 2015-present Lenovo
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,5 +26,10 @@ class Migration(migrations.Migration):
             model_name='job',
             name='priority',
             field=models.CharField(blank=True, default='', max_length=16, null=True),
+        ),
+        migrations.AddField(
+            model_name='job',
+            name='requeued',
+            field=models.BooleanField(blank=True, default=False),
         ),
     ]

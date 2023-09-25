@@ -1,4 +1,4 @@
-# Copyright 2015-2023 Lenovo
+# Copyright 2015-present Lenovo
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -478,6 +478,9 @@ def parse_job_info(  # noqa: C901
                 job.state = JobState[value]
             elif key == "Reason":
                 job.reason = value
+            elif key == 'Restarts':
+                if try_int(value):
+                    job.requeued = True
             elif key == "RunTime":
                 job.runtime = convert_runtime_2_seconds(value)
             elif key == "SubmitTime":

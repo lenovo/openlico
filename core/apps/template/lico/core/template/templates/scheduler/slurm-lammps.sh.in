@@ -1,0 +1,13 @@
+#!/bin/bash
+#SBATCH --job-name='{{ job_name|addslashes }}'
+#SBATCH --chdir={{ job_workspace }}
+#SBATCH --partition={{ job_queue }}
+#SBATCH {% if gpu_per_node %}--ntasks-per-node={{ cores_per_node|default:1 }}{% else %}--ntasks={{ cores|default:1 }}{% endif %}
+{% if gpu_per_node %}
+#SBATCH --nodes={{ nodes|default:1 }}
+#SBATCH --gres={% if gpu_resource_name %}{{ gpu_resource_name }}{% else %}gpu{% endif %}:{{ gpu_per_node }}
+{% endif %}
+{% if run_time %}#SBATCH --time={{ run_time|timeformat }}{% endif %}
+{% if ram_size %}#SBATCH --mem={{ ram_size }}M{% endif %}
+
+ENV_JOB_ID=$SLURM_JOB_ID

@@ -1,4 +1,4 @@
-# Copyright 2015-2023 Lenovo
+# Copyright 2015-present Lenovo
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -147,3 +147,4 @@ class CSResGenerator(defaultdict):
             allocate_vals.append(str(self._inner_dict[key]))
         self[key] = ','.join(allocate_vals)
         return self[key]
+

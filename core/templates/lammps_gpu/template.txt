@@ -1,0 +1,10 @@
+{% include "scheduler/lammps.sh.in" %}
+{% settings as settings %}
+module use {{ lico.user.workspace }}/{{ settings.USERMODULE.WORK_PATH }}/modules/all
+{% include "runtime.sh.in" %}
+echo job start time is `date`
+echo `hostname`
+
+mpirun  {{ args|default:"" }} lmp -log lammps_${ENV_JOB_ID}.log -sf gpu -pk gpu {{ gpu_per_node |default:1 }} -i {{ lammps_input_file |default:"" }}
+
+echo job end time is `date`

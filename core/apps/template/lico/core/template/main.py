@@ -1,4 +1,4 @@
-# Copyright 2015-2023 Lenovo
+# Copyright 2015-present Lenovo
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -45,3 +45,4 @@ class Application(AbstractApplication):
         from django.core.management import call_command
         call_command('lmod_sync')
         call_command('template_sync')
+

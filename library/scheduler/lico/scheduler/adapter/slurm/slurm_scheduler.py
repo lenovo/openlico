@@ -1,4 +1,4 @@
-# Copyright 2015-2023 Lenovo
+# Copyright 2015-present Lenovo
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ from lico.scheduler.utils.cmd_utils import (
     exec_oscmd, exec_oscmd_with_login, exec_oscmd_with_user,
 )
 
-from .slurm_acct_parser import query_events_by_time
+from .slurm_acct_parser import query_events_by_job, query_events_by_time
 from .slurm_config import SchedulerConfig
 from .slurm_job_identity import JobIdentity
 from .utils.job_parser import (
@@ -174,8 +174,11 @@ class Scheduler(IScheduler):
             raise ResumeJobFailedException
         return status
 
-    def query_job(self, job_identity: JobIdentity) -> Job:
+    def query_job(self, job_identity: JobIdentity,
+                  include_history=False) -> Job:
         jobid = job_identity.scheduler_id
+        if include_history:
+            return query_events_by_job(jobid)
         args = ["scontrol", "show", "jobs", jobid]
         rc, out, err = exec_oscmd(args, self._config.timeout)
         job_info = [s for s in out.decode().splitlines() if s.strip() != '']

@@ -1,4 +1,4 @@
-# Copyright 2015-2023 Lenovo
+# Copyright 2015-present Lenovo
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -125,25 +125,29 @@ def import_record(task, operator_username='root'):
                     pwd.getpwnam(record.username)
                 except KeyError:
                     record.ret = False
-                    record.error_message = 'The user does not exist'
+                    record.error_message = 'The user does not exist in nss.'
                     record.save()
                     continue
 
-                user, created = User.objects.update_or_create(
+                if User.objects.filter(username=record.username).exists():
+                    record.ret = False
+                    record.error_message = 'The user already exists in db.'
+                    record.save()
+                    continue
+
+                user = User.objects.create(
                     username=record.username,
-                    defaults={
-                        "first_name": record.first_name,
-                        "last_name": record.last_name,
-                        "email": record.email,
-                        "role": record.role,
-                    }
+                    first_name=record.first_name,
+                    last_name=record.last_name,
+                    email=record.email,
+                    role=record.role
                 )
                 record.ret = True
                 record.save()
                 EventLog.opt_create(
                     operator_username,
                     EventLog.user,
-                    EventLog.create if created else EventLog.update,
+                    EventLog.create,
                     EventLog.make_list(user.id, user.username)
                 )
     except Exception:

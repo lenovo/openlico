@@ -1,4 +1,4 @@
-# Copyright 2015-2023 Lenovo
+# Copyright 2015-present Lenovo
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ class ModuleItem(Model):
     category = CharField(null=True, max_length=255)
     description = CharField(null=True, max_length=255)
     parents = CharField(null=True, max_length=255)
+    location = TextField(null=True)
 
     @property
     def parents_list(self):

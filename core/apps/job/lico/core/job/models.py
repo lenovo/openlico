@@ -1,4 +1,4 @@
-# Copyright 2015-2023 Lenovo
+# Copyright 2015-present Lenovo
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -72,6 +72,7 @@ class Job(Model):
     tags = ManyToManyField(Tag, through="JobTags")
     user_comment = TextField(null=True, blank=True, default="")
     priority = CharField(null=True, max_length=16, blank=True, default="")
+    requeued = BooleanField(null=False, blank=True, default=False)
 
     @property
     def get_job_password(self):

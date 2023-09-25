@@ -1,4 +1,4 @@
-# Copyright 2015-2023 Lenovo
+# Copyright 2015-present Lenovo
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -63,9 +63,11 @@ class ModuleVerifyView(APIView):
         ]
     })
     def post(self, request):
+        role = request.query_params.get('role')
         verify_modules(
             user=request.user,
-            modules=request.data['modules']
+            modules=request.data['modules'],
+            role=role
         )
 
         return Response()
