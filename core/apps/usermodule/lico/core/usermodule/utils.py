@@ -52,26 +52,29 @@ def exec_oscmd(args, timeout=30):
     return process.returncode, process.stdout, process.stderr
 
 
-def get_eb_prefix(workspace):
-    return os.path.join(workspace, settings.USERMODULE.WORK_PATH)
+class EasyBuildUtils():
+    def __init__(self, user):
+        self.user = user
+
+    def get_eb_prefix(self):
+        return os.path.join(self.user.workspace, settings.USERMODULE.WORK_PATH)
+
+    def get_eb_module_file_path(self, module_name=None):
+        file_path = os.path.join(self.get_eb_prefix(), MODULE_FILE_DIR)
+        if module_name is not None:
+            file_path = os.path.join(file_path, f"{module_name}.lua")
+        return file_path
+
+    def get_eb_software_path(self, module_name=None):
+        software_path = os.path.join(self.get_eb_prefix(), SOFTWARE_DIR)
+        if module_name is not None:
+            software_path = os.path.join(software_path, module_name)
+        return software_path
 
 
-def get_eb_module_file_path(workspace, module_name=None):
-    file_path = os.path.join(get_eb_prefix(workspace), MODULE_FILE_DIR)
-    if module_name is not None:
-        file_path = os.path.join(file_path, f"{module_name}.lua")
-    return file_path
-
-
-def get_eb_software_path(workspace, module_name=None):
-    software_path = os.path.join(get_eb_prefix(workspace), SOFTWARE_DIR)
-    if module_name is not None:
-        software_path = os.path.join(software_path, module_name)
-    return software_path
-
-
-def get_private_module(spider, workspace):
-    module_path = get_eb_module_file_path(workspace)
+def get_private_module(spider, user):
+    eb_utils = EasyBuildUtils(user)
+    module_path = eb_utils.get_eb_module_file_path()
 
     if not os.path.exists(module_path):
         raise ModulepathNotExistedException
@@ -88,13 +91,14 @@ def get_private_module(spider, workspace):
         raise UserModuleGetPrivateModuleException(err.decode())
 
     private_module_content = json.loads(output)
-    private_module = process_module(private_module_content, workspace)
+    private_module = process_module(private_module_content, user)
 
     return private_module
 
 
-def process_module(content, workspace):
-    software_path = get_eb_software_path(workspace)
+def process_module(content, user):
+    eb_utils = EasyBuildUtils(user)
+    software_path = eb_utils.get_eb_software_path()
     module_list = list()
     for name, modules in content.items():
         module_dict = {

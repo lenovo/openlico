@@ -151,3 +151,7 @@ class JupyterLabImageNotExist(TemplateException):
 class CreateJobWorkspaceException(TemplateException):
     message = "Failed to create the job workspace."
     errid = 4043
+
+
+class UserModuleNotFoundException(Exception):
+    message = "lico-core-usermodule not found."

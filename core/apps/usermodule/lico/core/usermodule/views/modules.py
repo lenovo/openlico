@@ -28,8 +28,8 @@ from ..exceptions import (
     UserModuleSubmitException,
 )
 from ..utils import (
-    MODULE_FILE_DIR, UserModuleJobHelper, get_eb_module_file_path,
-    get_eb_software_path, get_fs_operator, get_private_module,
+    MODULE_FILE_DIR, EasyBuildUtils, UserModuleJobHelper, get_fs_operator,
+    get_private_module,
 )
 
 logger = logging.getLogger(__name__)
@@ -98,10 +98,9 @@ class ModuleListView(APIView):
     def delete(self, request):
         module_name = request.query_params.get('fullname')
 
-        modulefile_path = get_eb_module_file_path(
-            request.user.workspace, module_name)
-        software_path = get_eb_software_path(
-            request.user.workspace, module_name)
+        eb_utils = EasyBuildUtils(request.user)
+        modulefile_path = eb_utils.get_eb_module_file_path(module_name)
+        software_path = eb_utils.get_eb_software_path(module_name)
 
         try:
             # delete software
