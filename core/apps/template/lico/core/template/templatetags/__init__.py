@@ -16,6 +16,7 @@ import re
 from subprocess import run  # nosec B404
 
 from django import template
+from django.conf import settings
 from django.db.models import Q
 from six import raise_from
 
@@ -65,6 +66,15 @@ def runtime_sh(user, runtime_id, affinity_id=None):
                 script_list = script_list + affinity_filter.script_list
 
             module_str = 'module purge \n' if module_list else ''
+
+            # Add EasyBuild module path
+            eb_utils_class = settings.USERMODULE.EASYBUILDUTILS.get(
+                "EasyBuildUtils", None)
+            if eb_utils_class and module_list:
+                eb_utils = eb_utils_class(user)
+                module_dir = eb_utils.get_eb_module_file_path()
+                module_str += f"module use {module_dir}\n"
+
             for module in module_list:
                 module_str += "module try-load {} \n".format(module)
             env_str = ''

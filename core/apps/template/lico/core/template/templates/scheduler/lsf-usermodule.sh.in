@@ -1,0 +1,10 @@
+#!/bin/bash
+#BSUB -J {{ job_name }}
+#BSUB -q {{ job_queue }}
+#BSUB -cwd {{ job_workspace }}
+{% get_now as current %}#BSUB -o {{ job_name }}-{{ current }}.out
+#BSUB -e {{ job_name }}-{{ current }}.out
+#BSUB -n {{ nodes|default:1|multi:cores_per_node|default:1 }}
+#BSUB -R "span[ptile={{ cores_per_node|default:1 }}]"
+
+ENV_JOB_ID=$LSB_JOBID

@@ -78,9 +78,10 @@ class ModuleListView(APIView):
         spider = os.path.join(settings.TEMPLATE.LMOD_DIR, "spider")
         modules = []
         try:
-            modules = get_private_module(spider, self.user.workspace)
+            modules = get_private_module(spider, self.user)
         except Exception as e:
             logger.exception(e)
+            raise LicoInternalError
         return modules
 
     @json_schema_validate({
