@@ -12,8 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
+
+import pkg_resources
+
 from lico.core.base.subapp import AbstractApplication
 
 
 class Application(AbstractApplication):
-    pass
+    def on_load_settings(
+            self, settings_module_name, arch
+    ):
+        super().on_load_settings(settings_module_name, arch)
+        module = sys.modules[settings_module_name]
+        easybuildutils = dict()
+        for entry_point in pkg_resources.iter_entry_points(
+                'lico.core.usermodule.easybuildutils'):
+            easybuildutils[entry_point.name] = entry_point.load()
+        module.USERMODULE.EASYBUILDUTILS = easybuildutils

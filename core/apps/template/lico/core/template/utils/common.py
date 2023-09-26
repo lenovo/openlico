@@ -18,6 +18,8 @@ import pwd
 
 from django.conf import settings
 
+from ..exceptions import UserModuleNotFoundException
+
 logger = logging.getLogger(__name__)
 
 
@@ -39,8 +41,12 @@ def set_user_env(user, role="admin"):
     if role == 'admin':
         os.putenv('MODULEPATH', settings.TEMPLATE.MODULE_PATH)
     else:
-        from lico.core.usermodule.utils import get_eb_module_file_path
-        private_modulepath = get_eb_module_file_path(user.workspace)
+        try:
+            eb_utils = settings.USERMODULE.EASYBUILDUTILS[
+                'EasyBuildUtils'](user)
+        except Exception as e:
+            raise UserModuleNotFoundException from e
+        private_modulepath = eb_utils.get_eb_module_file_path()
         os.putenv(
             'MODULEPATH',
             f"{settings.TEMPLATE.MODULE_PATH}:{private_modulepath}"
