@@ -1,0 +1,8 @@
+#!/bin/bash
+#SBATCH --job-name='{{ job_name|addslashes }}'
+#SBATCH --chdir={{ job_workspace }}
+#SBATCH --partition={{ job_queue }}
+#SBATCH --nodes={{ nodes|default:1 }}
+#SBATCH --mincpus={{ cores_per_node|default:1 }}
+
+ENV_JOB_ID=$SLURM_JOB_ID

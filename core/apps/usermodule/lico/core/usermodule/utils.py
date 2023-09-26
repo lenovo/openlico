@@ -100,6 +100,9 @@ def process_module(content, user):
     eb_utils = EasyBuildUtils(user)
     software_path = eb_utils.get_eb_software_path()
     module_list = list()
+    if not content:
+        return module_list
+
     for name, modules in content.items():
         module_dict = {
             "name": name,
