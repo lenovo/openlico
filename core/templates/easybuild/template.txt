@@ -11,4 +11,4 @@ export EASYBUILD_LOGFILE_FORMAT="easybuildlog,{{ job_name }}-{{ settings.LICO.SC
 
 module use {{ lico.user.workspace }}/{{ settings.USERMODULE.WORK_PATH }}/{{ module_file_dir }}
 
-eb {{ easyconfig_path }} --rebuild --robot --tmp-logdir={{ job_workspace }}/easybuildlog
+eb {{ easyconfig_path }} {{ args|default:"" }} --robot --tmp-logdir={{ job_workspace }}/easybuildlog

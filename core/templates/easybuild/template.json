@@ -53,6 +53,17 @@
       "type": "system"
     },
     {
+      "id": "args",
+      "name": {
+        "en": "EasyBuild Building Options",
+        "zh": "EasyBuild运行参数"
+      },
+      "class": "param",
+      "dataType": "string",
+      "input": "input",
+      "must": false
+    },
+    {
       "id": "cores_per_node",
       "name": {
         "en": "CPU Cores",

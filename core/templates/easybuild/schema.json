@@ -18,6 +18,9 @@
       "type": "string",
       "minLength": 1
     },
+    "args": {
+      "type": "string"
+    },
     "cores_per_node": {
       "type": "integer",
       "minimum": 1,
