@@ -3,7 +3,9 @@
 {% include "runtime.sh.in" %}
 echo job start time is `date`
 echo `hostname`
-
-mpirun {{ args|default:"" }} lmp -log lammps_${ENV_JOB_ID}.log -i {{ lammps_input_file |default:"" }}
+if [ -z "$OMP_NUM_THREADS" ]; then
+    export OMP_NUM_THREADS=1
+fi
+mpirun {{ args|default:"" }} lmp -log lammps_${ENV_JOB_ID}.log -k on t ${OMP_NUM_THREADS} -sf kk -i {{ lammps_input_file |default:"" }}
 
 echo job end time is `date`
