@@ -42,6 +42,10 @@ class UserModuleGetPrivateModuleException(Exception):
     message = 'Failed to get private module.'
 
 
+class UserModuleConfigsException(Exception):
+    message = 'Failed to get easybuild configs.'
+
+
 class ModulepathNotExistedException(Exception):
     message = 'Modulepath is not existed.'
 

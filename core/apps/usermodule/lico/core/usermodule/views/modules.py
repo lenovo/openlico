@@ -24,12 +24,12 @@ from lico.core.contrib.views import APIView
 from lico.core.template.models import Module
 
 from ..exceptions import (
-    UserModuleDeleteFailed, UserModulePermissionDenied,
+    UserModuleDeleteFailed, UserModuleException, UserModulePermissionDenied,
     UserModuleSubmitException,
 )
 from ..utils import (
-    MODULE_FILE_DIR, EasyBuildUtils, UserModuleJobHelper, get_fs_operator,
-    get_private_module,
+    MODULE_FILE_DIR, EasyBuildUtils, EasyConfigParser, UserModuleJobHelper,
+    get_fs_operator, get_private_module,
 )
 
 logger = logging.getLogger(__name__)
@@ -200,3 +200,34 @@ class UserModuleSubmit(APIView):
             return ret
         except Exception:
             raise UserModuleSubmitException
+
+
+class UserModuleSearch(APIView):
+    def get(self, request, option):
+        eb_utils = EasyBuildUtils(request.user)
+        param = request.query_params.get('param', '')
+        if option == "alnum":
+            eb_configs = eb_utils.get_eb_configs(param=param)
+        elif option == "name":
+            eb_configs = eb_utils.get_eb_configs(param=param, is_alnum=False)
+        else:
+            raise NotImplementedError
+
+        eb_data = list()
+        for config in eb_configs:
+            if not config or not config.endswith("eb"):
+                continue
+            if os.path.exists(config):
+                try:
+                    with open(config, 'r') as f:
+                        module_info = EasyConfigParser(f.name, f.read()).\
+                            parse()
+                        if option == "name" and param.lower() \
+                                not in module_info["name"].lower():
+                            continue
+                        eb_data.append(module_info)
+                except Exception as e:
+                    logger.exception(e)
+                    raise UserModuleException
+
+        return Response(eb_data)
