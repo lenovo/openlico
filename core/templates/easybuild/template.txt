@@ -3,7 +3,7 @@
 
 module purge
 
-module load EasyBuild
+module try-load EasyBuild
 export EASYBUILD_PREFIX={{ lico.user.workspace }}/{{ settings.USERMODULE.WORK_PATH }}
 export EASYBUILD_LOGTOSTDOUT=True
 

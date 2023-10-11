@@ -11,13 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from django.urls import path
+from django.urls import path, re_path
 
 from .views.easyconfig import EasyConfigParseView
-from .views.modules import ModuleListView, UserModuleSubmit
+from .views.modules import ModuleListView, UserModuleSearch, UserModuleSubmit
 
 urlpatterns = [
     path("", ModuleListView.as_view()),
     path("submit/", UserModuleSubmit.as_view()),
+    re_path("search/(?P<option>alnum|name)/", UserModuleSearch.as_view()),
     path("easyconfig/content/", EasyConfigParseView.as_view()),
 ]

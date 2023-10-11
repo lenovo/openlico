@@ -15,7 +15,7 @@ import ast
 import json
 import logging
 import os
-from subprocess import PIPE, run  # nosec B404
+from subprocess import PIPE, list2cmdline, run  # nosec B404
 
 import yaml
 from attr import asdict, attrib, attrs
@@ -25,7 +25,8 @@ from lico.core.contrib.client import Client
 
 from .exceptions import (
     ModulepathNotExistedException, SpiderToolNotAvailableException,
-    UserModuleFailToGetJobException, UserModuleGetPrivateModuleException,
+    UserModuleConfigsException, UserModuleFailToGetJobException,
+    UserModuleGetPrivateModuleException,
 )
 
 logger = logging.getLogger(__name__)
@@ -52,6 +53,19 @@ def exec_oscmd(args, timeout=30):
     return process.returncode, process.stdout, process.stderr
 
 
+def exec_oscmd_with_user(user, args, timeout=30):
+    process = run(  # nosec B603 B607
+        [
+            'su', '-', user, '-c',
+            list2cmdline(args)
+        ],
+        stdout=PIPE,
+        stderr=PIPE,
+        timeout=timeout
+    )
+    return process.returncode, process.stdout, process.stderr
+
+
 class EasyBuildUtils():
     def __init__(self, user):
         self.user = user
@@ -70,6 +84,34 @@ class EasyBuildUtils():
         if module_name is not None:
             software_path = os.path.join(software_path, module_name)
         return software_path
+
+    def get_eb_configs(self, param='', is_alnum=True):
+        """
+        For alphabet: eb --search=^A.*eb$
+        For number: eb --search=^[0-9].*eb$
+        For searching by name: eb --search=<param>
+        """
+        pattern = param
+
+        if is_alnum:
+            if param == '0':
+                pattern = "^[0-9].*eb$"
+            else:
+                pattern = f"^{param}.*eb$"
+
+        args = ["module", "try-load", "EasyBuild",
+                ";", "eb", f"--search={pattern}"]
+        code, out, err = exec_oscmd_with_user(self.user.username, args)
+
+        if err:
+            logger.exception("Failed to get usermodule configs.")
+            raise UserModuleConfigsException(err.decode())
+
+        def parse_configs(config):
+            if config.startswith(" * "):
+                return config.split(" * ")[-1]
+
+        return map(parse_configs, out.decode().splitlines())
 
 
 def get_private_module(spider, user):
@@ -149,7 +191,7 @@ def convert_myfolder(fopr, user, origin_path):
 
 class EasyConfigParser(object):
     HEADER_MANDATORY = ['version', 'name', 'homepage',
-                        'description']
+                        'description', 'toolchain']
     YEB_FORMAT_EXTENSION = '.yeb'
 
     def __init__(self, filename=None, content=''):
@@ -185,6 +227,11 @@ class EasyConfigParser(object):
                             header_dict[node_target_id] = node.value.s
                         elif isinstance(node.value, ast.Constant):
                             header_dict[node_target_id] = node.value.value
+                        elif isinstance(node.value, ast.Name):
+                            header_dict[node_target_id] = node.value.id
+                        elif isinstance(node.value, ast.Dict):
+                            values = [e.s for e in node.value.values]
+                            header_dict[node_target_id] = "-".join(values)
             except Exception as e:
                 logger.info(e)
                 continue
