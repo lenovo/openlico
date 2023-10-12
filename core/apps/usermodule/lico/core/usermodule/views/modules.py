@@ -147,6 +147,10 @@ class ModuleListView(APIView):
 
 
 class UserModuleSubmit(APIView):
+    """
+    Used for submitting usermodule related jobs.
+    After gathering the parameters, it will send a request to `SubmitJobView`.
+    """
     @json_schema_validate({
         "type": "object",
         "properties": {
@@ -181,7 +185,9 @@ class UserModuleSubmit(APIView):
         param = dict()
         param.update(data)
         eb_path = data["easyconfig_path"]
-        param["job_name"] = os.path.splitext(os.path.basename(eb_path))[0]
+        # Make sure job_name length is not greater than 64 digits,
+        # in order to meet `SubmitJobView` API requirement.
+        param["job_name"] = os.path.splitext(os.path.basename(eb_path))[0][:64]
         param["job_workspace"] = os.path.join(
             self.user.workspace, settings.USERMODULE.JOB_WORKSPACE
         )
@@ -222,9 +228,7 @@ class UserModuleSearch(APIView):
                     with open(config, 'r') as f:
                         module_info = EasyConfigParser(f.name, f.read()).\
                             parse()
-                        if option == "name" and param.lower() \
-                                not in module_info["name"].lower():
-                            continue
+                        module_info["easyconfig_path"] = config
                         eb_data.append(module_info)
                 except Exception as e:
                     logger.exception(e)

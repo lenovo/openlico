@@ -194,9 +194,10 @@ class EasyConfigParser(object):
                         'description', 'toolchain']
     YEB_FORMAT_EXTENSION = '.yeb'
 
-    def __init__(self, filename=None, content=''):
+    def __init__(self, filename=None, content='', extra_fields=[]):
         self.filename = filename
         self.content = content
+        self.fields = self.HEADER_MANDATORY + extra_fields
 
     def _is_yeb_format(self):
         is_yeb = False
@@ -217,12 +218,12 @@ class EasyConfigParser(object):
 
     def _parse_eb_header(self):
         eb_ast_node = ast.parse(self.content)
-        header_dict = {e: "" for e in self.HEADER_MANDATORY}
+        header_dict = {e: "" for e in self.fields}
         for node in ast.walk(eb_ast_node):
             try:
                 if isinstance(node, ast.Assign):
                     node_target_id = node.targets[0].id
-                    if node_target_id in self.HEADER_MANDATORY:
+                    if node_target_id in self.fields:
                         if isinstance(node.value, ast.Str):
                             header_dict[node_target_id] = node.value.s
                         elif isinstance(node.value, ast.Constant):
@@ -240,8 +241,8 @@ class EasyConfigParser(object):
 
     def _parse_yeb_header(self):
         yeb_content = yaml.safe_load(self.content)
-        header_dict = {e: "" for e in self.HEADER_MANDATORY}
-        for hm in self.HEADER_MANDATORY:
+        header_dict = {e: "" for e in self.fields}
+        for hm in self.fields:
             header_dict[hm] = yeb_content.get(hm)
 
         return header_dict
