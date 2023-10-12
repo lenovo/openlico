@@ -26,6 +26,7 @@ from lico.core.contrib.views import InternalAPIView
 from lico.scheduler.base.exception.job_exception import (
     SchedulerJobBaseException,
 )
+from lico.scheduler.base.job.job_state import JobState as SchedulerJobState
 
 from ..base.job_comment import JobComment
 from ..base.job_operate_state import JobOperateState
@@ -144,6 +145,14 @@ class JobSubmitView(InternalAPIView):
         # Save job identity to database
         scheduler_job = scheduler.query_job(job_identity)
         update_job_by_scheduler_job(job, scheduler_job)
+
+        # in case of job complete too fast to charge or notify
+        # but this results in a probability of repeated charge request
+        if job.state in JobState.get_final_state_values():
+            job.scheduler_state = SchedulerJobState.PENDING.value
+            job.state = JobState.from_scheduler_job_state(
+                SchedulerJobState.PENDING).value
+
         if job.operate_state == JobOperateState.CREATING.value \
                 or not job.operate_state:
             job.operate_state = JobOperateState.CREATED.value
