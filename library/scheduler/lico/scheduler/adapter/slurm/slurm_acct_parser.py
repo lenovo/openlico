@@ -140,6 +140,12 @@ class AcctEvent(object):
 
     def merge_sub_event(self, sub_event):
         try:
+            # [JIRA:LICO-7651] When the job is requeue after cancel,
+            # the main_event elapsed_time is not trusted,
+            # so the .batch elapsed_time is required for verification.
+            if sub_event.job_id.startswith(self.job_id + '.batch'):
+                if sub_event.run_time - self.run_time < 0:
+                    self.run_time = sub_event.run_time
             # Check the relation
             if sub_event.job_id.index(self.job_id + '.') == 0:
                 step_mem = calculate_step_mem(
@@ -278,9 +284,13 @@ def query_events_by_job(scheduler_id):
     args = ["sacct", "-P", "--noheader",
             "--format", ",".join(SLURM_SACCT_FIELDS), "-j", scheduler_id]
     new_args = args
+    first_flag = True
     while new_args:
         events = _get_acct_job_event(new_args, charge=True)
         if events:
+            if not first_flag and not events[0].state != JobState.REQUEUED:
+                break
+            first_flag = False
             job = events[0].get_acct_job()
             job_list.append(job)
             # Slurm 20.11 requires subtracting 1 second to get the run time
