@@ -180,3 +180,63 @@ msgstr "Deposit"
 
 msgid "Deposit.Type.Withdraw"
 msgstr "Withdraw"
+
+msgid "Django.accounting.expense_bill.Date"
+msgstr "Date"
+
+msgid "Django.accounting.expense_bill.Record_ID"
+msgstr "Record ID"
+
+msgid "Django.accounting.expense_bill.Job_ID"
+msgstr "Job ID"
+
+msgid "Django.accounting.expense_bill.Job_Name"
+msgstr "Job Name"
+
+msgid "Django.accounting.expense_bill.User"
+msgstr "User"
+
+msgid "Django.accounting.expense_bill.Billing_Group"
+msgstr "Billing Group"
+
+msgid "Django.accounting.expense_bill.Queue"
+msgstr "Queue"
+
+msgid "Django.accounting.expense_bill.Run_Time"
+msgstr "Run Time(s)"
+
+msgid "Django.accounting.expense_bill.CPU_Rate"
+msgstr "CPU Billing Rate({unit}/Core*Hour)"
+
+msgid "Django.accounting.expense_bill.CPU_Used"
+msgstr "CPU Used(core)"
+
+msgid "Django.accounting.expense_bill.CPU_Cost"
+msgstr "CPU Cost({unit})"
+
+msgid "Django.accounting.expense_bill.Memory_Rate"
+msgstr "Memory Billing Rate({unit}/MB*Hour)"
+
+msgid "Django.accounting.expense_bill.Memory_Used"
+msgstr "Memory Used(MB)"
+
+msgid "Django.accounting.expense_bill.Memory_Cost"
+msgstr "Memory Cost({unit})"
+
+msgid "Django.accounting.expense_bill.GRES_Rate"
+msgstr "{gres} Billing Rate({unit}/{g_unit}*Hour)"
+
+msgid "Django.accounting.expense_bill.GRES_Used"
+msgstr "{gres} Used({g_unit})"
+
+msgid "Django.accounting.expense_bill.GRES_Cost"
+msgstr "{gres} Cost({unit})"
+
+msgid "Django.accounting.expense_bill.Sum_Total"
+msgstr "Total({unit})"
+
+msgid "Django.accounting.expense_bill.Discount"
+msgstr "Discount"
+
+msgid "Django.accounting.expense_bill.Discounted_Cost"
+msgstr "Discounted Cost({unit})"

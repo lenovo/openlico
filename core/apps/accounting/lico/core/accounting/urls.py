@@ -14,7 +14,7 @@
 from django.urls import path
 
 from lico.core.accounting.views.consumeview import (
-    ConsumeRankingView, CostStatisticView,
+    ConsumeRankingView, CostStatisticView, ExpenseReportView,
 )
 from lico.core.contrib.authentication import RemoteJWTWebAuthentication
 from lico.core.contrib.permissions import AsAdminRole
@@ -68,4 +68,5 @@ urlpatterns = [
     # consume report preview api
     path('consume/cost/', CostStatisticView.as_view()),
     path('consume/ranking/', ConsumeRankingView.as_view()),
+    path('consume_report/<str:filename>/', ExpenseReportView.as_view()),
 ]

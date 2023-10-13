@@ -13,13 +13,18 @@
 # limitations under the License.
 
 import logging
+import uuid
 from datetime import timedelta
+from os import path
 
 from dateutil import tz
 from dateutil.parser import parse
+from dateutil.tz import tzoffset
 from django.db import transaction
 from django.db.models import ExpressionWrapper, F, FloatField, Sum
+from django.http import StreamingHttpResponse
 from pandas import DataFrame
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.status import HTTP_403_FORBIDDEN
 
@@ -28,7 +33,10 @@ from lico.core.contrib.permissions import AsOperatorRole
 from lico.core.contrib.schema import json_schema_validate
 from lico.core.contrib.views import APIView
 
-from ..exceptions import QueryBillingStatementFailedException
+from ..exceptions import (
+    InvalidParameterException, QueryBillingStatementFailedException,
+)
+from ..helpers.expense_report_helper import ExpenseReportExporter
 from ..models import Gresource, JobBillingStatement, StorageBillingStatement
 
 logger = logging.getLogger(__name__)
@@ -353,3 +361,93 @@ class ConsumeRankingView(APIView):
             'data': rank_list[:10:]
         }
         return Response(data)
+
+
+class ExpenseReportView(APIView):
+
+    config = {"expense_details": ExpenseReportExporter}
+
+    @json_schema_validate({
+        "type": "object",
+        "required": ["args"],
+        "properties": {
+            "timezone_offset": {
+                "type": "string",
+                'pattern': r'^[+-]?\d+$'
+            },
+            "role": {
+                "type": "string",
+                "const": "admin",
+            },
+            "args": {
+                "type": "object",
+                "required": ["start_date", "end_date"],
+                "properties": {
+                    "start_date": {
+                        "type": "string",
+                        "pattern": date_str_pattern
+                    },
+                    "end_date": {
+                        "type": "string",
+                        "pattern": date_str_pattern
+                    },
+                    "filter": {
+                        "type": "object",
+                        "required": ["values", "value_type"],
+                        "properties": {
+                            "value_type": {
+                                "type": "string",
+                                "enum": ["username", "billinggroup"]
+                            },
+                            "values": {
+                                "type": "array",
+                                "minItems": 0,
+                                "uniqueItems": True,
+                            }
+                        }
+                    }
+                }
+            },
+        }
+    })
+    def post(self, request, filename):
+        username = request.user.username
+        args = request.data['args']
+        role = request.data.get('role', None)
+        get_tzinfo = int(request.data.get('timezone_offset', 0))
+        filename, ext = path.splitext(filename)
+        if filename not in self.config or ext not in ['.csv']:
+            raise InvalidParameterException
+        start_date, end_date = date_string_to_utctime(
+            args['start_date'], args['end_date']
+        )
+        job_bill_query, storage_bill_query = filter_by_date_range(
+            start_date, end_date
+        )
+        if role:
+            if request.user.role < AsOperatorRole.floor:
+                logger.exception('User role has no permission'
+                                 'for get other user billing reports')
+                raise PermissionDenied
+
+            value_type = args['filter']['value_type']
+            values = args['filter']['values']
+            job_bill_query, storage_bill_query = filter_by_values(
+                value_type, values, job_bill_query, storage_bill_query
+            )
+        else:
+            job_bill_query = job_bill_query.filter(submitter=username)
+        report = self.config[filename](
+            bill_query=job_bill_query,
+            doctype=ext[1:],
+            timezone_offset=tzoffset(
+                'lico/web', -get_tzinfo * timedelta(minutes=1)
+            )
+        )
+        stream, ext = report.report_export()
+        filename = str(uuid.uuid1())
+        response = StreamingHttpResponse(stream)
+        response['Content-Type'] = 'application/octet-stream'
+        response['Content-Disposition'] = \
+            f'attachement;filename="{filename}{ext}"'
+        return response
