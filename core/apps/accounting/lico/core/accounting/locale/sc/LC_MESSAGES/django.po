@@ -179,3 +179,63 @@ msgstr "存入"
 
 msgid "Deposit.Type.Withdraw"
 msgstr "取出"
+
+msgid "Django.accounting.expense_bill.Date"
+msgstr "日期"
+
+msgid "Django.accounting.expense_bill.Record_ID"
+msgstr "流水号"
+
+msgid "Django.accounting.expense_bill.Job_ID"
+msgstr "作业ID"
+
+msgid "Django.accounting.expense_bill.Job_Name"
+msgstr "作业名称"
+
+msgid "Django.accounting.expense_bill.User"
+msgstr "用户"
+
+msgid "Django.accounting.expense_bill.Billing_Group"
+msgstr "计费组"
+
+msgid "Django.accounting.expense_bill.Queue"
+msgstr "队列"
+
+msgid "Django.accounting.expense_bill.Run_Time"
+msgstr "运行时长(秒)"
+
+msgid "Django.accounting.expense_bill.CPU_Rate"
+msgstr "CPU 费率({unit}/Core*Hour)"
+
+msgid "Django.accounting.expense_bill.CPU_Used"
+msgstr "CPU数量(core)"
+
+msgid "Django.accounting.expense_bill.CPU_Cost"
+msgstr "CPU费用({unit})"
+
+msgid "Django.accounting.expense_bill.Memory_Rate"
+msgstr "内存费率({unit}/MB*Hour)"
+
+msgid "Django.accounting.expense_bill.Memory_Used"
+msgstr "内存使用(MB)"
+
+msgid "Django.accounting.expense_bill.Memory_Cost"
+msgstr "内存费用({unit})"
+
+msgid "Django.accounting.expense_bill.GRES_Rate"
+msgstr "{gres}费率({unit}/{g_unit}*Hour)"
+
+msgid "Django.accounting.expense_bill.GRES_Used"
+msgstr "{gres}数量({unit})"
+
+msgid "Django.accounting.expense_bill.GRES_Cost"
+msgstr "{gres}费用({unit})"
+
+msgid "Django.accounting.expense_bill.Sum_Total"
+msgstr "合计({unit})"
+
+msgid "Django.accounting.expense_bill.Discount"
+msgstr "折扣"
+
+msgid "Django.accounting.expense_bill.Discounted_Cost"
+msgstr "实际费用({unit})"
