@@ -24,9 +24,8 @@ from django.conf import settings
 from lico.core.contrib.client import Client
 
 from .exceptions import (
-    ModulepathNotExistedException, SpiderToolNotAvailableException,
-    UserModuleConfigsException, UserModuleFailToGetJobException,
-    UserModuleGetPrivateModuleException,
+    SpiderToolNotAvailableException, UserModuleConfigsException,
+    UserModuleFailToGetJobException, UserModuleGetPrivateModuleException,
 )
 
 logger = logging.getLogger(__name__)
@@ -119,7 +118,7 @@ def get_private_module(spider, user):
     module_path = eb_utils.get_eb_module_file_path()
 
     if not os.path.exists(module_path):
-        raise ModulepathNotExistedException
+        return list()
 
     if not os.path.exists(spider):
         raise SpiderToolNotAvailableException

@@ -46,10 +46,6 @@ class UserModuleConfigsException(Exception):
     message = 'Failed to get easybuild configs.'
 
 
-class ModulepathNotExistedException(Exception):
-    message = 'Modulepath is not existed.'
-
-
 class SpiderToolNotAvailableException(Exception):
     message = 'Spider tool is not available.'
 
