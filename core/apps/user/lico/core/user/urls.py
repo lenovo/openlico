@@ -53,8 +53,12 @@ urlpatterns = [
     path('import/', UserImportView.as_view()),
     path('import/detail/', UserImportDetailView.as_view()),
     path('<int:pk>/', UserDetailView.as_view(), name="user-detail-id"),
+    # Username needs a different endpoint because usernames can be numeric
+    # such as username=20230804, in those cases the endpoint above will
+    # match the numeric username to the user with id=20230804, which is
+    # not what we want.
     path(
-        '<str:username>/',
+        '<str:username>/by_username',
         UserDetailView.as_view(),
         name="user-detail-username",
     ),
