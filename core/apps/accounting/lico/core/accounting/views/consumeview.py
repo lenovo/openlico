@@ -369,7 +369,7 @@ class ExpenseReportView(APIView):
 
     @json_schema_validate({
         "type": "object",
-        "required": ["args"],
+        "required": ["args", "timezone_offset"],
         "properties": {
             "timezone_offset": {
                 "type": "string",
