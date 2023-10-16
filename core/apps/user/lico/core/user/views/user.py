@@ -246,10 +246,7 @@ class UserDetailView(APIView):
             )
 
     def get(self, request, pk=None, username=None):
-        if pk:
-            user = DataBase().get_user(pk)
-        elif username:
-            user = DataBase().get_user(username)
+        user = DataBase().get_user(username or pk)
         user_dict = user.as_dict(
             inspect_related=False
         )
