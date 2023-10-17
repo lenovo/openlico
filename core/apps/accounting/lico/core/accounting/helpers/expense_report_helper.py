@@ -94,12 +94,12 @@ class ExpenseReportExporter(object):
             job_data.append([
                 format_datetime(
                     bill.create_time.astimezone(self.timezone_offset)),
-                bill.record_id,
-                bill.scheduler_id,
-                bill.job_name,
-                bill.submitter,
-                bill.bill_group_name,
-                bill.queue,
+                f'"{bill.record_id}"',
+                f'"{bill.scheduler_id}"',
+                f'"{bill.job_name}"',
+                f'"{bill.submitter}"',
+                f'"{bill.bill_group_name}"',
+                f'"{bill.queue}"',
                 bill.billing_runtime,
                 bill.charge_rate,
                 bill.cpu_count,
@@ -108,8 +108,7 @@ class ExpenseReportExporter(object):
                 bill.memory_count,
                 bill.memory_cost,
                 *gres_data,
-                bill.cpu_cost + bill.memory_cost +
-                sum(bill.gres_cost.values()),
+                bill.total_cost,
                 bill.discount,
                 bill.billing_cost,
             ])
@@ -118,7 +117,7 @@ class ExpenseReportExporter(object):
     def export_csv(self):
         job_head, job_data = self.gen_export_data()
         stream = StringIO()
-        writer = csv.writer(stream)
+        writer = csv.writer(stream, quotechar="'")
         writer.writerow(job_head)
         writer.writerows(job_data)
         stream.seek(0)
