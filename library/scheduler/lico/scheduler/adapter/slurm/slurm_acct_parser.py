@@ -288,7 +288,7 @@ def query_events_by_job(scheduler_id):
     while new_args:
         events = _get_acct_job_event(new_args, charge=True)
         if events:
-            if not first_flag and not events[0].state != JobState.REQUEUED:
+            if not first_flag and events[0].state != JobState.REQUEUED:
                 break
             first_flag = False
             job = events[0].get_acct_job()
