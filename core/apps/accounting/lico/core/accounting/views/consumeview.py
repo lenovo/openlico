@@ -14,7 +14,7 @@
 
 import logging
 import uuid
-from datetime import timedelta
+from datetime import datetime, timedelta
 from os import path
 
 from dateutil import tz
@@ -381,16 +381,10 @@ class ExpenseReportView(APIView):
             },
             "args": {
                 "type": "object",
-                "required": ["start_date", "end_date"],
+                "required": ["start_time", "end_time"],
                 "properties": {
-                    "start_date": {
-                        "type": "string",
-                        "pattern": date_str_pattern
-                    },
-                    "end_date": {
-                        "type": "string",
-                        "pattern": date_str_pattern
-                    },
+                    "start_time": {"type": "integer"},
+                    "end_time": {"type": "integer"},
                     "filter": {
                         "type": "object",
                         "required": ["values", "value_type"],
@@ -418,11 +412,9 @@ class ExpenseReportView(APIView):
         filename, ext = path.splitext(filename)
         if filename not in self.config or ext not in ['.csv']:
             raise InvalidParameterException
-        start_date, end_date = date_string_to_utctime(
-            args['start_date'], args['end_date']
-        )
         job_bill_query, storage_bill_query = filter_by_date_range(
-            start_date, end_date
+            datetime.fromtimestamp(args['start_time'], tz=tz.tzutc()),
+            datetime.fromtimestamp(args['end_time'], tz=tz.tzutc())
         )
         if role:
             if request.user.role < AsOperatorRole.floor:
