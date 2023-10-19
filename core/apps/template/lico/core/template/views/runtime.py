@@ -444,7 +444,8 @@ class RuntimeVerifyView(APIView):
             module.module
             for module in
             RuntimeModule.objects.filter(
-                runtime__username=request.user.username
+                Q(runtime__username=request.user.username) |
+                Q(runtime__username='')
             ).filter(
                 runtime__id=pk
             ).order_by('index')
