@@ -157,6 +157,24 @@ def get_queue_used_resource(
     return used_resource_list
 
 
+def parse_gres_str(gres_str):
+    # gres_str examples:
+    #    (null)    Outer logical skip this string pattern
+    #    gpu:0
+    #    gpu:4(S:0)
+    #    gpu:(null):0(IDX:N/A)
+    #    gpu:V100:2
+    #    gpu:V100:1(IDX:0)
+    #    gpu:a6000:8(S:0-1)
+    #    gpu:3g.20gb:2
+    #    gpu:3g.20gb:2(IDX:0)
+
+    item = re.sub(r"(\(.*?\))", '', gres_str)
+    gres_pattern = re.compile(
+        r"(?P<gres_code>\w+):((?P<gres_label>[^:]*):)?(?P<count>\d+)$")
+    return gres_pattern.match(item).groupdict()
+
+
 def parse_queue_resource(
         output_data: list, output_fields: dict, config: SchedulerConfig
 ) -> (dict, dict, int):
@@ -174,24 +192,27 @@ def parse_queue_resource(
         for gres in config.tracking_gres_list:
             gres_data = i.get("GRES")
             gres_val = 0
-            if "null" not in gres_data:
+            if "(null)" != gres_data.strip():
                 for item in gres_data.split(","):
-                    data = item.split(":")
-                    if len(data) == 2 and data[0] == gres:
-                        gres_val += int(data[-1])
-                    elif len(data) == 3 and data[0] == gres:
-                        gres_val += int(data[-1])
-                        label = data[1]
+                    data = parse_gres_str(item)
+                    if data["gres_code"] != gres:
+                        continue
+
+                    gres_num = int(data.get("count", 0))
+                    label = data["gres_label"]
+
+                    gres_val += gres_num
+
+                    if label:
                         gres_label_count = gres_label_info[gres].get(label, 0)
                         gres_label_info[gres].update({
-                            label: int(data[-1]) * nodes + gres_label_count
+                            label: gres_num * nodes + gres_label_count
                         })
-                        gres_per_count = max(
-                            int(data[-1]),
-                            gres_per_node_max[gres].get(label, 0)
-                        )
                         gres_per_node_max[gres].update({
-                            label: gres_per_count
+                            label: max(
+                                gres_num,
+                                gres_per_node_max[gres].get(label, 0)
+                            )
                         })
 
             if gres not in gres_dict:
@@ -200,23 +221,27 @@ def parse_queue_resource(
                 )
             else:
                 total_gres = int(gres_val) * nodes + gres_dict[gres][1]
-                if int(gres_val) > gres_dict[gres][0]:
-                    gres_dict.update({gres: (int(gres_val), total_gres)})
-                else:
-                    gres_dict.update({gres: (gres_dict[gres][0], total_gres)})
+                gres_dict.update({
+                    gres: (
+                        max(int(gres_val), gres_dict[gres][0]),
+                        total_gres
+                    )
+                })
+
             if "GRES_USED" in output_fields:
                 gres_used = 0
-                if "null" not in i.get("GRES"):
+
+                if "(null)" != i.get("GRES"):
                     for item in i.get("GRES_USED", "").split(","):
-                        item = re.match("([^(]*)", item).group(0) or ""
-                        data = item.split(":")
-                        used = int(re.match(
-                            r"([\d]+)*", data[-1]).group(0) or 0)
-                        if len(data) == 2:
-                            gres_used += used
-                        elif len(data) == 3:
-                            gres_used += used
-                            label = data[1]
+                        data = parse_gres_str(item)
+                        if data["gres_code"] != gres:
+                            continue
+
+                        used = int(data.get("count", 0))
+                        label = data["gres_label"]
+
+                        gres_used += used
+                        if label:
                             gres_label_used = gres_label_used_info[gres].get(
                                 label, 0)
                             gres_label_used_info[gres].update({
