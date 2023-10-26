@@ -473,6 +473,12 @@ class Scheduler(IScheduler):
             if not gres:
                 continue
             for item in gres.split(','):
+
+                # If GRES are associated with specific sockets,
+                # that information will be reported
+                # e.g. Gres=gpu:4(S:0)
+                item = re.sub(r"(\(.*?\))", '', item)
+
                 gres_list = item.split(":")
                 if len(gres_list) == 2:
                     gres_dict[host][''] = int(gres_list[-1])
