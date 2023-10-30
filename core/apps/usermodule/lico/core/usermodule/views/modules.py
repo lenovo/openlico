@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import glob
 import logging
 import os
 
@@ -21,12 +22,14 @@ from rest_framework.response import Response
 from lico.core.contrib.exceptions import LicoInternalError
 from lico.core.contrib.schema import json_schema_validate
 from lico.core.contrib.views import APIView
+from lico.core.job.base.job_state import JobState
+from lico.core.job.models import Job
 from lico.core.template.models import Module
 
 from ..exceptions import (
     UserModuleDeleteFailed, UserModuleException, UserModulePermissionDenied,
-    UserModuleSubmitException,
 )
+from ..models import UserModuleJob
 from ..utils import (
     MODULE_FILE_DIR, EasyBuildUtils, EasyConfigParser, UserModuleJobHelper,
     get_fs_operator, get_private_module,
@@ -146,7 +149,7 @@ class ModuleListView(APIView):
             fopr.rmtree(path)
 
 
-class UserModuleSubmit(APIView):
+class UserModuleSubmitView(APIView):
     """
     Used for submitting usermodule related jobs.
     After gathering the parameters, it will send a request to `SubmitJobView`.
@@ -185,9 +188,10 @@ class UserModuleSubmit(APIView):
         param = dict()
         param.update(data)
         eb_path = data["easyconfig_path"]
+        param["software_name"] = os.path.splitext(os.path.basename(eb_path))[0]
         # Make sure job_name length is not greater than 64 digits,
         # in order to meet `SubmitJobView` API requirement.
-        param["job_name"] = os.path.splitext(os.path.basename(eb_path))[0][:64]
+        param["job_name"] = param["software_name"][:64]
         param["job_workspace"] = os.path.join(
             self.user.workspace, settings.USERMODULE.JOB_WORKSPACE
         )
@@ -202,13 +206,32 @@ class UserModuleSubmit(APIView):
             ret = helper.submit_module_job(data["template_id"], param)
             job_id = ret['id']
             job = helper.query_job(job_id)
+
+            # Create record for usermodule jobs
+            log_path_glob = ""
+            if job["scheduler_id"]:
+                log_name_glob = "-".join([
+                    param["job_name"], settings.LICO.SCHEDULER,
+                    job["scheduler_id"]
+                ]) + "*.log"
+                log_path_glob = os.path.join(
+                    param["job_workspace"], "easybuildlog", log_name_glob
+                )
+            UserModuleJob.objects.create(
+                job_id=job_id,
+                user=job["submitter"],
+                software_name=param["software_name"],
+                log_path=log_path_glob
+            )
+
             ret.update(job)
             return ret
-        except Exception:
-            raise UserModuleSubmitException
+        except Exception as e:
+            logger.exception(e)
+            raise LicoInternalError from e
 
 
-class UserModuleSearch(APIView):
+class UserModuleSearchView(APIView):
     def get(self, request, option):
         eb_utils = EasyBuildUtils(request.user)
         param = request.query_params.get('param', '')
@@ -235,3 +258,103 @@ class UserModuleSearch(APIView):
                     raise UserModuleException
 
         return Response(eb_data)
+
+
+class UserModuleBuildingView(APIView):
+    def get_id_um_job_mapping(self, um_jobs):
+        ret = {}
+        for e in um_jobs:
+            ret[e.job_id] = e
+        return ret
+
+    def extract_values(self, jobs, um_jobs_map):
+        job_filter = [
+            "scheduler_id", "job_name", "state", "operate_state",
+            "scheduler_state"
+        ]
+        ret = []
+        for job in jobs:
+            job_id = job.id
+            if job_id in um_jobs_map.keys():
+                job_dict = job.as_dict(include=job_filter)
+                job_dict.update(um_jobs_map[job_id].as_dict())
+                ret.append(job_dict)
+        return ret
+
+    def get(self, request):
+        submitter = request.user.username
+
+        unfinished_jobs = Job.objects.filter(
+            delete_flag=False, submitter=submitter,
+            # job states: R, S, Q, H
+            state__in=JobState.get_waiting_state_values()
+        )
+        unfinished_job_ids = unfinished_jobs.values_list("id", flat=True)
+        unfinished_um_jobs = UserModuleJob.objects.filter(
+            user=submitter, is_cleared=False, job_id__in=unfinished_job_ids
+        )
+        unfinished_um_map = self.get_id_um_job_mapping(unfinished_um_jobs)
+        unfinished = self.extract_values(unfinished_jobs, unfinished_um_map)
+
+        finished_um_jobs = UserModuleJob.objects.filter(
+            user=submitter, is_cleared=False
+        ).exclude(job_id__in=unfinished_job_ids).order_by("-update_time")[:10]
+        finished_um_map = self.get_id_um_job_mapping(finished_um_jobs)
+
+        finished_um_jids = finished_um_jobs.values_list("job_id", flat=True)
+        finished = []
+        if finished_um_jids:
+            finished_jobs = Job.objects.filter(
+                delete_flag=False, submitter=submitter,
+                id__in=list(finished_um_jids)
+            ).order_by("-update_time")
+            finished = self.extract_values(finished_jobs, finished_um_map)
+
+        ret = unfinished + finished
+        return Response(ret)
+
+
+class UserModuleJobView(APIView):
+    def get_user_job_pair_by_id(self, um_id, username):
+        # Return (UserModuleJob, Job) pair.
+        um_job = UserModuleJob.objects.\
+            filter(id=um_id, is_cleared=False).first()
+        job = None
+        if um_job:
+            job = Job.objects.filter(
+                submitter=username, id=um_job.job_id
+            ).first()
+        return (um_job, job)
+
+    def get(self, request, pk):
+        # View log, pk refers to UserModuleJob.id
+        um_job, job = self.get_user_job_pair_by_id(pk, request.user.username)
+        log = ""
+        if job:
+            log = um_job.log_path
+            if job.scheduler_id in log and '*' in log:
+                path_list = glob.glob(log)
+                log = path_list[0] if path_list else log
+                um_job.log_path = log
+                um_job.save()
+        else:
+            raise Job.DoesNotExist
+        return Response(dict(log_path=log))
+
+    def put(self, request, pk):
+        # Cancel, pk refers to UserModuleJob.id
+        um_job, job = self.get_user_job_pair_by_id(pk, request.user.username)
+        if job:
+            helper = UserModuleJobHelper(request.user.username)
+            helper.cancel_job(job.id)
+        else:
+            raise Job.DoesNotExist
+        return Response()
+
+    def delete(self, request, pk):
+        # Clear, pk refers to UserModuleJob.id
+        um_job, job = self.get_user_job_pair_by_id(pk, request.user.username)
+        if um_job:
+            um_job.is_cleared = True
+            um_job.save()
+        return Response()

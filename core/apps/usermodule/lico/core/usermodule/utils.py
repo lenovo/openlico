@@ -270,3 +270,6 @@ class UserModuleJobHelper(object):
             raise UserModuleFailToGetJobException(
                 "Failed to get job. Job id = {}".format(job_id)
             )
+
+    def cancel_job(self, job_id):
+        self._job_client.cancel_job(job_id)
