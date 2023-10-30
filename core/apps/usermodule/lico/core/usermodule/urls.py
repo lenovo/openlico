@@ -14,11 +14,16 @@
 from django.urls import path, re_path
 
 from .views.easyconfig import EasyConfigParseView
-from .views.modules import ModuleListView, UserModuleSearch, UserModuleSubmit
+from .views.modules import (
+    ModuleListView, UserModuleBuildingView, UserModuleJobView,
+    UserModuleSearchView, UserModuleSubmitView,
+)
 
 urlpatterns = [
     path("", ModuleListView.as_view()),
-    path("submit/", UserModuleSubmit.as_view()),
-    re_path("search/(?P<option>alnum|name)/", UserModuleSearch.as_view()),
+    path("submit/", UserModuleSubmitView.as_view()),
+    re_path("search/(?P<option>alnum|name)/", UserModuleSearchView.as_view()),
     path("easyconfig/content/", EasyConfigParseView.as_view()),
+    path("job/", UserModuleBuildingView.as_view()),
+    path("job/<int:pk>/", UserModuleJobView.as_view()),
 ]
