@@ -439,6 +439,7 @@ class RuntimeDetailView(APIView):
 
 class RuntimeVerifyView(APIView):
     def post(self, request, pk):
+        role = request.query_params.get('role')
         from lico.core.template.utils.lmod import verify_modules
         modules = (
             module.module
@@ -450,7 +451,7 @@ class RuntimeVerifyView(APIView):
                 runtime__id=pk
             ).order_by('index')
         )
-        verify_modules(request.user, modules)
+        verify_modules(request.user, modules, role)
 
         return Response()
 
