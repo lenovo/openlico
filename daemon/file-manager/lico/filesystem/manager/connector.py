@@ -87,14 +87,25 @@ class FilesConnector(Connector):
 
     def _handle_rep_added(self):
         """handle response added."""
-        path_list = self._response.get(R_ADDED)
-        if path_list:
-            self._response[R_ADDED] = []
-            for path_dict in path_list:
-                path_hash = path_dict["hash"]
-                path = self._find(path_hash)
-                self.adapter.change_owner(path, self.user)
-                self._response[R_ADDED].append(self._info(path))
+        added_list = self._response.get(R_ADDED)
+        if added_list:
+            path_list = [
+                self._find(path_dict["hash"]) 
+                for path_dict in added_list
+            ]
+            try:
+                for path in path_list:
+                    self._change_owner(path)
+            except OSError as e:
+                logger.error(f"Unable to create file or folder: {e}")
+                for path in path_list:
+                    self._change_owner_rollback(path)
+                self._response[R_ERROR] = "Unable to create file or folder"
+                return
+            self._response[R_ADDED] = [
+                self._info(path) for path in path_list
+            ]
+
 
     def _handle_rep_cwd(self):
         """handle response cwd."""
@@ -130,8 +141,20 @@ class FilesConnector(Connector):
             return False
         return self._options["defaults"][access]
 
-    def _change_owner(self, path, followlinks=False):
-        self.adapter.change_owner(path, self.user, followlinks)
+    def _change_owner_rollback(self, target):
+        if os.path.exists(target):
+            if not os.path.isdir(target):
+                os.unlink(target)
+            else:
+                shutil.rmtree(target, ignore_errors=True)
+
+    def _change_owner(self, path, followlinks=False, rollback=False):
+        try:
+            self.adapter.change_owner(path, self.user, followlinks)
+        except OSError:
+            if rollback:
+                self._change_owner_rollback(path)
+            raise
 
     def _copy(self, src: str, dst: str) -> bool:
         """Provide internal copy procedure."""
@@ -150,21 +173,30 @@ class FilesConnector(Connector):
             try:
                 shutil.copyfile(src, dst)
                 shutil.copymode(src, dst)
-                self._change_owner(dst)
-                return True
             except (shutil.SameFileError, OSError):
                 self._set_error_data(src, "Unable to copy files")
                 return False
+            try:
+                self._change_owner(dst, rollback=True)
+                return True
+            except OSError as e:
+                logger.error(f"Unable to copy files: {e}")
+                self._set_error_data(src, "Unable to copy files")
+                return False
         else:
-            self._copy_dir(src, dst)
-        return True
+            return self._copy_dir(src, dst)
 
     def _copy_dir(self, src: str, dst: str):
         try:
             os.mkdir(dst, int(self._options["dir_mode"]))
             shutil.copymode(src, dst)
-            self._change_owner(dst)
         except (shutil.SameFileError, OSError):
+            self._set_error_data(src, "Unable to copy files")
+            return False
+        try:
+            self._change_owner(dst, rollback=True)
+        except OSError as e:
+            logger.error(f"Unable to copy files: {e}")
             self._set_error_data(src, "Unable to copy files")
             return False
         try:
@@ -178,6 +210,7 @@ class FilesConnector(Connector):
             if not self._copy(new_src, new_dst):
                 self._set_error_data(new_src, "Unable to copy files")
                 return False
+        return True
 
     def _r_option(self, path):
         resp_option = {
@@ -432,10 +465,27 @@ class FilesConnector(Connector):
                 with open(cur_file, "w+") as text_fil:
                     text_fil.write(self._request[API_CONTENT])
                 self._response[R_CHANGED] = [self._info(cur_file)]
-            except OSError:
+            except OSError as e:
+                logger.error(f"Unable to write to file: {e}")
                 self._response[R_ERROR] = "Unable to write to file"
         else:
-            super()._Connector__put()
+            try:
+                if (
+                        self._request[API_CONTENT].startswith("data:")
+                        and ";base64," in self._request[API_CONTENT][:100]
+                ):
+                    img_data = self._request[API_CONTENT].split(";base64,")[1]
+                    img_data = base64.b64decode(img_data)
+                    with open(cur_file, "wb") as bin_fil:
+                        bin_fil.write(img_data)
+                else:
+                    with open(cur_file, "w+") as text_fil:
+                        text_fil.write(self._request[API_CONTENT])
+                self._rm_tmb(cur_file)
+                self._response[R_CHANGED] = [self._info(cur_file)]
+            except OSError as e:
+                logger.error(f"Unable to write to file: {e}")
+                self._response[R_ERROR] = "Unable to write to file"
 
     def _remove(self, target: str) -> bool:
         """Provide internal remove procedure."""
@@ -508,7 +558,8 @@ class FilesConnector(Connector):
                     new_file = os.path.join(os.path.dirname(path), name)
                     try:
                         os.rename(path, new_file)
-                    except OSError:
+                    except OSError as e:
+                        logger.error(f"Unable to create archive: {e}")
                         os.unlink(path)
                         self._response[R_ADDED] = []
                         self._response[R_ERROR] = "Unable to create archive"
@@ -545,14 +596,20 @@ class FilesConnector(Connector):
         if path_list:
             for each_path in path_list:
                 path_hash = each_path["hash"]
-                path = self._find(path_hash)
-                self.adapter.change_owner(path, self.user)
-                for path, dirs, files in os.walk(path):
-                    self.adapter.change_owner(path, self.user)
-                    for name in files:
-                        self.adapter.change_owner(
-                            os.path.join(path, name), self.user
-                        )
+                dirpath = self._find(path_hash)
+                try:
+                    self._change_owner(dirpath)
+                    for path, dirs, files in os.walk(dirpath):
+                        self._change_owner(path)
+                        for name in files:
+                            self._change_owner(
+                                os.path.join(path, name)
+                            )
+                except OSError as e:
+                    logger.error(f"Unable to extract files from archive: {e}")
+                    self._change_owner_rollback(dirpath)
+                    self._response[R_ERROR] = "Unable to extract files from archive"
+                    return
 
     # flake8: noqa: C901
     def _find(self, fhash, parent=None):
@@ -575,7 +632,7 @@ class FilesConnector(Connector):
             if fhash == self._hash(parent):
                 return parent
 
-        if self.valid_path_pattern.match(path) is None or os.path.isdir(parent):
+        if self.valid_path_pattern.match(parent) is None or os.path.isdir(parent):
             for root, dirs, files in os.walk(
                     parent, topdown=True, followlinks=True
             ):
