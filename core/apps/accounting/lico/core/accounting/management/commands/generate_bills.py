@@ -112,7 +112,7 @@ class Command(BaseCommand):
             billing_type=BillingFile.USER,
             period=BillingFile.DAILY,
         )
-        if reports and not force:
+        if reports.exists() and not force:
             for report in reports:
                 print_(
                     '{} already exits'.format(
@@ -138,7 +138,7 @@ class Command(BaseCommand):
             billing_type=BillingFile.USER,
             period=BillingFile.MONTHLY,
         )
-        if reports and not force:
+        if reports.exists() and not force:
             for report in reports:
                 print_(
                     '{} already exits'.format(
@@ -207,7 +207,7 @@ class Command(BaseCommand):
                 billing_type=BillingFile.CLUSTER,
                 period=BillingFile.DAILY,
             )
-            if reports and not force:
+            if reports.exists() and not force:
                 for report in reports:
                     print_(
                         '{} already exits'.format(
@@ -234,7 +234,7 @@ class Command(BaseCommand):
                 billing_type=BillingFile.CLUSTER,
                 period=BillingFile.MONTHLY,
             )
-            if reports and not force:
+            if reports.exists() and not force:
                 for report in reports:
                     print_(
                         '{} already exits'.format(
