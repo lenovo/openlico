@@ -160,7 +160,7 @@ class RackInternalAddView(InternalAPIView):
         row = request.data.get('row')
         if row:
             query_row = Row.objects.filter(name=row)
-            if query_row:
+            if query_row.exists():
                 kwargs.update(row=query_row.first())
         try:
             rack = Rack.objects.create(**kwargs)
