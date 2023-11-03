@@ -164,7 +164,8 @@ class Client(BaseClient):
 
     def add_node(
             self, hostname, type, machinetype, mgt_address, rack,
-            bmc_address=None, location_u=1, chassis=None, on_cloud=True
+            bmc_address=None, location_u=1, chassis=None, on_cloud=True,
+            provider=None
     ):
         data = {
             "hostname": hostname,
@@ -179,6 +180,8 @@ class Client(BaseClient):
             data.update(bmc_address=bmc_address)
         if chassis:
             data.update(chassis=chassis)
+        if provider:
+            data.update(provider=provider)
         response = self.post(
             url=self.get_url('node/internal/add/'),
             json=data

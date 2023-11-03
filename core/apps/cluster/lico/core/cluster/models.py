@@ -40,6 +40,7 @@ class Node(Model):
         )
     )
     vendor = CharField(null=True, max_length=255)
+    provider = CharField(null=True, max_length=32)
 
     @property
     def location(self):
