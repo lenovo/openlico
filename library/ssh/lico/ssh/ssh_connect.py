@@ -79,7 +79,7 @@ class RemoteSSH:
 
     def async_run(self, cmd: list, env: dict = None,
                   in_stream=None, out_stream=None,
-                  err_stream=None, command_timeout=None):
+                  err_stream=None, command_timeout=None, **kwargs):
         """
         If you want to use the parameter 'asynchronous=True' to execute the
         asynchronous tasks,please ensure that the connection is alive when
@@ -107,7 +107,8 @@ class RemoteSSH:
                 err_stream=err_stream,
                 asynchronous=True,
                 timeout=command_timeout,
-                env=env
+                env=env,
+                **kwargs
             )
             return result
         except Failure as e:
@@ -122,7 +123,7 @@ class RemoteSSH:
 
     def run(self, cmd: list, env: dict = None, in_stream=None,
             out_stream=None, err_stream=None, hide=True,
-            command_timeout=None):
+            command_timeout=None, **kwargs):
         """
         params:
         :param cmd: The shell command to execute.
@@ -146,7 +147,8 @@ class RemoteSSH:
                 hide=hide,
                 asynchronous=False,
                 timeout=command_timeout,
-                env=env
+                env=env,
+                **kwargs
             )
             return result
         except Failure as e:
