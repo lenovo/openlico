@@ -187,6 +187,10 @@ class NodeInternalAddView(InternalAPIView):
             },
             'on_cloud': {
                 'type': 'boolean'
+            },
+            'provider': {
+                'type': 'string',
+                'minLength': 1
             }
         },
         'required': ['hostname', 'type', 'machinetype', 'mgt_address', 'rack']
@@ -200,7 +204,8 @@ class NodeInternalAddView(InternalAPIView):
             "mgt_address": request.data["mgt_address"],
             "bmc_address": request.data.get("bmc_address"),
             "location_u": request.data.get("location_u", 1),
-            "on_cloud": request.data.get("on_cloud", True)
+            "on_cloud": request.data.get("on_cloud", True),
+            "provider": request.data.get("provider")
         }
         rack_name = request.data["rack"]
         try:

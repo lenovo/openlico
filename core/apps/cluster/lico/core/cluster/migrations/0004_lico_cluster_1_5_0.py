@@ -33,4 +33,9 @@ class Migration(migrations.Migration):
             name='vendor',
             field=models.CharField(max_length=255, null=True),
         ),
+        migrations.AddField(
+            model_name='node',
+            name='provider',
+            field=models.CharField(max_length=32, null=True),
+        ),
     ]
