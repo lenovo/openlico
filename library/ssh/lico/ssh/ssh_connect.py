@@ -74,6 +74,9 @@ class RemoteSSH:
         """
         return self.connection.cd(path=path)
 
+    def sftp(self):
+        return self.connection.sftp()
+
     def is_connected(self):
         return self.connection.is_connected
 
