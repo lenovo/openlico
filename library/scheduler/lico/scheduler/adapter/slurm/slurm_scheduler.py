@@ -368,6 +368,12 @@ class Scheduler(IScheduler):
             if gres_pattern.search(node):
                 gres = gres_pattern.search(node).group(1)
                 for item in gres.strip().split(","):
+
+                    # If GRES are associated with specific sockets,
+                    # that information will be reported
+                    # e.g. Gres=gpu:4(S:0)
+                    item = re.sub(r"(\(.*?\))", '', item)
+
                     if item.startswith("gpu"):
                         gres_data = item.split(":")
                         if len(gres_data) == 2:
