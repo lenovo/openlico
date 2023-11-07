@@ -44,7 +44,7 @@ def service_auth_filter_factory(
 
 
 class ServiceAuthFilter:
-    keyword = 'lico'
+    keyword = 'jwt'
 
     def __init__(
             self, app, verify=True,
