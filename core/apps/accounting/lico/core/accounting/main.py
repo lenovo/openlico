@@ -84,3 +84,8 @@ class Application(AbstractApplication):
             os.getenv("LICO_CONFIG_FOLDER"), 'gres.csv'
         )
 
+    def on_init(self, settings):
+        from .models import BalanceAlertSetting
+        balance_setting = BalanceAlertSetting.objects.first()
+        if not balance_setting:
+            BalanceAlertSetting.objects.create()

@@ -19,6 +19,7 @@ from lico.core.accounting.views.consumeview import (
 from lico.core.contrib.authentication import RemoteJWTWebAuthentication
 from lico.core.contrib.permissions import AsAdminRole
 
+from .views.balance import BalanceView
 from .views.billgroup import BillGroupDetailView, BillGroupListView
 from .views.billingreport import BillingDate, BillingDownload
 from .views.chargejob import ChargeJobView
@@ -64,6 +65,7 @@ urlpatterns = [
     path('charge/job/', ChargeJobView.as_view()),  # internal
     path('billing/download/', BillingDownload.as_view()),
     path('billing/latestdate/', BillingDate.as_view()),
+    path('balance/', BalanceView.as_view()),
 
     # consume report preview api
     path('consume/cost/', CostStatisticView.as_view()),
