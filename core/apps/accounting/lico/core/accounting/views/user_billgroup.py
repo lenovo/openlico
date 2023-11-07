@@ -24,7 +24,9 @@ from rest_framework.views import APIView as BaseAPIView
 from lico.core.accounting.exceptions import (
     CreateBillGroupUserRelationException,
 )
-from lico.core.accounting.models import BillGroup, UserBillGroupMapping
+from lico.core.accounting.models import (
+    BalanceAlertSetting, BillGroup, UserBillGroupMapping,
+)
 from lico.core.contrib.permissions import AsAdminRole, AsUserRole
 from lico.core.contrib.schema import json_schema_validate
 from lico.core.contrib.views import APIView, InternalAPIView
@@ -96,8 +98,18 @@ class UserBillGroupView(BaseUserBillGroupView, APIView):
             ubg_mapping = UserBillGroupMapping.objects.get(
                 username=self.request.user.username
             )
+            result = UserBillGroupSerializer(ubg_mapping).data
+
+            # Check whether the balance is lower than the alarm threshold
+            balance_setting = BalanceAlertSetting.objects.first()
+            if ubg_mapping.bill_group.balance_alert and \
+                    ubg_mapping.bill_group.balance < \
+                    balance_setting.balance_threshold:
+                result['balance_alert'] = True
+            else:
+                result['balance_alert'] = False
             return Response(
-                UserBillGroupSerializer(ubg_mapping).data,
+                result,
                 status=status.HTTP_200_OK
             )
         except UserBillGroupMapping.DoesNotExist:
@@ -106,6 +118,7 @@ class UserBillGroupView(BaseUserBillGroupView, APIView):
                 {
                     'username': self.request.user.username,
                     'bill_group': None,
+                    'balance_alert': False
                 },
                 status=status.HTTP_200_OK
             )

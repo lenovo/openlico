@@ -15,10 +15,11 @@
 
 from django.db.models import (
     CASCADE, PROTECT, BigIntegerField, CharField, DateField, DecimalField,
-    FloatField, ForeignKey, IntegerField,
+    FloatField, ForeignKey, IntegerField, ManyToManyField,
 )
 from django.db.models.fields import BooleanField
 
+from lico.core.alert.models import NotifyTarget
 from lico.core.contrib.fields import DateTimeField, JSONField
 from lico.core.contrib.models import Model
 
@@ -114,6 +115,7 @@ class BillGroup(Model):
                                  default=DISPLAY_TYPE_CHOICES[0][0])
     storage_charge_rate = FloatField(null=False, default=1,
                                      help_text='unit:ccy per GB*day')
+    balance_alert = BooleanField(default=False)
 
 
 class BillGroupQueuePolicy(Model):
@@ -239,3 +241,15 @@ class BillingFile(Model):
     billing_date = DateField(null=False)
     create_time = DateTimeField(db_index=True, auto_now_add=True)
     update_time = DateTimeField(auto_now=True)
+
+
+class BalanceAlertSetting(Model):
+    balance_threshold = FloatField(default=0)
+    targets = ManyToManyField(NotifyTarget, blank=True, symmetrical=False)
+
+
+class BalanceAlert(Model):
+    bill_group = ForeignKey(
+        'BillGroup', related_name='alert', on_delete=CASCADE
+    )
+    create_time = DateTimeField(auto_now_add=True)
