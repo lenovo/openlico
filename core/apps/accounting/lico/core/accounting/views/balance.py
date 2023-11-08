@@ -30,6 +30,14 @@ logger = logging.getLogger(__name__)
 class BalanceView(APIView):
     permission_classes = (AsAdminRole,)
 
+    def get(self, request):
+        balance_setting = BalanceAlertSetting.objects.first().as_dict()
+        targets = balance_setting.pop('targets')
+        balance_setting['targets'] = []
+        for target in targets:
+            balance_setting['targets'].append(target.get('id'))
+        return Response(balance_setting)
+
     @json_schema_validate({
         'type': 'object',
         'properties': {
