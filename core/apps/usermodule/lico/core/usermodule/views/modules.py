@@ -233,18 +233,18 @@ class UserModuleSubmitView(APIView):
 
 class UserModuleSearchView(APIView):
     def get(self, request, option):
+        ignore_file = "TEMPLATE.eb"  # Ignore easyconfig template
         eb_utils = EasyBuildUtils(request.user)
         param = request.query_params.get('param', '')
         if option == "alnum":
             eb_configs = eb_utils.get_eb_configs(param=param)
         elif option == "name":
             eb_configs = eb_utils.get_eb_configs(param=param, is_alnum=False)
-        else:
-            raise NotImplementedError
 
         eb_data = list()
         for config in eb_configs:
-            if not config or not config.endswith("eb"):
+            if not config or not config.endswith("eb") \
+                    or config.endswith(ignore_file):
                 continue
             if os.path.exists(config):
                 try:

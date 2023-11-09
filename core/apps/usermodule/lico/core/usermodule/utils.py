@@ -88,7 +88,7 @@ class EasyBuildUtils():
         """
         For alphabet: eb --search=^A.*eb$
         For number: eb --search=^[0-9].*eb$
-        For searching by name: eb --search=<param>
+        For searching by name: eb --search=<param>.*eb$
         """
         pattern = param
 
@@ -193,10 +193,15 @@ class EasyConfigParser(object):
                         'description', 'toolchain']
     YEB_FORMAT_EXTENSION = '.yeb'
 
-    def __init__(self, filename=None, content='', extra_fields=[]):
+    EXIST = 1
+    NOTEXIST = 0
+
+    def __init__(self, filename=None, content=''):
         self.filename = filename
         self.content = content
-        self.fields = self.HEADER_MANDATORY + extra_fields
+        self.book = {e: self.NOTEXIST for e in self.HEADER_MANDATORY}
+        self.name_value_map = {}
+        self.augmented_map = {}
 
     def _is_yeb_format(self):
         is_yeb = False
@@ -215,33 +220,98 @@ class EasyConfigParser(object):
         else:
             return self._parse_eb_header()
 
-    def _parse_eb_header(self):
-        eb_ast_node = ast.parse(self.content)
-        header_dict = {e: "" for e in self.fields}
-        for node in ast.walk(eb_ast_node):
-            try:
-                if isinstance(node, ast.Assign):
-                    node_target_id = node.targets[0].id
-                    if node_target_id in self.fields:
-                        if isinstance(node.value, ast.Str):
-                            header_dict[node_target_id] = node.value.s
-                        elif isinstance(node.value, ast.Constant):
-                            header_dict[node_target_id] = node.value.value
-                        elif isinstance(node.value, ast.Name):
-                            header_dict[node_target_id] = node.value.id
-                        elif isinstance(node.value, ast.Dict):
-                            values = [e.s for e in node.value.values]
-                            header_dict[node_target_id] = "-".join(values)
-            except Exception as e:
-                logger.info(e)
+    def get_ast_str(self, node):
+        return node.s
+
+    def get_ast_constant(self, node):
+        return node.value
+
+    def get_ast_num(self, node):
+        return node.n
+
+    def get_ast_name_toolchain_only(self, node, target_id):
+        value = ""
+        if target_id == "toolchain":
+            value = node.id
+        return value
+
+    def get_ast_values(self, node, header_dict):
+        targets = node.targets
+        for target in targets:
+            if not hasattr(target, 'id'):
                 continue
+            if target.id in self.book.keys():
+                self.book[target.id] = self.EXIST
+                if isinstance(node.value, ast.Name):
+                    header_dict[target.id] = \
+                        self.get_ast_name_toolchain_only(node.value, target.id)
+                elif isinstance(node.value, ast.Str):
+                    header_dict[target.id] = self.get_ast_str(node.value)
+                elif isinstance(node.value, ast.Num):
+                    header_dict[target.id] = self.get_ast_num(node.value)
+                elif isinstance(node.value, ast.Constant):
+                    header_dict[target.id] = self.get_ast_constant(node.value)
+        return
+
+    def get_parameters(self, suffix, filename, header_dict):
+        # Filename looks like: <name>-<version>.eb
+        # Output: header_dict["version"] = "<version>"
+        #         header_dict["toolchain"] = "SYSTEM"
+        if header_dict["toolchain"].lower() == "system" \
+                and self.book["versionsuffix"] == self.NOTEXIST:
+            header_dict["toolchain"] = "SYSTEM"
+            header_dict["version"] = suffix.split('-', 1)[1]
+
+        # Filename looks like: <name>-<version>-<versionsuffix>.eb
+        # Output: header_dict["version"] = "<version>-<versionsuffix>"
+        #         header_dict["toolchain"] = "SYSTEM"
+        elif header_dict["toolchain"].lower() == "system" \
+                and self.book["versionsuffix"] == self.EXIST:
+            header_dict["toolchain"] = "SYSTEM"
+            _, header_dict["version"] = suffix.split('-', 1)
+
+        # Filename looks like: <name>-<version>-<toolchain>-<versionsuffix>.eb
+        # or: <name>-<version>-<toolchain>.eb
+        # Output: header_dict["version"] = "<version>"
+        #         header_dict["toolchain"] = "<toolchain>-<versionsuffix>"
+        #      or header_dict["toolchain"] = "<toolchain>"
+        elif header_dict["toolchain"].lower() != "system":
+            if header_dict["version"]:
+                version = header_dict["version"]
+                toolchain = suffix.split(version, 1)[-1]
+                if toolchain.startswith('-'):
+                    toolchain = toolchain[1:]
+            else:
+                _, version, toolchain = suffix.split('-', 2)
+            header_dict["toolchain"] = toolchain
+            header_dict["version"] = version
+
+        header_dict["filename"] = filename
+        return
+
+    def _parse_eb_header(self):
+        header_dict = {e: "" for e in self.HEADER_MANDATORY}
+        self.book["versionsuffix"] = self.NOTEXIST
+
+        filename = os.path.basename(self.filename)
+        pkg_name = os.path.dirname(self.filename).split("/")[-1]
+        suffix = filename.split(pkg_name, 1)[-1].rsplit(".eb", 1)[0]
+
+        eb_ast_node = ast.parse(self.content)
+        for node in ast.iter_child_nodes(eb_ast_node):
+            if (sum(self.book.values()) == len(self.book)):
+                break
+            if isinstance(node, ast.Assign):
+                self.get_ast_values(node, header_dict)
+
+        self.get_parameters(suffix, filename, header_dict)
 
         return header_dict
 
     def _parse_yeb_header(self):
         yeb_content = yaml.safe_load(self.content)
-        header_dict = {e: "" for e in self.fields}
-        for hm in self.fields:
+        header_dict = {e: "" for e in self.HEADER_MANDATORY}
+        for hm in self.HEADER_MANDATORY:
             header_dict[hm] = yeb_content.get(hm)
 
         return header_dict
