@@ -35,12 +35,10 @@ class Command(BaseCommand):
 
         try:
             if pkg_resources.require("celery >= 5.0"):
-                app.start(
-                    argv=['worker', '-l', options['log_level'],
-                          '--autoscale', options['autoscale']]
-                )
+                argv = ['worker', '-l', options['log_level'],
+                        '--autoscale', options['autoscale']]
         except pkg_resources.VersionConflict:
-            app.start(
-                argv=['celery', 'worker', '-l', options['log_level'],
-                      '--autoscale', options['autoscale']]
-            )
+            argv = ['celery', 'worker', '-l', options['log_level'],
+                    '--autoscale', options['autoscale']]
+
+        app.start(argv)
