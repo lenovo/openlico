@@ -33,7 +33,7 @@ class NodeListView(DataTableView):
             include=[
                 'id', 'hostname', 'type',
                 'mgt_address', 'bmc_address', 'groups',
-                'on_cloud'
+                'on_cloud', 'provider', 'node_type'
             ],
             related_field_options=dict(
                 groups=dict(
