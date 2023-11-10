@@ -35,15 +35,14 @@ from lico.ssh.ssh_connect import RemoteSSH
 
 from ..models import Gpu, MonitorNode
 from ..utils import (
-    BUSY_THRESHOLD, IDLE_THRESHOLD, ResourceFactory,
-    get_node_status_preference, node_check,
+    ResourceFactory, get_node_status, get_node_status_preference,
 )
 
 logger = logging.getLogger(__name__)
 
 
 class NodeHardwareView(DataTableView):
-    def _trans_result(self, result, request, busy_nodes):
+    def _trans_result(self, result, request):
         result_dict = self.trans_result(result)
         result_dict["gpu"] = self.get_gpu_logical_info(result_dict)
 
@@ -62,22 +61,8 @@ class NodeHardwareView(DataTableView):
             return result_dict
 
         preference = get_node_status_preference(request.user)
-        if preference == "cpu_util":
-            cpu_util = result.cpu_util
-            if cpu_util is None:
-                cpu_util = -1
-            if cpu_util > BUSY_THRESHOLD:
-                result_dict["status"] = "busy"
-            elif cpu_util < IDLE_THRESHOLD:
-                result_dict["status"] = "idle"
-            else:
-                result_dict["status"] = "used"
-        else:
-            if result.hostname.lower() in busy_nodes:
-                result_dict["status"] = "busy"
-            else:
-                result_dict["status"] = "idle"
-
+        result_dict['status'] = get_node_status(
+            preference, result.hostname, result.cpu_util)
         return result_dict
 
     def get_gpu_logical_info(self, result_dict):
@@ -139,8 +124,6 @@ class NodeHardwareView(DataTableView):
             query[offset:offset + param_args['length']]
         offset = offset + len(results)
 
-        busy_nodes = node_check(to_lowercase=True)
-
         return Response(
             {
                 'offset': offset,
@@ -149,7 +132,6 @@ class NodeHardwareView(DataTableView):
                     self._trans_result(
                         result,
                         request,
-                        busy_nodes
                     ) for result in results
                 ],
             }
