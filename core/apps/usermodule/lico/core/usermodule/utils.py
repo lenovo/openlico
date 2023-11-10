@@ -189,19 +189,18 @@ def convert_myfolder(fopr, user, origin_path):
 
 
 class EasyConfigParser(object):
-    HEADER_MANDATORY = ['version', 'name', 'homepage',
-                        'description', 'toolchain']
+    BUILD_JOB_LABEL = ['version', 'name', 'homepage', 'description']
+    PARSE_FILENAME = ['name', 'version', 'toolchain', 'versionsuffix']
     YEB_FORMAT_EXTENSION = '.yeb'
 
     EXIST = 1
     NOTEXIST = 0
 
-    def __init__(self, filename=None, content=''):
+    def __init__(self, filename=None, content='', parse_with_name=False):
         self.filename = filename
         self.content = content
-        self.book = {e: self.NOTEXIST for e in self.HEADER_MANDATORY}
-        self.name_value_map = {}
-        self.augmented_map = {}
+        self.book = {}
+        self.parse_with_name = parse_with_name
 
     def _is_yeb_format(self):
         is_yeb = False
@@ -253,7 +252,7 @@ class EasyConfigParser(object):
                     header_dict[target.id] = self.get_ast_constant(node.value)
         return
 
-    def get_parameters(self, suffix, filename, header_dict):
+    def get_parameters(self, suffix, header_dict):
         # Filename looks like: <name>-<version>.eb
         # Output: header_dict["version"] = "<version>"
         #         header_dict["toolchain"] = "SYSTEM"
@@ -276,27 +275,41 @@ class EasyConfigParser(object):
         #         header_dict["toolchain"] = "<toolchain>-<versionsuffix>"
         #      or header_dict["toolchain"] = "<toolchain>"
         elif header_dict["toolchain"].lower() != "system":
+            version = ""
+            toolchain = ""
             if header_dict["version"]:
                 version = header_dict["version"]
                 toolchain = suffix.split(version, 1)[-1]
                 if toolchain.startswith('-'):
                     toolchain = toolchain[1:]
             else:
-                _, version, toolchain = suffix.split('-', 2)
+                if '-' in suffix[1:]:
+                    version, toolchain = suffix[1:].split('-', 1)
+
             header_dict["toolchain"] = toolchain
             header_dict["version"] = version
 
-        header_dict["filename"] = filename
         return
 
     def _parse_eb_header(self):
-        header_dict = {e: "" for e in self.HEADER_MANDATORY}
-        self.book["versionsuffix"] = self.NOTEXIST
-
         filename = os.path.basename(self.filename)
         pkg_name = os.path.dirname(self.filename).split("/")[-1]
         suffix = filename.split(pkg_name, 1)[-1].rsplit(".eb", 1)[0]
 
+        if self.parse_with_name:
+            header_dict = {e: "" for e in self.PARSE_FILENAME}
+            self.book = {e: self.NOTEXIST for e in self.PARSE_FILENAME}
+            self._parse_easyconfig_with_filename(suffix, header_dict)
+        else:
+            header_dict = {e: "" for e in self.BUILD_JOB_LABEL}
+            self.book = {e: self.NOTEXIST for e in self.BUILD_JOB_LABEL}
+            self._parse_provided_easyconfig_file(header_dict)
+
+        header_dict["filename"] = filename
+
+        return header_dict
+
+    def _parse_easyconfig_with_filename(self, suffix, header_dict):
         eb_ast_node = ast.parse(self.content)
         for node in ast.iter_child_nodes(eb_ast_node):
             if (sum(self.book.values()) == len(self.book)):
@@ -304,14 +317,24 @@ class EasyConfigParser(object):
             if isinstance(node, ast.Assign):
                 self.get_ast_values(node, header_dict)
 
-        self.get_parameters(suffix, filename, header_dict)
+        self.get_parameters(suffix, header_dict)
+
+        return header_dict
+
+    def _parse_provided_easyconfig_file(self, header_dict):
+        eb_ast_node = ast.parse(self.content)
+        for node in ast.iter_child_nodes(eb_ast_node):
+            if (sum(self.book.values()) == len(self.book)):
+                break
+            if isinstance(node, ast.Assign):
+                self.get_ast_values(node, header_dict)
 
         return header_dict
 
     def _parse_yeb_header(self):
         yeb_content = yaml.safe_load(self.content)
-        header_dict = {e: "" for e in self.HEADER_MANDATORY}
-        for hm in self.HEADER_MANDATORY:
+        header_dict = {e: "" for e in self.BUILD_JOB_LABEL}
+        for hm in self.BUILD_JOB_LABEL:
             header_dict[hm] = yeb_content.get(hm)
 
         return header_dict
