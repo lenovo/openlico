@@ -22,6 +22,9 @@ from lico.core.contrib.models import Model
 
 
 class Node(Model):
+    STANDARD_NODE = 0
+    CLOUD_NODE = 1
+    VGPU_NODE = 2
     hostname = CharField(null=False, unique=True, max_length=255)
     type = TextField(null=False,)
     machinetype = TextField(null=False)
@@ -50,12 +53,19 @@ class Node(Model):
             'chassis_id': 'null' if self.chassis is None else self.chassis.pk
         }
 
+    @property
+    def node_type(self):
+        if self.on_cloud:
+            return self.CLOUD_NODE
+        return self.STANDARD_NODE if self.provider is None else self.VGPU_NODE
+
     def as_dict_on_finished(
         self, result, is_exlucded, **kwargs
     ):
         if not is_exlucded('location'):
             result['location'] = self.location
-
+        if not is_exlucded('node_type'):
+            result['node_type'] = self.node_type
         return result
 
 
