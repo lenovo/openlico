@@ -50,10 +50,11 @@ class Application(AbstractApplication):
 
             from lico.core.accounting.utils import get_local_timezone
 
+            from .tasks.balance_alert import check_balance_and_alert
             from .tasks.generate_export import charge_and_billing
 
             scheduler.add_executor(
-                'threadpool', alias=self.name, max_workers=1
+                'threadpool', alias=self.name, max_workers=2
             )
             conf_time = parser.parse(settings.ACCOUNTING.BILLING.DAILY_HOUR)
             conf_time = conf_time.replace(
@@ -62,6 +63,14 @@ class Application(AbstractApplication):
             scheduler.add_job(
                 func=charge_and_billing,
                 trigger='cron',
+                hour=int(conf_time.hour),
+                minute=int(conf_time.minute),
+                max_instances=1,
+                executor=self.name,
+            )
+            scheduler.add_job(
+                func=check_balance_and_alert,
+                trigger="cron",
                 hour=int(conf_time.hour),
                 minute=int(conf_time.minute),
                 max_instances=1,

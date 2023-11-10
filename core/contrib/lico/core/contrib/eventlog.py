@@ -48,6 +48,7 @@ class EventLog(object):
     comment = OperationLog.COMMENT
     priority = OperationLog.PRIORITY
     requeue = OperationLog.REQUEUE
+    low_balance = OperationLog.LOW_BALANCE
 
     @classmethod
     def opt_create_instance(cls, targets, **kwargs):

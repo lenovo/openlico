@@ -44,7 +44,8 @@ class Migration(migrations.Migration):
                     ('rerun', 'rerun'),
                     ('comment', 'comment'),
                     ('priority', 'priority'),
-                    ('requeue', 'requeue')
+                    ('requeue', 'requeue'),
+                    ('low_balance', 'low_balance')
                 ], max_length=128),
         ),
     ]

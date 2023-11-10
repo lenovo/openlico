@@ -42,6 +42,7 @@ class OperationLog(models.Model):
     COMMENT = 'comment'
     PRIORITY = 'priority'
     REQUEUE = 'requeue'
+    LOW_BALANCE = 'low_balance'
 
     MODULE_TYPE_CHOIXES = (
         (USER, 'user'),
@@ -72,7 +73,8 @@ class OperationLog(models.Model):
         (RERUN, 'rerun'),
         (COMMENT, 'comment'),
         (PRIORITY, 'priority'),
-        (REQUEUE, 'requeue')
+        (REQUEUE, 'requeue'),
+        (LOW_BALANCE, 'low_balance'),
     )
 
     module = models.CharField(
