@@ -249,8 +249,9 @@ class UserModuleSearchView(APIView):
             if os.path.exists(config):
                 try:
                     with open(config, 'r') as f:
-                        module_info = EasyConfigParser(f.name, f.read()).\
-                            parse()
+                        module_info = EasyConfigParser(
+                            f.name, f.read(), parse_with_name=True
+                        ).parse()
                         module_info["easyconfig_path"] = config
                         eb_data.append(module_info)
                 except Exception as e:

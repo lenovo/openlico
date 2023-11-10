@@ -28,6 +28,7 @@ core/apps/tensorboard
 core/apps/user
 core/apps/workflow
 core/apps/oneapi
+core/apps/usermodule
 daemon/confluent-proxy[executable]
 daemon/async-task[executable]
 daemon/mail-agent[executable]
