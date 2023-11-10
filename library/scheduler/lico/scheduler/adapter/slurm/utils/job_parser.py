@@ -41,7 +41,7 @@ FAILED_TO_PARSE_MEM = -1
 
 
 def convert_runtime_2_seconds(time_length: str) -> int:
-    if time_length.strip() == "UNLIMITED":
+    if time_length.strip() in ("UNLIMITED", "INVALID"):
         return 0
     time_list = [int(i) for i in reversed(re.findall(r'\d+', time_length))]
     default_value = {
@@ -573,6 +573,9 @@ def parse_job_info(  # noqa: C901
 
     if job.submit_time is None:
         logger.warning("Fail to get job submit time. Job id: %s", jobid)
+
+    if job.start_time is None:
+        job.runtime = 0
 
     job.identity = JobIdentity(
         scheduler_id=jobid,
