@@ -138,6 +138,26 @@ def get_node_status_preference(user):
             return "cpu_util"
 
 
+def get_node_status(
+        preference, hostname=None, cpu_util=None, to_lowercase=True):
+    if preference == "cpu_util":
+        if cpu_util is None:
+            cpu_util = -1
+        if cpu_util > BUSY_THRESHOLD:
+            status = "busy"
+        elif cpu_util < IDLE_THRESHOLD:
+            status = "idle"
+        else:
+            status = "used"
+    else:
+        busy_nodes = node_check(to_lowercase=to_lowercase)
+        if hostname is not None and hostname.lower() in busy_nodes:
+            status = "busy"
+        else:
+            status = "idle"
+    return status
+
+
 def get_node_statics(preference, nodelist):
     lens = len(NODE_TYPES)
 
