@@ -26,4 +26,14 @@ class Migration(migrations.Migration):
             name='states',
             field=models.TextField(null=False, blank=True, default=''),
         ),
+        migrations.AddField(
+            model_name='gpu',
+            name='parent_uuid',
+            field=models.CharField(max_length=128, null=True),
+        ),
+        migrations.AddField(
+            model_name='gpu',
+            name='uuid',
+            field=models.CharField(max_length=128, null=True),
+        ),
     ]

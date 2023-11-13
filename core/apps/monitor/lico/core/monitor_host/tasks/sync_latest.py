@@ -63,6 +63,7 @@ gpu_map = {
     "gpu_util_mem": "bandwidth_util",
     "gpu_proc_num": "occupation",
     "gpu_product_name": "type",  # vendor in output
+    "gpu_uuid": "uuid",  # vendor in output
     "gpu_driver": "driver_version",
     "gpu_pcie_generation": "pcie_generation",
     "gpu_mig_mode": "mig_mode",
@@ -73,6 +74,7 @@ gpu_map = {
 gpu_static = {
     "type": "product_name",
     "driver_version": "driver_version",
+    "uuid": "uuid",
     "pcie_generation": "pcie_generation",
 }
 # {field name in GpuLogicMetric which gpu vendor is nvidia
@@ -620,3 +622,34 @@ class LatestMonitorSync:
 
 def sync_latest(data_list):
     LatestMonitorSync(data_list).update()
+
+
+def sync_vgpu_parent_uuid():
+    from lico.core.monitor_host.models import Gpu
+    from lico.core.vgpu.models import vGPUNode
+    from lico.core.vgpu.utils.common import EncryptData
+    from lico.core.vgpu.utils.gpu_device import GpuDeviceManager
+    from lico.ssh import RemoteSSH
+
+    vgpu_gpu_dict = dict()
+    for node in vGPUNode.objects.all():
+        conn = RemoteSSH(
+            node.address,
+            username=node.username,
+            password=EncryptData(
+                node.hostname, node.address).decrypt(node.password)
+        )
+        gpu_info = GpuDeviceManager(conn).get_gpu_info_dict()
+        for gpu in gpu_info['gpus']:
+            uuid = gpu['uuid']
+            for created in gpu['vgpus'].get('created'):
+                if bool(created['vm']):
+                    vgpu_uuid = created['vgpu_uuid']
+                    vgpu_gpu_dict[vgpu_uuid] = uuid
+
+    for vgpu_uuid, uuid in vgpu_gpu_dict.items():
+        vgpu = Gpu.objects.filter(uuid=f'GPU-{vgpu_uuid}')
+        if vgpu:
+            vgpu = vgpu[0]
+            vgpu.parent_uuid = uuid
+            vgpu.save()
