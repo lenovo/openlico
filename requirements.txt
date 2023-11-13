@@ -22,13 +22,13 @@ core/apps/container
 core/apps/job
 core/apps/maintenance
 core/apps/monitor
+core/apps/oneapi
 core/apps/operation
 core/apps/template
 core/apps/tensorboard
 core/apps/user
-core/apps/workflow
-core/apps/oneapi
 core/apps/usermodule
+core/apps/workflow
 daemon/confluent-proxy[executable]
 daemon/async-task[executable]
 daemon/mail-agent[executable]
