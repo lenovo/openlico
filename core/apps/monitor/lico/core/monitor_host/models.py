@@ -122,7 +122,8 @@ class Gpu(Model):
     type = CharField(null=False, max_length=100, default="")
     vendor = IntegerField(choices=VENDOR, null=True)
     driver_version = CharField(null=False, max_length=100, default="")
-
+    uuid = CharField(max_length=128, null=True)
+    parent_uuid = CharField(max_length=128, null=True)
     occupation = BooleanField(null=False, default=False,
                               help_text="True: used; False: free")
     memory_used = IntegerField(null=True, help_text="Unit: KiB")

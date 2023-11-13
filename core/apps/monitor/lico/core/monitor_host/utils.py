@@ -608,7 +608,7 @@ NODE_ON, NODE_OFF = 'UP', 'DOWN'
 job_re = re.compile(r'^job_([0-9a-zA-Z]*)_(cpu_util|mem_used)$')
 node_re = re.compile(r'^(vnc_session)_\d+|(node_health)_critical_count$')
 gpu_re = re.compile(
-    r'^(gpu)(\d+)_(driver|product_name|pcie_generation|util|temp|'
+    r'^(gpu)(\d+)_(driver|product_name|uuid|pcie_generation|util|temp|'
     r'mem_used|mem_total|proc_num|util_mem|mig_mode)$')
 gpu_dev_re = re.compile(
     r'^(gpu)(\d+)_(.*)_(util|mem_used|mem_total|proc_num|util_bandwidth|'
@@ -749,6 +749,7 @@ class GpuPhysicsMetric:
     gpu_proc_num = attr.ib(default=attr.Factory(lambda: defaultdict(list)))
     gpu_util_mem = attr.ib(default=attr.Factory(lambda: defaultdict(list)))
     gpu_product_name = attr.ib(default=attr.Factory(lambda: defaultdict(list)))
+    gpu_uuid = attr.ib(default=attr.Factory(lambda: defaultdict(list)))
     gpu_driver = attr.ib(default=attr.Factory(lambda: defaultdict(list)))
     gpu_mig_mode = attr.ib(default=attr.Factory(lambda: defaultdict(list)))
     gpu_dev_model = attr.ib(default=attr.Factory(lambda: GpuLogicMetric()))

@@ -14,6 +14,8 @@
 import subprocess  # nosec B404
 import tempfile
 
+from pkg_resources import get_entry_info
+
 from lico.core.contrib.client import Client
 
 
@@ -223,3 +225,13 @@ def on_config_scheduler(self, scheduler, settings):
         max_instances=1,
         executor=self.name,
     )
+    if get_entry_info(
+            'lico-core-vgpu', 'lico.core.application', 'vgpu') is not None:
+        from .tasks import sync_vgpu_parent_uuid
+        scheduler.add_job(
+            func=sync_vgpu_parent_uuid,
+            trigger='cron',
+            second='*/30',
+            max_instances=1,
+            executor=self.name,
+        )
