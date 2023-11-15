@@ -22,7 +22,7 @@ from lico.core.contrib.dataclass import LocalUserNotFound
 
 from ..authentication import (
     ApiKeyAuthentication, BasicAuthentication, BasicJSONAuthentication,
-    JWTInternalAuthentication, JWTWebAuthentication,
+    JWTWebAuthentication,
 )
 from . import APIView
 
@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 class AuthView(APIView):
     authentication_classes = (
         BasicAuthentication, BasicJSONAuthentication, JWTWebAuthentication,
-        JWTInternalAuthentication, ApiKeyAuthentication
+        ApiKeyAuthentication
     )
     hidden_permission_classes = ()
 
