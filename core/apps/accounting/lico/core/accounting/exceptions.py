@@ -149,3 +149,8 @@ class JobChargeDurationException(AccountingException):
     message = 'The job charge Duration error.'
     errid = 14030
 
+
+class UpdateBalanceAlertException(AccountingException):
+    message = 'Failed to update balance alert.'
+    errid = 14031
+
