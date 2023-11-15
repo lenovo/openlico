@@ -19,9 +19,6 @@ from django.db.models import Count, Max, Min
 from rest_framework import status
 from rest_framework.response import Response
 
-from lico.core.contrib.authentication import (
-    JWTInternalAnonymousAuthentication, RemoteJWTWebAuthentication,
-)
 from lico.core.contrib.permissions import AsUserRole
 from lico.core.contrib.schema import json_schema_validate
 from lico.core.contrib.views import APIView, DataTableView, InternalAPIView
@@ -161,12 +158,7 @@ class InternalMonitorResourceView(InternalAPIView):
         return Response(ResourceFactory().get_res(resource_type))
 
 
-class NodeProcessView(InternalAPIView, APIView):
-    authentication_classes = (
-        RemoteJWTWebAuthentication,
-        JWTInternalAnonymousAuthentication
-    )
-
+class NodeProcessView(APIView):
     def get(self, request, hostname):
         scheduler_id = request.query_params.get("scheduler_id", None)
         pids = json.loads(request.query_params.get("pids", "[]"))

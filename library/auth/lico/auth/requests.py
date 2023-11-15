@@ -18,7 +18,7 @@ from requests.auth import AuthBase
 class ServiceAuth(AuthBase):
     def __init__(
         self, secret, username=None,
-        keyword='lico', **extra_args
+        keyword='jwt', **extra_args
     ):
         self.secret = secret
         self.username = username
