@@ -100,7 +100,7 @@ class RemoteJWTWebAuthentication(RemoteAuthentication):
 
 
 class RemoteJWTInternalAuthentication(RemoteAuthentication):
-    keyword = 'lico'
+    keyword = 'jwt'
 
 
 class RemoteApiKeyAuthentication(RemoteAuthentication):
@@ -108,7 +108,7 @@ class RemoteApiKeyAuthentication(RemoteAuthentication):
 
 
 class JWTInternalAnonymousAuthentication(LicoAuthentication):
-    keyword = 'lico'
+    keyword = 'jwt'
 
     @property
     def token(self):
