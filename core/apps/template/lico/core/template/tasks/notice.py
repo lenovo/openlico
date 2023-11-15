@@ -59,8 +59,7 @@ def lico_restapi(jobcomp_id, job_info):
         if url:
             auth = ServiceAuth(
                 secret=settings.WEB_SECRET_KEY,
-                username=job_info.get('submitter'),
-                keyword='lico'
+                username=job_info.get('submitter')
             )
             res = requests.request(
                 method=jobcomp.method,
