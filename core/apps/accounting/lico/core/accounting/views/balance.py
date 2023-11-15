@@ -22,7 +22,8 @@ from lico.core.contrib.permissions import AsAdminRole
 from lico.core.contrib.schema import json_schema_validate
 from lico.core.contrib.views import APIView
 
-from ..models import BalanceAlertSetting
+from ..exceptions import UpdateBalanceAlertException
+from ..models import BalanceAlertSetting, BillGroup
 
 logger = logging.getLogger(__name__)
 
@@ -65,3 +66,28 @@ class BalanceView(APIView):
         balance_setting.targets.set(query_s)
         balance_setting.save()
         return Response(balance_setting.as_dict())
+
+
+class BalanceAlertView(APIView):
+    permission_classes = (AsAdminRole,)
+
+    @json_schema_validate({
+        'type': 'object',
+        'properties': {
+            'balance_alert': {
+                'type': 'boolean'
+            }
+        },
+        'required': ['balance_alert']
+    })
+    @atomic
+    def put(self, request, pk):
+        try:
+            bill_group = BillGroup.objects.get(id=pk)
+            bill_group.balance_alert = request.data['balance_alert']
+            bill_group.save()
+            return Response({})
+        except BillGroup.DoesNotExist:
+            raise
+        except Exception as e:
+            raise UpdateBalanceAlertException from e

@@ -70,11 +70,10 @@ class Application(AbstractApplication):
             )
             scheduler.add_job(
                 func=check_balance_and_alert,
-                trigger="cron",
-                hour=int(conf_time.hour),
-                minute=int(conf_time.minute),
-                max_instances=1,
+                trigger="interval",
+                minutes=settings.ACCOUNTING.BALANCE.ALERT_INTERVAL_MINUTES,
                 executor=self.name,
+                max_instances=1
             )
 
     def on_load_settings(self, settings_module_name, arch):
