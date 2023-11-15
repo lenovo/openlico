@@ -50,7 +50,7 @@ def send_alert_email(targets, alert_bill_groups, threshold):
                 })
         )
     except Exception as e:
-        logger.Exception('Send balance alert email failed, reason is: %s', e)
+        logger.exception('Send balance alert email failed, reason is: %s', e)
 
 
 def check_balance_and_alert():
@@ -81,6 +81,6 @@ def check_balance_and_alert():
             else:
                 bill_group.alert.all().delete()
     except Exception as e:
-        logger.Exception('Check bill group balance failed, reason is: %s', e)
+        logger.exception('Check bill group balance failed, reason is: %s', e)
 
     send_alert_email(targets, alert_bill_groups, threshold)
