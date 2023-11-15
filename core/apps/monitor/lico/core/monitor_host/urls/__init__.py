@@ -42,9 +42,17 @@ urlpatterns = [
 
 # 'cluster' means to use the monitor function.
 if 'cluster' in settings.MONITOR.TARGETS:
+    from lico.core.contrib.authentication import (
+        JWTInternalAnonymousAuthentication,
+    )
+
     from ..views.node import NodeProcessView
 
     urlpatterns += [
-        path('internal/process/<str:hostname>/',
-             NodeProcessView.as_view()),
+        path(
+            'internal/process/<str:hostname>/',
+            NodeProcessView.as_view(
+                 authentication_classes=(JWTInternalAnonymousAuthentication,)
+             )
+        ),
     ]
