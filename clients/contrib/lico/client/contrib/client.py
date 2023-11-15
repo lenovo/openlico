@@ -36,7 +36,7 @@ class BaseClient(metaclass=ABCMeta):
         url: str = 'http://127.0.0.1:18080/api/',
         timeout: int = 30,
         username=None, secret=None,
-        keyword='lico', **extra_args
+        keyword='jwt', **extra_args
     ):
         from lico.auth.requests import ServiceAuth
         self.url = path.join(url, self.app)
