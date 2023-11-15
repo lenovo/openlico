@@ -149,33 +149,9 @@ class JWTWebAuthentication(JWTAuthentication):
                 detail='User has already locked'
             )
 
-        if payload['role'] > user.role:
+        if 'role' in payload and payload['role'] > user.role:
             raise PermissionDenied(
                 'Insufficient permission.'
-            )
-
-        return user
-
-
-class JWTInternalAuthentication(JWTAuthentication):
-    keyword = 'lico'
-
-    @property
-    def token(self):
-        return settings.WEB_SECRET_KEY
-
-    @staticmethod
-    def get_user(payload):
-        try:
-            user = User.objects.get(username=payload['sub'])
-        except User.DoesNotExist as e:
-            raise AuthenticationFailed(
-                detail='User does not exists.'
-            ) from e
-
-        if not user.is_activate:
-            raise AuthenticationFailed(
-                detail='User has already locked'
             )
 
         return user
