@@ -25,12 +25,12 @@ from ..models import BalanceAlert, BalanceAlertSetting, BillGroup
 logger = logging.getLogger(__name__)
 
 
-def format_unit(balance):
+def format_unit(number):
     unit = settings.ACCOUNTING.BILLING.UNIT
     unit = [u.strip() for u in unit.split(';', 1)]
     if len(unit) == 1:
-        return f'{unit[0]}{balance}'
-    return f'{unit[0]}{balance}{unit[1]}'
+        return f'{unit[0]}{number:.2f}'
+    return f'{unit[0]}{number:.2f}{unit[1]}'
 
 
 def send_alert_email(targets, alert_bill_groups, threshold):

@@ -1,7 +1,7 @@
 <div>
     {% for bill_group in bill_groups %}
-    <p> Billing Group {{ bill_group.name }} balance: {{ bill_group.balance }}</p>
+    <p> Billing Group "{{ bill_group.name }}" balance: {{ bill_group.balance }}</p>
     {% endfor %}
-    <p> The account balance of the above billing group(s) is less than {{ threshold }} ended {% now "Y-m-d" %}. Please top up your account in time.</p>
+    <p> The account balance of the above billing group(s) is less than {{ threshold }} ended {% now "Y-m-d H:i" %}. Please top up your account in time.</p>
     <p> Sent By LiCO</p>
 </div>
