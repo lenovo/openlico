@@ -190,6 +190,9 @@ class BaseDataTableView(BaseAPIView, metaclass=ABCMeta):
 
     def filters(self, query, filters):
         for field in filters:
+            if len(field['values']) == 0 or query is None:
+                continue
+
             if field['prop'] in self.columns_mapping:
                 prop = self.columns_mapping[field['prop']]
             else:
@@ -201,14 +204,14 @@ class BaseDataTableView(BaseAPIView, metaclass=ABCMeta):
                         prop + '__{}'.format(
                             "in"): field['values']
                     }
-                ) if len(field['values']) > 0 and query else query
+                )
             else:
                 query = query.filter(
                     **{
                         prop + '__{}'.format(
                             field['type']): field['values']
                     }
-                ) if len(field['values']) > 0 and query else query
+                )
         return query
 
     @classmethod
