@@ -299,7 +299,7 @@ class UserModuleBuildingView(APIView):
 
         finished_um_jobs = UserModuleJob.objects.filter(
             user=submitter, is_cleared=False
-        ).exclude(job_id__in=unfinished_job_ids).order_by("-update_time")[:10]
+        ).exclude(job_id__in=unfinished_job_ids).order_by("-create_time")[:10]
         finished_um_map = self.get_id_um_job_mapping(finished_um_jobs)
 
         finished_um_jids = finished_um_jobs.values_list("job_id", flat=True)
