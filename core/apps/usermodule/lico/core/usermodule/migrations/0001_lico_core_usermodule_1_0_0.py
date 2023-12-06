@@ -43,7 +43,7 @@ class Migration(migrations.Migration):
                     blank=True, default='', max_length=32
                 )),
                 ('create_time', lico.core.contrib.fields.DateTimeField(
-                    auto_now_add=True
+                    auto_now_add=True, db_index=True
                 )),
                 ('update_time', lico.core.contrib.fields.DateTimeField(
                     auto_now=True

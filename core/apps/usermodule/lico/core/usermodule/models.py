@@ -23,5 +23,5 @@ class UserModuleJob(Model):
     log_path = CharField(null=False, max_length=260, blank=True, default="")
     is_cleared = BooleanField(null=False, blank=True, default=False)
     user = CharField(null=False, max_length=32, blank=True, default="")
-    create_time = DateTimeField(auto_now_add=True)
+    create_time = DateTimeField(auto_now_add=True, db_index=True)
     update_time = DateTimeField(auto_now=True)
