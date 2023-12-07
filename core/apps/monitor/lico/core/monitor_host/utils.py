@@ -889,13 +889,18 @@ def _init_datasource(metrics_dict):
     for calculate_metric in ['disk_total', 'memory_total']:
         metric_match = re.match(r'^(disk|memory)_total$', calculate_metric)
         metric_str = metric_match.groups()[0]
-        total = \
-            float(metrics_dict.get(calculate_metric, {}).get('value', '0.0'))
-        used_dict = metrics_dict.get(metric_str + '_used')
-        if not used_dict or total == 0.0:
+        # total_dict for example:
+        # {
+        #     'value': '0.0', 'unit': 'BYTES',
+        #     'output': '[OK] - Disk total = 0.0B, Disk used = 0.0B '
+        # }
+        total = metrics_dict.get(calculate_metric, {}).get('value', None)
+        used = metrics_dict.get(metric_str + '_used', {}).get('value', None)
+        if total is None or used is None:
             continue
         metrics_dict[metric_str + '_util'] = {
-            'value': str(calculate_util(used_dict['value'], total)),
+            'value': '0.0' if int(float(total)) == 0 else str(
+                calculate_util(used, float(total))),
             'unit': '%', 'output': ''}
     state_list = []
     for active_metric in ['rta', 'pl']:
