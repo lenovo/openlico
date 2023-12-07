@@ -206,25 +206,25 @@ def on_config_scheduler(self, scheduler, settings):
     from .tasks import (
         cluster_res_summaries, group_summaries, summaries, sync_vnc,
     )
-    tasks = (cluster_res_summaries, summaries, group_summaries)
+    tasks_dict = {
+        cluster_res_summaries: '*/15',
+        summaries: '*/15',
+        group_summaries: '*/15',
+        sync_vnc: '*/30'
+    }
+
     scheduler.add_executor(
-        'processpool', alias=self.name, max_workers=len(tasks)
+        'processpool', alias=self.name, max_workers=len(tasks_dict)
     )
-    for task in tasks:
+
+    for task, cron_time in tasks_dict.items():
         scheduler.add_job(
             func=task,
             trigger='cron',
-            second='*/15',
+            second=cron_time,
             max_instances=1,
             executor=self.name,
         )
-    scheduler.add_job(
-        func=sync_vnc,
-        trigger='cron',
-        second='*/30',
-        max_instances=1,
-        executor=self.name,
-    )
 
     if working_set.find(Requirement('lico-core-vgpu')) is not None:
         from .tasks import sync_vgpu_parent_uuid
