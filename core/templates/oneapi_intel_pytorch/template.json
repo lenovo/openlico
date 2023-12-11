@@ -113,7 +113,7 @@
       "dataType": "number",
       "input": "input",
       "minValue": "0",
-      "maxValue": "1",
+      "maxValue": "99",
       "floatLength": 0,
       "defaultValue": "1",
       "must": false
