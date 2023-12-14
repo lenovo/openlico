@@ -282,6 +282,7 @@ class LatestMonitorSync:
         if nodes:
             nodes.update(**self.node_default_dict)
             for node in nodes:
+                node.hardware_health.all().delete()
                 self._no_monitor_gpu(node)
 
     @staticmethod

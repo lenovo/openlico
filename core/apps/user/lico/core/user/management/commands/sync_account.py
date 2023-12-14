@@ -87,7 +87,7 @@ class Command(BaseCommand):
         bill_user = set()
         bill_user_dict = defaultdict(list)
         for user_obj in users_billing_group():
-            bill_user_dict[user_obj.bill_group_name].append(
+            bill_user_dict[user_obj.bill_group_name.lower()].append(
                 user_obj.username)
             bill_user.add(user_obj.username)
         user_without_bill = set(user_list) - bill_user
