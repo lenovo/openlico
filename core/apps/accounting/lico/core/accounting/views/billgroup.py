@@ -122,6 +122,11 @@ class BillGroupListView(APIView):
     })
     def post(self, request):
         data = handle_request_data(request.data)
+
+        obj = BillGroup.objects.ci_exact(name=request.data.get('name'))
+        if obj:
+            raise BillroupAlreadyExistsException
+
         try:
             billgroup = BillGroup.objects.create(**data)
             timezone_now = timezone.now()
@@ -292,6 +297,11 @@ class BillGroupDetailView(APIView):
             "used_credits", "description", "last_operation_time"
         ]
         with transaction.atomic():
+
+            obj = BillGroup.objects.ci_exact(name=request.data['name'])
+            if obj:
+                raise BillroupAlreadyExistsException
+
             try:
                 data = BillGroup.objects.get(id=pk).as_dict(
                     inspect_related=False, exclude=exclude_fields
