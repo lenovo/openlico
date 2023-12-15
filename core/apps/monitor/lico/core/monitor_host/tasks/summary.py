@@ -15,6 +15,7 @@
 import json
 import logging
 import re
+from ast import literal_eval
 from collections import defaultdict
 from datetime import datetime
 
@@ -244,7 +245,9 @@ def add_node_points(write_points, node_data, current):
                 value, value_dict['unit'], metric_unit[node_metric]
             )
         if node_metric == 'node_health':
-            _, value = re.split(' - ', value_dict['output'])
+            _, value = re.split(
+                ' - ', literal_eval("'{}'".format(value_dict['output']))
+            )
         _add_points(write_points, node_measurement, current,
                     node_data.hostname, node_metric, str(value))
 
