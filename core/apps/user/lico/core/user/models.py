@@ -103,7 +103,7 @@ class User(Model):
 
     @staticmethod
     def get_full_name(first_name, last_name) -> str:
-        return f"{first_name} {last_name}".strip()
+        return f"{first_name or ''} {last_name or ''}".strip()
 
 
 class ApiKey(Model):
