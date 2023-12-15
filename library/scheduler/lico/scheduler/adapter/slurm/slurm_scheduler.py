@@ -36,7 +36,8 @@ from lico.scheduler.base.job.job import Job
 from lico.scheduler.base.job.queue import Queue
 from lico.scheduler.base.scheduler import IScheduler
 from lico.scheduler.utils.cmd_utils import (
-    exec_oscmd, exec_oscmd_with_login, exec_oscmd_with_user,
+    exec_oscmd, exec_oscmd_with_login, exec_oscmd_with_ssh,
+    exec_oscmd_with_user,
 )
 
 from .slurm_acct_parser import query_events_by_job, query_events_by_time
@@ -72,7 +73,9 @@ class Scheduler(IScheduler):
             self,
             job_filename: str,
             job_comment: Optional[str] = None,
-            job_name: Optional[str] = None
+            job_name: Optional[str] = None,
+            node_hostname: Optional[str] = None,
+            node_port: Optional[int] = 22
     ) -> JobIdentity:
         logger.debug("submit_job_from_file entry")
         if not os.path.isfile(job_filename):
@@ -84,14 +87,28 @@ class Scheduler(IScheduler):
             args.extend(['--comment', job_comment])
         args.append(job_filename)
 
-        rc, out, err = exec_oscmd_with_user(
-            self._operator_username, args, timeout=self._config.timeout
-        )
+        if node_hostname:
+            rc, out, err = exec_oscmd_with_ssh(
+                hostname=node_hostname,
+                port=node_port,
+                user=self._operator_username,
+                args=args,
+                timeout=self._config.timeout
+            )
+        else:
+            rc, out, err = exec_oscmd_with_user(
+                self._operator_username, args, timeout=self._config.timeout
+            )
+
         # Some envrionment has login welcome message
         # m = re.match(r'^.+?(?P<job_id>[\d_]+)$', out.strip().decode())
+        if isinstance(out, bytes):
+            decoded_out = out.decode('utf-8').strip()
+        else:
+            decoded_out = out.strip()
         m = re.match(
             r'^[\s\S]+?batch job (?P<job_id>[\d_]+)$',
-            out.strip().decode()
+            decoded_out
         )
         if m is not None:
             jobid = m.groupdict()['job_id']

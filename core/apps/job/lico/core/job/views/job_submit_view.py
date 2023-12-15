@@ -122,13 +122,21 @@ class JobSubmitView(InternalAPIView):
         try:
             # Generate job comment
             job_comment = JobComment(job.id)
+            # Get the node where job is submitted
+            job_submit_node_hostname = settings.JOB.get(
+                    'JOB_SUBMIT_NODE_HOSTNAME', "")
+            job_submit_node_port = settings.JOB.get(
+                    'JOB_SUBMIT_NODE_PORT', 22)
             # Scheduler adapter only can access local file.
             # If job file exist on local path, submit from file.
             if os.path.exists(job_filename):
                 job_identity = scheduler.submit_job_from_file(
                     job_filename=job_filename,
                     job_name=job_name,
-                    job_comment=job_comment.get_comment())
+                    job_comment=job_comment.get_comment(),
+                    node_hostname=job_submit_node_hostname,
+                    node_port=job_submit_node_port,
+                )
             # If job file does not exist on local path, submit from content.
             else:
                 job_identity = scheduler.submit_job(

@@ -36,7 +36,9 @@ class IScheduler(metaclass=ABCMeta):
             self,
             job_filename: str,
             job_comment: str = None,
-            job_name: str = None
+            job_name: str = None,
+            node_hostname: str = None,
+            node_port: int = 22
     ) -> IJobIdentity:
         pass
 
