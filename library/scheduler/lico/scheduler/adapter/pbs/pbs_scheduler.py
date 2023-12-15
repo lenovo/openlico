@@ -33,7 +33,8 @@ from lico.scheduler.base.job.queue import Queue
 from lico.scheduler.base.job.queue_state import QueueState
 from lico.scheduler.base.scheduler import IScheduler
 from lico.scheduler.utils.cmd_utils import (
-    exec_oscmd, exec_oscmd_with_login, exec_oscmd_with_user,
+    exec_oscmd, exec_oscmd_with_login, exec_oscmd_with_ssh,
+    exec_oscmd_with_user,
 )
 
 from .pbs_config import SchedulerConfig
@@ -67,6 +68,8 @@ class Scheduler(IScheduler):
             job_filename: str,
             job_name: Optional[str] = None,
             job_comment: Optional[str] = None,
+            node_hostname: Optional[str] = None,
+            node_port: Optional[int] = 22
     ) -> JobIdentity:
         logger.debug("submit_job_from_file entry")
         if not os.path.isfile(job_filename):
@@ -81,12 +84,24 @@ class Scheduler(IScheduler):
 
         args.append(job_filename)
 
-        rc, out, err = exec_oscmd_with_user(
-            self._operator_username, args, timeout=self._config.timeout
-        )
+        if node_hostname:
+            rc, out, err = exec_oscmd_with_ssh(
+                hostname=node_hostname,
+                port=node_port,
+                user=self._operator_username,
+                args=args,
+                timeout=self._config.timeout
+            )
+        else:
+            rc, out, err = exec_oscmd_with_user(
+                self._operator_username, args, timeout=self._config.timeout
+            )
         # stdout should be the job id, query the job to return the
         # proper job identity
-        scheduler_id = out.decode("utf8").strip()
+        if isinstance(out, bytes):
+            scheduler_id = out.decode('utf-8').strip()
+        else:
+            scheduler_id = out.strip()
         if not scheduler_id or not scheduler_id.split('.')[0].isdigit():
             raise SubmitJobFailedException
         return JobIdentity(

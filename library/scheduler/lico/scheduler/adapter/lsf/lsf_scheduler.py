@@ -43,7 +43,8 @@ from lico.scheduler.base.job.queue import Queue
 from lico.scheduler.base.job.queue_state import QueueState
 from lico.scheduler.base.scheduler import IScheduler
 from lico.scheduler.utils.cmd_utils import (
-    exec_oscmd, exec_oscmd_with_login, exec_oscmd_with_user,
+    exec_oscmd, exec_oscmd_with_login, exec_oscmd_with_ssh,
+    exec_oscmd_with_user,
 )
 
 from .lsf_acct_parser import query_events_by_time
@@ -77,7 +78,9 @@ class Scheduler(IScheduler):
             self,
             job_filename: str,
             job_comment: Optional[str] = None,
-            job_name: str = None
+            job_name: str = None,
+            node_hostname: Optional[str] = None,
+            node_port: Optional[int] = 22
     ) -> JobIdentity:
 
         if not path.exists(job_filename):
@@ -91,13 +94,24 @@ class Scheduler(IScheduler):
             args.extend(['-Jd', job_comment])
         args.extend(['<', job_filename])
 
-        rc, out, err = exec_oscmd_with_user(
-            self._operator_username,
-            args,
-            timeout=self._config.timeout
-        )
+        if node_hostname:
+            rc, out, err = exec_oscmd_with_ssh(
+                hostname=node_hostname,
+                port=node_port,
+                user=self._operator_username,
+                args=args,
+                timeout=self._config.timeout
+            )
+        else:
+            rc, out, err = exec_oscmd_with_user(
+                self._operator_username, args, timeout=self._config.timeout
+            )
+        if isinstance(out, bytes):
+            decoded_out = out.decode('utf-8')
+        else:
+            decoded_out = out
         reg = re.compile(r'^Job <(.*?)>')
-        ret = reg.findall(out.decode())
+        ret = reg.findall(decoded_out)
 
         if len(ret) < 1:
             logger.error(

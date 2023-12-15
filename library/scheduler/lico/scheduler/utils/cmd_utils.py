@@ -14,6 +14,8 @@
 
 from subprocess import PIPE, list2cmdline, run  # nosec B404
 
+from lico.ssh import RemoteSSH
+
 
 def exec_oscmd(args, timeout: int):
     process = run(
@@ -46,3 +48,15 @@ def exec_oscmd_with_user(user, args, timeout: int):
         timeout=timeout
     )
     return process.returncode, process.stdout, process.stderr
+
+
+def exec_oscmd_with_ssh(hostname, port, user, args, timeout: int):
+    with RemoteSSH(host=hostname, port=port) as conn:
+        process = conn.run(
+            cmd=[
+                'su', '-', user, '-c',
+                list2cmdline(args)
+            ],
+            command_timeout=timeout
+        )
+    return process.return_code, process.stdout, process.stderr
