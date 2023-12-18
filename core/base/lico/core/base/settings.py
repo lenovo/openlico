@@ -116,6 +116,7 @@ load_settings(
 arch = sys.modules[__name__].LICO.ARCH
 for app in iter_sub_apps():
     app.on_install_apps(INSTALLED_APPS, arch)
+    app.on_install_middlewares(MIDDLEWARE, arch)
     app.on_load_settings(__name__, arch)
     app.on_load_template_builtins(builtins, arch)
 
