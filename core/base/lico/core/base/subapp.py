@@ -62,6 +62,11 @@ class AbstractApplication(metaclass=ABCMeta):
             f'lico.core.{self.name}'
         )
 
+    def on_install_middlewares(
+            self, install_middlewares: List[str], arch: str
+    ):
+        pass
+
     def on_load_template_builtins(self, builtins: List[str], arch: str):
         pass
 
