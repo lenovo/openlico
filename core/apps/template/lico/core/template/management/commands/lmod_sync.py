@@ -17,6 +17,8 @@ import os
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
+from lico.ssh.ssh_connect import RemoteSSH
+
 __all__ = ['Command']
 
 
@@ -51,13 +53,21 @@ class Command(BaseCommand):
         import json
         from subprocess import check_output  # nosec B404
 
-        output = check_output(  # nosec B603
-            [spider, '-o', 'spider-json', modulepath]
-        )
-
+        cmd = [spider, '-o', 'spider-json', modulepath]
+        if not settings.JOB.JOB_SUBMIT_NODE_HOSTNAME:
+            output = check_output(cmd)   # nosec B603
+        else:
+            output = self.exec_ssh_oscmd(settings.JOB.JOB_SUBMIT_NODE_HOSTNAME,
+                                         settings.JOB.JOB_SUBMIT_NODE_PORT,
+                                         cmd).stdout.strip()
         from lico.core.template.utils.lmod import sync
         sync(json.loads(output))
 
         from lico.core.template.models import Module
         for module in Module.objects.iterator():
             print(module.name)
+
+    def exec_ssh_oscmd(self, hostname, port, cmd, timeout=30):
+        with RemoteSSH(host=hostname, port=port) as conn:
+            result = conn.run(cmd, command_timeout=timeout)
+        return result
