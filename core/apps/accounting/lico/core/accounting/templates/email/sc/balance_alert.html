@@ -2,6 +2,6 @@
     {% for bill_group in bill_groups %}
     <p>计费组 “{{ bill_group.name }}” 账户余额：{{ bill_group.balance }}</p>
     {% endfor %}
-    <p>截至{% now "Y-m-d H:i" %}，以上计费组账户余额已少于{{ threshold }}，请及时充值。</p>
+    <p>截至{% now "Y-m-d H:i" %}(UTC{% now "O" %})，以上计费组账户余额已少于{{ threshold }}，请及时充值。</p>
     <p>此邮件由LiCO发送</p>
 </div>
