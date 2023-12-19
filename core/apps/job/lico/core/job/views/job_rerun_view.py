@@ -16,6 +16,7 @@ import logging
 import os
 import stat
 
+from django.conf import settings
 from rest_framework.response import Response
 
 from lico.core.contrib.authentication import RemoteJWTInternalAuthentication
@@ -79,12 +80,20 @@ class JobRerunView(InternalAPIView):
         try:
             # Generate job comment
             job_comment = JobComment(job.id)
+            # Get the node where job is submitted
+            job_submit_node_hostname = settings.JOB.get(
+                    'JOB_SUBMIT_NODE_HOSTNAME', "")
+            job_submit_node_port = settings.JOB.get(
+                    'JOB_SUBMIT_NODE_PORT', 22)
             # Scheduler adapter only can access local file.
             # If job file exist on local path, submit from file.
             job_identity = scheduler.submit_job_from_file(
                 job_filename=job_file,
                 job_name=origin_job.job_name,
-                job_comment=job_comment.get_comment())
+                job_comment=job_comment.get_comment(),
+                node_hostname=job_submit_node_hostname,
+                node_port=job_submit_node_port,
+            )
         except SchedulerJobBaseException as e:
             job.operate_state = JobOperateState.CREATE_FAIL.value
             job.state = JobState.COMPLETED.value
