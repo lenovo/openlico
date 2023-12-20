@@ -22,6 +22,7 @@ from attr import asdict, attrib, attrs
 from django.conf import settings
 
 from lico.core.contrib.client import Client
+from lico.ssh import RemoteSSH
 
 from .exceptions import (
     SpiderToolNotAvailableException, UserModuleConfigsException,
@@ -65,6 +66,18 @@ def exec_oscmd_with_user(user, args, timeout=30):
     return process.returncode, process.stdout, process.stderr
 
 
+def exec_oscmd_with_ssh(hostname, port, user, args, timeout=30):
+    with RemoteSSH(host=hostname, port=port) as conn:
+        process = conn.run(
+            cmd=[
+                'su', '-', user, '-c',
+                list2cmdline(args)
+            ],
+            command_timeout=timeout
+        )
+    return process.return_code, process.stdout, process.stderr
+
+
 class EasyBuildUtils():
     def __init__(self, user):
         self.user = user
@@ -100,17 +113,32 @@ class EasyBuildUtils():
 
         args = ["module", "try-load", "EasyBuild",
                 ";", "eb", f"--search={pattern}"]
-        code, out, err = exec_oscmd_with_user(self.user.username, args)
+        host = settings.JOB.JOB_SUBMIT_NODE_HOSTNAME
+        host_port = settings.JOB.JOB_SUBMIT_NODE_PORT
 
-        if err:
+        if host:
+            rc, out, err = exec_oscmd_with_ssh(
+                host, host_port, self.user.username, args=args
+            )
+        else:
+            rc, out, err = exec_oscmd_with_user(self.user.username, args)
+
+        if rc == 0:
+            def parse_configs(config):
+                if config.startswith(" * "):
+                    return config.split(" * ")[-1]
+            if isinstance(out, bytes):
+                decoded_out = out.decode('utf-8').strip()
+            else:
+                decoded_out = out.strip()
+            return map(parse_configs, decoded_out.splitlines())
+        else:
             logger.exception("Failed to get usermodule configs.")
-            raise UserModuleConfigsException(err.decode())
-
-        def parse_configs(config):
-            if config.startswith(" * "):
-                return config.split(" * ")[-1]
-
-        return map(parse_configs, out.decode().splitlines())
+            if isinstance(err, bytes):
+                decoded_err = err.decode('utf-8').strip()
+            else:
+                decoded_err = err.strip()
+            raise UserModuleConfigsException(decoded_err)
 
 
 def get_private_module(spider, user):
@@ -120,21 +148,43 @@ def get_private_module(spider, user):
     if not os.path.exists(module_path):
         return list()
 
-    if not os.path.exists(spider):
-        raise SpiderToolNotAvailableException
+    args = [spider, '-o', 'spider-json', module_path]
+    host = settings.JOB.JOB_SUBMIT_NODE_HOSTNAME
+    host_port = settings.JOB.JOB_SUBMIT_NODE_PORT
 
-    rc, output, err = exec_oscmd([spider, '-o', 'spider-json', module_path])
-    if err:
+    if host:
+        try:
+            # Check if path is existed by ssh
+            frc, fout, ferr = exec_oscmd_with_ssh(
+                host, host_port, user.username, args=["test", "-e", spider]
+            )
+        except Exception:
+            raise SpiderToolNotAvailableException
+
+        # Execute `spider` by ssh
+        rc, out, err = exec_oscmd_with_ssh(
+            host, host_port, user.username, args=args
+        )
+    else:
+        if not os.path.exists(spider):
+            raise SpiderToolNotAvailableException
+        rc, out, err = exec_oscmd_with_user(user.username, args)
+
+    if rc == 0:
+        if isinstance(out, bytes):
+            decoded_out = out.decode('utf-8').strip()
+        else:
+            decoded_out = out.strip()
+        private_module_content = json.loads(decoded_out)
+        private_module = process_module(private_module_content, user)
+
+        return private_module
+    else:
         logger.error(
             "Failed to get modules output. "
             "Error message is: %s", err.decode()
         )
         raise UserModuleGetPrivateModuleException(err.decode())
-
-    private_module_content = json.loads(output)
-    private_module = process_module(private_module_content, user)
-
-    return private_module
 
 
 def process_module(content, user):
@@ -151,10 +201,15 @@ def process_module(content, user):
             "type": "private"
         }
         for item_name, item in modules.items():
+            # For Ubuntu module package, it is named as `full`.
+            # For OHPC module package, it is named as `fullName`.
+            full = item.get("fullName") or item.get("full")
             version = item.get("Version") if item.get("Version") else None
+            if version is None:
+                version = full.split("/")[-1]
             location = os.path.join(software_path, name, version)
             module = Module(
-                name=item.get("fullName"),
+                name=full,
                 path=item_name,
                 version=version,
                 category=item.get("Category"),
