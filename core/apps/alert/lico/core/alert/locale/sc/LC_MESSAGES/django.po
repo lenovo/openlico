@@ -94,7 +94,7 @@ msgid "Remark"
 msgstr "备注"
 
 #: templates/alert/report/alert_statistics.html:28
-msgid "Alert Num"
+msgid "Alert Number"
 msgstr "报警数量"
 
 #: templates/alert/report/alert_statistics.html:31

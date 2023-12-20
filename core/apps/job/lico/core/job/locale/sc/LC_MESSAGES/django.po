@@ -87,7 +87,7 @@ msgstr "提交者"
 #: lico/core/job/templates/report/jobs_statistics.html:8
 #: lico/core/job/templates/report/user_details.html:19
 #: lico/core/job/templates/report/user_statistics.html:14
-msgid "job.CPU Core Num"
+msgid "job.CPU Core Number"
 msgstr "CPU核数"
 
 #: lico/core/job/templates/report/bill_details.html:20
@@ -105,7 +105,7 @@ msgstr "CPU运行时长(核秒)"
 #: lico/core/job/templates/report/jobs_statistics.html:10
 #: lico/core/job/templates/report/user_details.html:21
 #: lico/core/job/templates/report/user_statistics.html:16
-msgid "job.GPU Num"
+msgid "job.GPU Number"
 msgstr "GPU数"
 
 #: lico/core/job/templates/report/bill_details.html:22
@@ -126,7 +126,7 @@ msgstr "提交日期"
 #: lico/core/job/templates/report/bill_statistics.html:13
 #: lico/core/job/templates/report/jobs_statistics.html:7
 #: lico/core/job/templates/report/user_statistics.html:13
-msgid "job.Job Num"
+msgid "job.Job Number"
 msgstr "作业数量"
 
 #: lico/core/job/templates/report/user_details.html:6
