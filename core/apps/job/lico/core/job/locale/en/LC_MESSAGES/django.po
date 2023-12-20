@@ -87,8 +87,8 @@ msgstr "Submitter"
 #: lico/core/job/templates/report/jobs_statistics.html:8
 #: lico/core/job/templates/report/user_details.html:19
 #: lico/core/job/templates/report/user_statistics.html:14
-msgid "job.CPU Core Num"
-msgstr "CPU Core Num"
+msgid "job.CPU Core Number"
+msgstr "CPU Core Number"
 
 #: lico/core/job/templates/report/bill_details.html:20
 #: lico/core/job/templates/report/bill_statistics.html:15
@@ -105,8 +105,8 @@ msgstr "CPU Core Time (Core*s)"
 #: lico/core/job/templates/report/jobs_statistics.html:10
 #: lico/core/job/templates/report/user_details.html:21
 #: lico/core/job/templates/report/user_statistics.html:16
-msgid "job.GPU Num"
-msgstr "GPU Num"
+msgid "job.GPU Number"
+msgstr "GPU Number"
 
 #: lico/core/job/templates/report/bill_details.html:22
 #: lico/core/job/templates/report/bill_statistics.html:17
@@ -126,8 +126,8 @@ msgstr "Submit Date"
 #: lico/core/job/templates/report/bill_statistics.html:13
 #: lico/core/job/templates/report/jobs_statistics.html:7
 #: lico/core/job/templates/report/user_statistics.html:13
-msgid "job.Job Num"
-msgstr "Job Num"
+msgid "job.Job Number"
+msgstr "Job Number"
 
 #: lico/core/job/templates/report/user_details.html:6
 #: lico/core/job/templates/report/user_statistics.html:6

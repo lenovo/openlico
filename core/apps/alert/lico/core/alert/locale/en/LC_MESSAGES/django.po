@@ -95,7 +95,7 @@ msgid "Remark"
 msgstr ""
 
 #: templates/alert/report/alert_statistics.html:28
-msgid "Alert Num"
+msgid "Alert Number"
 msgstr ""
 
 #: templates/alert/report/alert_statistics.html:31

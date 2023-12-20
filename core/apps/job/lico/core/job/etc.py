@@ -15,14 +15,14 @@
 
 jobs_detail_host_head = [
     "job.Job ID", "job.Job Name", "job.Status", "job.Queue", "job.Submit Time",
-    "job.Start Time", "job.End Time", "job.Submitter", "job.CPU Core Num",
-    "job.CPU Core Time (Core*s)", "job.GPU Num", "job.GPU Time (Card*s)"]
+    "job.Start Time", "job.End Time", "job.Submitter", "job.CPU Core Number",
+    "job.CPU Core Time (Core*s)", "job.GPU Number", "job.GPU Time (Card*s)"]
 user_detail_host_head = ["job.Submitter",
                          ["job.Job ID", "job.Job Name", "job.Status",
                           "job.Queue", "job.Submit Time", "job.Start Time",
-                          "job.End Time", "job.Submitter", "job.CPU Core Num",
-                          "job.CPU Core Time (Core*s)",
-                          "job.GPU Num", "job.GPU Time (Card*s)"]]
+                          "job.End Time", "job.Submitter",
+                          "job.CPU Core Number", "job.CPU Core Time (Core*s)",
+                          "job.GPU Number", "job.GPU Time (Card*s)"]]
 I18N = {
     "user_statistics": {
         "head": [
@@ -30,10 +30,10 @@ I18N = {
             [
                 "job.Submit Date",
                 "job.User Name",
-                "job.Job Num",
-                "job.CPU Core Num",
+                "job.Job Number",
+                "job.CPU Core Number",
                 "job.CPU Core Time (Core*s)",
-                "job.GPU Num",
+                "job.GPU Number",
                 "job.GPU Time (Card*s)"
             ]
         ],
@@ -51,9 +51,9 @@ I18N = {
                 "job.Start Time",
                 "job.End Time",
                 "job.Submitter",
-                "job.CPU Core Num",
+                "job.CPU Core Number",
                 "job.CPU Core Time (Core*s)",
-                "job.GPU Num",
+                "job.GPU Number",
                 "job.GPU Time (Card*s)"
             ]
         ],
@@ -62,10 +62,10 @@ I18N = {
     "jobs_statistics": {
         "head": [
             "job.Submit Date",
-            "job.Job Num",
-            "job.CPU Core Num",
+            "job.Job Number",
+            "job.CPU Core Number",
             "job.CPU Core Time (Core*s)",
-            "job.GPU Num",
+            "job.GPU Number",
             "job.GPU Time (Card*s)"
         ],
         "title": "job.Job Statistics Report"
@@ -84,10 +84,10 @@ I18N = {
             [
                 "job.Submit Date",
                 "job.Billing Group Name",
-                "job.Job Num",
-                "job.CPU Core Num",
+                "job.Job Number",
+                "job.CPU Core Number",
                 "job.CPU Core Time (Core*s)",
-                "job.GPU Num",
+                "job.GPU Number",
                 "job.GPU Time (Card*s)"
             ]
         ],
