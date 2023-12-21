@@ -46,15 +46,14 @@ class Command(BaseCommand):
             print('No modulepath available')
             return
 
-        if not path.exists(spider):
-            print('No spider tool available')
-            return
-
         import json
         from subprocess import check_output  # nosec B404
 
         cmd = [spider, '-o', 'spider-json', modulepath]
         if not settings.JOB.JOB_SUBMIT_NODE_HOSTNAME:
+            if not path.exists(spider):
+                print('No spider tool available')
+                return
             output = check_output(cmd)   # nosec B603
         else:
             output = self.exec_ssh_oscmd(settings.JOB.JOB_SUBMIT_NODE_HOSTNAME,
