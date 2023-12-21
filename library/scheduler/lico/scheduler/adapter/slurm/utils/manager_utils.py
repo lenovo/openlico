@@ -57,6 +57,7 @@ def save_slurm_conf():
 
         if is_enabled_hybird_HPC(slurm_conf_path):
             sync_slurm_for_hybird_HPC(new_config_path)
+        remove_attribute("MaxNodeCount", new_config_path)
 
         with open(new_config_path, "r") as f, \
                 open(slurm_conf_path, 'w') as f2:
@@ -325,6 +326,13 @@ def sync_slurm_for_hybird_HPC(slurm_conf):
                 content = re.sub(r'{}.*'.format(kw), '', content)
     content = content + '\n' + 'include /opt/lico/cloud/azure/slurm.conf\n'
     with open(slurm_conf, 'w') as f:
-        content = re.sub(r'MaxNodeCount=.*', '', content)
+        f.write(content)
+
+
+def remove_attribute(key, slurm_conf):
+    with open(slurm_conf, 'r') as f:
+        content = f.read()
+    content = re.sub(r'{key}=.*'.format(key=key), '', content)
+    with open(slurm_conf, 'w') as f:
         f.write(content)
 
