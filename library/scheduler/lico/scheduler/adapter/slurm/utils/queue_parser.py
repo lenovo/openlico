@@ -291,7 +291,7 @@ def parse_queue_info(sinfo_lines, partition_lines, config) -> List[Queue]:
             )
         ]
 
-        gres_dict, gres_used_dict, gres_label_info,\
+        gres_dict, gres_used_dict, gres_label_info, \
             gres_label_used_info, alloc_cpus, gres_per_node_max = \
             parse_queue_resource(queue_info, output_fields, config)
 
