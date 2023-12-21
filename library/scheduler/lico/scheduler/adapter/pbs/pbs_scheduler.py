@@ -176,7 +176,8 @@ class Scheduler(IScheduler):
             raise ResumeJobFailedException
         return status
 
-    def query_job(self, job_identity: JobIdentity) -> Job:
+    def query_job(self, job_identity: JobIdentity,
+                  include_history=False) -> Job:
         jobid = job_identity.scheduler_id
         args = ["qstat", "-xf", "-F", "json", jobid]
         rc, out, err = exec_oscmd_with_login(args, self._config.timeout)

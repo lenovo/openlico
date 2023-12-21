@@ -55,7 +55,7 @@ def parse_job_info(  # noqa: C901
         job.end_time = convert_timestr_2_datetime(job_info['mtime'])
         # job.runtime = int((job.end_time - job.start_time).total_seconds())
         job.runtime = -1
-    job.submitter_username = job_info['Variable_List']['PBS_O_LOGNAME']
+    job.submitter_username = str(job_info['Variable_List']['PBS_O_LOGNAME'])
     state_map = {
         'B': JobState.RUNNING,  # array job has at least on job running
         'E': JobState.COMPLETING,  # exiting after having run
