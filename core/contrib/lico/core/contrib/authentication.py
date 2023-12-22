@@ -131,4 +131,3 @@ class JWTInternalAnonymousAuthentication(LicoAuthentication):
             ) from e
 
         return None, payload
-

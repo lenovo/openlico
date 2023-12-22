@@ -175,4 +175,3 @@ class ApiKeyAuthentication(LicoAuthentication):
             raise AuthenticationFailed(
                 detail='User does not exists.'
             ) from e
-

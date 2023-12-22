@@ -197,4 +197,3 @@ billing_type_translate_code = {
 def trans_billing_type(billing_type):
     trans_code = billing_type_translate_code[billing_type]
     return ugettext(trans_code)
-

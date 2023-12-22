@@ -335,4 +335,3 @@ def remove_attribute(key, slurm_conf):
     content = re.sub(r'{key}=.*'.format(key=key), '', content)
     with open(slurm_conf, 'w') as f:
         f.write(content)
-

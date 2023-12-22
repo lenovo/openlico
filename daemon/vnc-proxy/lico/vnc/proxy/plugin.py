@@ -43,4 +43,3 @@ class LICOTokenApi(BasePlugin):
         ).decode()
         host, port = vnc_info.split(":")
         return host, int(port)
-

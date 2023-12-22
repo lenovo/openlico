@@ -55,4 +55,3 @@ class ApplicationConfigView(APIView):
             self.app.on_show_config(settings)
             if self.app is not None else {}
         )
-

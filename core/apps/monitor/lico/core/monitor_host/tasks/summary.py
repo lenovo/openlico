@@ -701,4 +701,3 @@ def cluster_res_summaries():
             NodeSchedulableRes.objects.create(**node)
 
     NodeSchedulableRes.objects.exclude(hostname__in=scheduler_hosts).delete()
-

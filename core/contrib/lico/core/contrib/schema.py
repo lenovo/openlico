@@ -37,4 +37,3 @@ def json_schema_validate(schema, is_get=False):
                 return func(self, request, *args, **kwargs)
         return _func
     return validate_func
-

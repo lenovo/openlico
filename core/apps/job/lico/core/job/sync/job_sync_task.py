@@ -183,4 +183,3 @@ class JobSyncTask(metaclass=ABCMeta):
             Client().template_client().notify_job(job.as_dict())
         except Exception:
             logger.warning("Notify job failed. Job id: %s", job.id)
-

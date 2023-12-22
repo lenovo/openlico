@@ -31,4 +31,3 @@ urlpatterns = [
 
 for app in iter_sub_apps():
     app.on_load_urls(urlpatterns, settings)
-

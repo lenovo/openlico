@@ -55,4 +55,3 @@ def rstudio_image():
         )
     except Exception as e:
         raise RstudioImageNotExist from e
-

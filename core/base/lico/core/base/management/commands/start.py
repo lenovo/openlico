@@ -83,4 +83,3 @@ class Command(BaseCommand):
         else:
             self.prepare()
             self.start(**options)
-

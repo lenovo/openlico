@@ -140,4 +140,3 @@ def main():
         exit()
 
     LicoManagementUtility(sys.argv).execute()
-

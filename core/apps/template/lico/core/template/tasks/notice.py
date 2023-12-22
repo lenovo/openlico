@@ -140,4 +140,3 @@ def get_job_status(job):
     if op_state.lower() in op_state_mapping:
         status = op_state_mapping[op_state.lower()]
     return status
-

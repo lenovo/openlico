@@ -60,4 +60,3 @@ class Rack:
 class Row:
     name: str = attr.ib(kw_only=True)
     racks: List[str] = attr.ib(kw_only=True, factory=list)
-

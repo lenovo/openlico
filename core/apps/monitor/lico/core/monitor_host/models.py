@@ -229,4 +229,3 @@ class NodeSchedulableRes(Model):
     gres = TextField(null=False, default='{}')
     create_time = DateTimeField(auto_now_add=True)
     update_time = DateTimeField(auto_now=True)
-

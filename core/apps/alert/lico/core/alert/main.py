@@ -63,4 +63,3 @@ class Application(AbstractApplication):
                 max_instances=1,
                 executor=self.name,
             )
-

@@ -59,4 +59,3 @@ class Application(AbstractApplication):
                     TaskStatus.FAILURE.value
                 ]
             ).update(status=TaskStatus.FAILURE.value)
-

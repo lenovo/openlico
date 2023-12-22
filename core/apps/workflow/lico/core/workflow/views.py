@@ -599,4 +599,3 @@ class WorkflowStepJobMoveView(APIView):
 
         ret_dict = job.as_dict(inspect_related=False)
         return Response(ret_dict)
-
