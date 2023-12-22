@@ -41,4 +41,3 @@ setup(
         local_scheme=lico_scheme
     )
 )
-

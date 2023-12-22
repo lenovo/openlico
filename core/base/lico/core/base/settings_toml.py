@@ -99,4 +99,3 @@ def load_settings(
             )
         else:
             update_settings(module_name, config)
-

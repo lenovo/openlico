@@ -163,4 +163,3 @@ class LatestSecret(Secret):  # pragma: no cover
     def key(self, key):
         if not self.key:
             self.key = key
-

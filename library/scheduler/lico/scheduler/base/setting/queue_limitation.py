@@ -246,4 +246,3 @@ class QueueLimitation:
             params = add_gres(params, gres_name, gres_list)
 
         return params
-

@@ -134,4 +134,3 @@ def iter_sub_apps(
                 yield subapp
         else:
             yield subapp
-

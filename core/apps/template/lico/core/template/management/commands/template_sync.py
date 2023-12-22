@@ -44,4 +44,3 @@ class Command(BaseCommand):
         from lico.core.template.models import Template
         for template in Template.objects.iterator():
             print(template.code)
-

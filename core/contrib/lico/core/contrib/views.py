@@ -225,4 +225,3 @@ class BaseDataTableView(BaseAPIView, metaclass=ABCMeta):
 
 class DataTableView(APIView, BaseDataTableView, metaclass=ABCMeta):
     pass
-

@@ -75,4 +75,3 @@ class Migration(migrations.Migration):
             bases=(models.Model, lico.core.contrib.models.ToDictMixin),
         ),
     ]
-

@@ -152,4 +152,3 @@ class PerJobMaxRuntimeWrongFormat(SchedulerManagerBaseException):
 class GresNotAvailableException(SchedulerManagerBaseException):
     message = 'Current Gres is not available in slurm. Define it in slurm.conf\
         first.'
-

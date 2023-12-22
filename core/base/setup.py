@@ -74,4 +74,3 @@ setup(
         write_to_template = TEMPLATE
     ),
 )
-

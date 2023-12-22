@@ -162,4 +162,3 @@ class Model(BaseModel, ToDictMixin):
 
     class Meta:
         abstract = True
-

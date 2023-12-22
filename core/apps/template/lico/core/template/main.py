@@ -45,4 +45,3 @@ class Application(AbstractApplication):
         from django.core.management import call_command
         call_command('lmod_sync')
         call_command('template_sync')
-

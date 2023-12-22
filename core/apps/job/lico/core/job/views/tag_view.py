@@ -118,4 +118,3 @@ class TagView(APIView):
                     "Clear job tags failed. Error job id: %s", job.id)
 
         return Response({"failed": set(jobs_id) - success})
-

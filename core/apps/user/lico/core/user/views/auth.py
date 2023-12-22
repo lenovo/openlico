@@ -76,4 +76,3 @@ class AuthView(APIView):
             role=user.role,
             workspace=passwd.workspace
         )
-

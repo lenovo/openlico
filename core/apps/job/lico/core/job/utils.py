@@ -171,4 +171,3 @@ def get_display_runtime(runtime, start_time, state):
     if not start_time:
         return runtime
     return max([runtime, int(time.time()) - start_time])
-

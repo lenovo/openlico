@@ -137,4 +137,3 @@ class SchedulerLicenseFeatureView(APIView):
         except Exception as e:
             raise QuerySchedulerLicenseFeatureException from e
         return Response(res or [])
-

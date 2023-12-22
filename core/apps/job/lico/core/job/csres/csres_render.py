@@ -147,4 +147,3 @@ class CSResGenerator(defaultdict):
             allocate_vals.append(str(self._inner_dict[key]))
         self[key] = ','.join(allocate_vals)
         return self[key]
-

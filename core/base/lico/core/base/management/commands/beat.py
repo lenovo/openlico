@@ -49,4 +49,3 @@ class Command(BaseCommand):
         db.close_old_connections()
 
         scheduler.start()
-

@@ -28,4 +28,3 @@ class HostFileManger:
 
     def upload_file(self, local_path, remote_path):
         self.filesystem.copyfile(local_path, remote_path)
-

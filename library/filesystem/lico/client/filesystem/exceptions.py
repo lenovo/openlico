@@ -16,4 +16,3 @@
 class RemoteFileSystemException(Exception):
     def __init__(self, msg='Remote file operator internal error'):
         super().__init__(msg)
-

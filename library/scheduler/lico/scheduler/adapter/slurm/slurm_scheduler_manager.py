@@ -499,4 +499,3 @@ class SchedulerManager(ISchedulerManager):
             logger.exception("Delete association '%s' failed.", account_name)
             raise DeleteAssociationException from e
         return {"is_scheduler_node": is_scheduler_node}
-
