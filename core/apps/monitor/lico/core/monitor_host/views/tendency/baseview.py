@@ -109,11 +109,11 @@ class NodeHistoryBaseView(APIView, metaclass=ABCMeta):  # pragma: no cover
 
     def get_current_data(self, node_obj, mariadb_metric):
         node_list = node_obj.as_dict(
-            include=[mariadb_metric, 'create_time']
+            include=[mariadb_metric, 'update_time']
         )
         if not node_list:
             return None, None
-        value, time = node_list[0][mariadb_metric], node_list[0]['create_time']
+        value, time = node_list[0][mariadb_metric], node_list[0]['update_time']
         if value is None:
             return value, time
         return float(value), time
@@ -124,6 +124,9 @@ class NodeHistoryBaseView(APIView, metaclass=ABCMeta):  # pragma: no cover
 
     def return_success(self, history, current):
         current_value, current_time = current
+        if history and history[-1]['time'] > current_time:
+            current_value, current_time = \
+                history[-1]['value'], history[-1]['time']
         return_data = {
             "history": history if history else [],
             'current': str(current_value),
@@ -409,13 +412,13 @@ class ClusterTendencyBaseView(APIView, metaclass=ABCMeta):  # pragma: no cover
             if cluster_data is None:
                 return current_value, current_time
             data_dict = cluster_data.first().as_dict(
-                include=['value', 'create_time']
+                include=['value', 'update_time']
             )
-            return float(data_dict['value']), data_dict['create_time']
+            return float(data_dict['value']), data_dict['update_time']
 
         usage_obj_list = Cluster.objects.filter(
             metric__in=metric_mapping[metric]
-        ).as_dict(include=['metric', 'value', 'create_time'])
+        ).as_dict(include=['metric', 'value', 'update_time'])
         total = used = None
         usage_re = re.compile('^.*(total)$')
         for usage_dict in usage_obj_list:
@@ -423,7 +426,7 @@ class ClusterTendencyBaseView(APIView, metaclass=ABCMeta):  # pragma: no cover
                 total = float(usage_dict['value'])
                 continue
             used = float(usage_dict['value'])
-            current_time = usage_dict['create_time']
+            current_time = usage_dict['update_time']
 
         if total is None or used is None or total <= 0 or used < 0:
             return current_value, current_time
@@ -434,6 +437,9 @@ class ClusterTendencyBaseView(APIView, metaclass=ABCMeta):  # pragma: no cover
 
     def return_success(self, history, current):
         current_value, current_time = current
+        if history and history[-1]['time'] > current_time:
+            current_value, current_time = \
+                history[-1]['value'], history[-1]['time']
         return_data = {"history": history if history else [],
                        # last value may be None
                        'current': float(current_value),
