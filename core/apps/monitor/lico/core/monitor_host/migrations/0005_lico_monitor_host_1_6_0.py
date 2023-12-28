@@ -36,4 +36,10 @@ class Migration(migrations.Migration):
             name='uuid',
             field=models.CharField(max_length=128, null=True),
         ),
+        migrations.AlterField(
+            model_name='gpu',
+            name='occupation',
+            field=models.BooleanField(null=True, default=False,
+                                      help_text="True: used; False: free")
+        ),
     ]
