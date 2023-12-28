@@ -571,6 +571,16 @@ def parse_job_info(  # noqa: C901
     if job.state == JobState.PENDING and job.priority == '0':
         job.state = JobState.HOLD
 
+    # in case of after job has completed, scheduler still show
+    # the estimate start time
+    now = datetime.now()
+    now = now.replace(tzinfo=tzlocal())
+    if job.state in JobState.get_final_state() and \
+            job.end_time is not None and \
+            job.start_time is not None and \
+            job.start_time > now:
+        job.start_time = job.end_time
+
     if job.submit_time is None:
         logger.warning("Fail to get job submit time. Job id: %s", jobid)
 
