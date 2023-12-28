@@ -171,7 +171,7 @@ class LatestMonitorSync:
             "temperature": None, "power": None,
             "node_active": False}
         self.gpu_default_dict = {
-            "occupation": False, "util": None,
+            "occupation": None, "util": None,
             "memory_used": None, "temperature": None,
         }
         self.gpu_logic_default_list = [
@@ -607,10 +607,10 @@ class LatestMonitorSync:
 
         update_metrics = []
         for metric, metric_value in self.cluster_metric.items():
-            if metric == "temperature" and metric_value is None:
-                value = metric_value
-            else:
+            if isinstance(metric_value, float):
                 value = round(metric_value, 2)
+            else:
+                value = metric_value
             Cluster.objects.update_or_create(
                 name=settings.LICO.DOMAIN,
                 metric=metric,

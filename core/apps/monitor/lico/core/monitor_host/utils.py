@@ -803,7 +803,7 @@ def set_job_attr(metric, job_info, value_dict, memory_total=0):
             job_mem_usage = getattr(
                 job_info, 'mem_usage', defaultdict(list)
             )
-            mem_usage = str(round(float(value)/float(memory_total), 2))
+            mem_usage = str(round(float(value) / float(memory_total), 2))
             job_mem_usage[scheduler_id].append(
                 {'value': mem_usage, 'output': '', 'index': index,
                  'dev_id': dev_id, 'unit': unit})
@@ -1005,11 +1005,11 @@ def init_datasource():
 
 
 def parse_gpu_logical_info(node_info, gpu_dict, gpu_metric=None):
-
     for gpu_info in node_info['gpu']:
         index = gpu_info['index']
         vendor = gpu_info['vendor']
-        occupy = 1 if gpu_info['occupation'] else 0
+        occupy = int(gpu_info['occupation']) \
+            if gpu_info['occupation'] in [True, False, 1, 0] else None
         gpu_dict['used'][index] = occupy
         gpu_dict['vendor'][index] = Gpu.VENDOR[vendor][1]
         gpu_dict['product'][index] = gpu_info['type']
@@ -1229,7 +1229,8 @@ class NodeSchedulerProcess:
                     gi = mig_device["gpu_instance_id"]
                     ci = mig_device["compute_instance_id"]
                     sm = int(mig_device[
-                        "device_attributes"]["shared"]["multiprocessor_count"])
+                                 "device_attributes"]["shared"][
+                                 "multiprocessor_count"])
                     gpu_mig_info[gi][ci] = {
                         "mig_dev": mig_dev,
                         "sm": sm
