@@ -468,3 +468,30 @@ class BatchDeleteView(JobBaseActionView):
                 event_details
             )
         return Response({"action_status": status})
+
+
+class JobInRangeView(InternalAPIView):
+
+    @json_schema_validate({
+        "type": "object",
+        "properties": {
+            "job_ids": {
+                "type": "array",
+                "items": {"type": ["integer"]}
+            },
+            "fields": {
+                "type": "array",
+                "items": {"type": ["string"]}
+            }
+        },
+        "required": ["job_ids"]
+    })
+    def post(self, request):
+        job_ids = request.data.get('job_ids')
+        fields = request.data.get('fields')
+
+        recent_jobs = Job.objects.filter(id__in=job_ids, delete_flag=False)
+        if fields:
+            return Response(recent_jobs.as_dict(include=fields))
+        return Response(
+            recent_jobs.as_dict(exclude=['job_content', 'delete_flag']))

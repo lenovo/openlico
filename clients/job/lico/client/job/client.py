@@ -111,12 +111,24 @@ class Client(BaseClient):
         )
         return response
 
-    def query_recent_jobs(self, end_time_offset=300):
+    def query_recent_jobs(self, end_time_offset=300, fields=[]):
         url = 'recent_job/user_job/' if self.username else 'recent_job/'
         response = self.get(
             self.get_url(url),
-            params={'end_time_offset': end_time_offset}
+            params={
+                'end_time_offset': end_time_offset,
+                'fields': fields
+            }
+        )
+        return response
 
+    def query_jobs_in_range(self, job_ids=[], fields=[]):
+        response = self.post(
+            self.get_url('job_in_range/'),
+            json={
+                'job_ids': job_ids,
+                'fields': fields
+            }
         )
         return response
 
