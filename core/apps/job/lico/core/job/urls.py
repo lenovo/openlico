@@ -32,8 +32,8 @@ from .views.job_statistic import JobHistoryStatisticView, JobStatisticView
 from .views.job_submit_view import JobSubmitView
 from .views.job_view import (
     BatchCancelView, BatchDeleteView, InternalJobView, JobHoldView,
-    JobListView, JobRawInfoView, JobReleaseView, JobResumeView, JobSuspendView,
-    JobView,
+    JobInRangeView, JobListView, JobRawInfoView, JobReleaseView, JobResumeView,
+    JobSuspendView, JobView,
 )
 from .views.priority import PriorityView
 from .views.queue import QueueListView
@@ -75,6 +75,7 @@ urlpatterns = [
     path('rerun/<int:pk>/', JobRerunView.as_view()),
     path('running/jobs/', RunningJobsDetailView.as_view()),
     path('job_list/', JobList.as_view()),
+    path('job_in_range/', JobInRangeView.as_view()),
 
     # job status chart
     path('job_history/', JobHistoryView.as_view()),

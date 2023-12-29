@@ -32,6 +32,7 @@ class RecentJobListView(InternalAPIView):
 
     def get(self, request):
         end_time_offset = int(request.query_params.get('end_time_offset', 300))
+        fields = request.query_params.getlist('fields')
         q = Q(state__in=JobState.get_running_state_values())
 
         if end_time_offset:
@@ -40,6 +41,8 @@ class RecentJobListView(InternalAPIView):
             ))
 
         recent_jobs = Job.objects.filter(Q(delete_flag=False) & q)
+        if fields:
+            return Response(recent_jobs.as_dict(include=fields))
         return Response(recent_jobs.as_dict(
             exclude=['job_content', 'delete_flag']
         ))
@@ -52,6 +55,7 @@ class UserRecentJobListView(InternalAPIView):
 
     def get(self, request):
         end_time_offset = int(request.query_params.get('end_time_offset', 300))
+        fields = request.query_params.getlist('fields')
         q = Q(state__in=JobState.get_running_state_values())
 
         if end_time_offset:
@@ -64,6 +68,8 @@ class UserRecentJobListView(InternalAPIView):
             Q(submitter=request.user.username) &
             q
         )
+        if fields:
+            return Response(recent_jobs.as_dict(include=fields))
         return Response(recent_jobs.as_dict(
             exclude=['job_content', 'delete_flag']
         ))
