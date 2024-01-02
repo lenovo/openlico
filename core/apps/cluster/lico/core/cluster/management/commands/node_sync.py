@@ -50,7 +50,7 @@ class Command(BaseCommand):
                 message = \
                     "The name 'all' is the system group name, " \
                     "please don't use it."
-                raise message
+                raise Exception(message)
         sync.sync2db(configure=conf)
 
         sync_with_confuent = not options['not_sync_with_confluent'] \
