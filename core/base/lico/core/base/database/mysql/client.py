@@ -12,17 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from django.db.backends.mysql import base
+import subprocess  # nosec B404
+import sys
 
-from .client import DatabaseClient
+from django.db.backends.mysql import client
 
 
-class DatabaseWrapper(base.DatabaseWrapper):
-    client_class = DatabaseClient
-
-    def ensure_connection(self):
-        if self.connection:
-            if self.autocommit:
-                self.connection.ping(True)
-
-        super().ensure_connection()
+class DatabaseClient(client.DatabaseClient):
+    def runshell(self):
+        args = DatabaseClient.settings_to_cmd_args(
+            self.connection.settings_dict
+        )
+        sys.exit(
+            subprocess.call(args)  # nosec B603
+        )
