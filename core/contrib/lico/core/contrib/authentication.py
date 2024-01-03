@@ -79,7 +79,7 @@ def _remote_auth(keyword, token):
         user = client.auth(f'{keyword} {token}')
     except Unauthorized as e:
         raise AuthenticationFailed(
-            detail='Invalie authorization header. '
+            detail='Invalid authorization header. '
                    f'Remote authenticate fail: {token}'
         ) from e
     except UnknownError as e:
