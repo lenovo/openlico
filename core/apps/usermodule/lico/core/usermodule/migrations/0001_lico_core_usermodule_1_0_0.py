@@ -35,9 +35,6 @@ class Migration(migrations.Migration):
                 )),
                 ('job_id', models.IntegerField(unique=True)),
                 ('software_name', models.CharField(max_length=256)),
-                ('log_path', models.CharField(
-                    blank=True, default='', max_length=260
-                )),
                 ('is_cleared', models.BooleanField(blank=True, default=False)),
                 ('user', models.CharField(
                     blank=True, default='', max_length=32

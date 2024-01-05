@@ -117,6 +117,8 @@ def _process_module_item_for_ubuntu(module, item_name, item):
     if parents is not None:
         parents = ','.join(parents[0])
 
+    location = _process_module_location(module, item)
+
     ModuleItem.objects.create(
         module=module,
         path=item_name,
@@ -124,7 +126,8 @@ def _process_module_item_for_ubuntu(module, item_name, item):
         name=item['full'],
         category=item.get('Category'),
         description=item.get('Description'),
-        parents=parents
+        parents=parents,
+        location=location
     )
 
 

@@ -20,7 +20,6 @@ from lico.core.contrib.models import Model
 class UserModuleJob(Model):
     job_id = IntegerField(unique=True)
     software_name = CharField(null=False, max_length=256)
-    log_path = CharField(null=False, max_length=260, blank=True, default="")
     is_cleared = BooleanField(null=False, blank=True, default=False)
     user = CharField(null=False, max_length=32, blank=True, default="")
     create_time = DateTimeField(auto_now_add=True, db_index=True)

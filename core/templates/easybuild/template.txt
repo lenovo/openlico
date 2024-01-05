@@ -7,8 +7,6 @@ module try-load EasyBuild
 export EASYBUILD_PREFIX={{ lico.user.workspace }}/{{ settings.USERMODULE.WORK_PATH }}
 export EASYBUILD_LOGTOSTDOUT=True
 
-export EASYBUILD_LOGFILE_FORMAT="easybuildlog,{{ job_name }}-{{ settings.LICO.SCHEDULER }}-${ENV_JOB_ID}.log"
-
 module use {{ lico.user.workspace }}/{{ settings.USERMODULE.WORK_PATH }}/{{ module_file_dir }}
 
 eb {{ easyconfig_path }} {{ args|default:"" }} --robot --tmp-logdir={{ job_workspace }}/easybuildlog
