@@ -207,21 +207,10 @@ class UserModuleSubmitView(APIView):
             job_id = ret['id']
             job = helper.query_job(job_id)
 
-            # Create record for usermodule jobs
-            log_path_glob = ""
-            if job["scheduler_id"]:
-                log_name_glob = "-".join([
-                    param["job_name"], settings.LICO.SCHEDULER,
-                    job["scheduler_id"]
-                ]) + "*.log"
-                log_path_glob = os.path.join(
-                    param["job_workspace"], "easybuildlog", log_name_glob
-                )
             UserModuleJob.objects.create(
                 job_id=job_id,
                 user=job["submitter"],
                 software_name=param["software_name"],
-                log_path=log_path_glob
             )
 
             ret.update(job)
@@ -271,7 +260,7 @@ class UserModuleBuildingView(APIView):
     def extract_values(self, jobs, um_jobs_map):
         job_filter = [
             "scheduler_id", "job_name", "state", "operate_state",
-            "scheduler_state"
+            "scheduler_state", "standard_output_file"
         ]
         ret = []
         for job in jobs:
@@ -308,7 +297,7 @@ class UserModuleBuildingView(APIView):
             finished_jobs = Job.objects.filter(
                 delete_flag=False, submitter=submitter,
                 id__in=list(finished_um_jids)
-            ).order_by("-update_time")
+            ).order_by("-submit_time")
             finished = self.extract_values(finished_jobs, finished_um_map)
 
         ret = unfinished + finished
