@@ -163,7 +163,12 @@ class NodeProcessView(APIView):
         scheduler_id = request.query_params.get("scheduler_id", None)
         pids = json.loads(request.query_params.get("pids", "[]"))
 
-        conn = RemoteSSH(hostname)
+        from lico.core.contrib.client import Client
+        node_info = Client().cluster_client().get_node(hostname=hostname)
+        if node_info['on_cloud']:
+            conn = RemoteSSH(node_info['mgt_address'])
+        else:
+            conn = RemoteSSH(hostname)
         node_scheduler_process = NodeSchedulerProcess()
         try:
             conn.connection.open()
