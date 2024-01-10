@@ -68,10 +68,9 @@ def runtime_sh(user, runtime_id, affinity_id=None):
             module_str = 'module purge \n' if module_list else ''
 
             # Add EasyBuild module path
-            eb_utils_class = settings.USERMODULE.EASYBUILDUTILS.get(
-                "EasyBuildUtils", None)
-            if eb_utils_class and module_list:
-                eb_utils = eb_utils_class(user)
+            if hasattr(settings, "USERMODULE") and module_list:
+                eb_utils = settings.USERMODULE.EASYBUILDUTILS[
+                    "EasyBuildUtils"](user)
                 module_dir = eb_utils.get_eb_module_file_path()
                 module_str += f"module use {module_dir}\n"
 

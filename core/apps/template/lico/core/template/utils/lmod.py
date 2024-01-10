@@ -13,11 +13,12 @@
 # limitations under the License.
 
 import logging
-from subprocess import PIPE, CalledProcessError, run  # nosec B404
+
+from django.conf import settings
 
 from ..exceptions import ModuleInvalid
 from ..models import Module, ModuleItem
-from ..utils.common import set_user_env
+from ..utils.common import exec_oscmd_with_user, exec_ssh_oscmd_with_user
 
 logger = logging.getLogger(__name__)
 
@@ -131,19 +132,35 @@ def _process_module_item_for_ubuntu(module, item_name, item):
     )
 
 
-def verify_modules(user, modules, role="admin"):
-    try:
-        run(  # nosec B603 B607
-            ['lico-lmod-verify'],
-            input=('\n'.join(modules)).encode(),
-            stdout=PIPE, stderr=PIPE,
-            preexec_fn=lambda: set_user_env(user, role),
-            # env={
-            #    'LMOD_DIR': settings.TEMPLATE.LMOD_DIR,
-            #    'MODULEPATH': settings.TEMPLATE.MODULE_PATH
-            # },
-            check=True
+def lmod_verify(user, host, port, modules, role="admin"):
+    module_path = settings.TEMPLATE.MODULE_PATH
+    module_verify = ["module", "--force", "purge", ";", "module", "load"]
+    module_verify.extend(modules)
+    if role != "admin":
+        if hasattr(settings, "USERMODULE"):
+            eb_utils = settings.USERMODULE.EASYBUILDUTILS[
+                'EasyBuildUtils'](user)
+            private_modulepath = eb_utils.get_eb_module_file_path()
+            module_path = module_path + ":" + private_modulepath
+    module_cmd = ["export", "MODULEPATH="+module_path, ";"]
+    module_cmd.extend(module_verify)
+
+    if host:
+        rc, out, err = exec_ssh_oscmd_with_user(
+            host, port, user.username, module_cmd
         )
-    except CalledProcessError as e:
-        logger.exception('Verify modules fail: %s', modules)
-        raise ModuleInvalid(output=e.stderr.strip()) from e
+    else:
+        rc, out, err = exec_oscmd_with_user(user.username, module_cmd)
+    if rc != 0:
+        logger.exception("Verify modules fail: %s", modules)
+        raise Exception(err)
+
+
+def verify_modules(user, modules, role="admin"):
+    host = settings.JOB.JOB_SUBMIT_NODE_HOSTNAME
+    host_port = settings.JOB.JOB_SUBMIT_NODE_PORT
+    try:
+        lmod_verify(user, host, host_port, modules, role)
+    except Exception as e:
+        logger.exception("Verify modules fail: %s", modules)
+        raise ModuleInvalid(output=str(e)) from e
