@@ -15,8 +15,11 @@
 import logging
 import os
 import pwd
+from subprocess import PIPE, list2cmdline, run  # nosec B404
 
 from django.conf import settings
+
+from lico.ssh import RemoteSSH
 
 logger = logging.getLogger(__name__)
 
@@ -58,3 +61,28 @@ def set_user_env(user, role="admin"):
     os.putenv('LMOD_DIR', settings.TEMPLATE.LMOD_DIR)
     home_dir = pwd.getpwnam(user.username).pw_dir
     os.putenv('HOME', home_dir)
+
+
+def exec_ssh_oscmd_with_user(hostname, port, user, args, timeout=30):
+    with RemoteSSH(host=hostname, port=port) as conn:
+        process = conn.run(
+            cmd=[
+                'su', '-', user, '-c',
+                list2cmdline(args)
+            ],
+            command_timeout=timeout
+        )
+    return process.return_code, process.stdout, process.stderr
+
+
+def exec_oscmd_with_user(user, args, timeout=30):
+    process = run(  # nosec B603 B607
+        [
+            'su', '-', user, '-c',
+            list2cmdline(args)
+        ],
+        stdout=PIPE,
+        stderr=PIPE,
+        timeout=timeout
+    )
+    return process.returncode, process.stdout, process.stderr
