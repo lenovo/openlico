@@ -20,6 +20,8 @@ from os import path, remove
 from subprocess import check_call, check_output  # nosec B404
 from typing import List
 
+from django.conf import settings
+
 from lico.scheduler.base.exception.manager_exception import (
     GresNotAvailableException, NodeNotExistException,
     PerJobMaxRuntimeWrongFormat, QueryLimitationDetailException,
@@ -31,6 +33,7 @@ from lico.scheduler.base.setting.queue_limitation import (
 )
 from lico.scheduler.base.setting.queue_over_subscribe import QueueOverSubscribe
 from lico.scheduler.base.setting.queue_setting import QueueNode, QueueSetting
+from lico.ssh import RemoteSSH
 
 from .job_parser import convert_memory
 
@@ -305,7 +308,6 @@ HYBIRD_SLURM_CONF = "/opt/lico/cloud/azure/slurm.conf"
 
 
 def is_enabled_hybird_HPC(slurm_conf):
-
     with open(slurm_conf, 'r') as f:
         content = f.read()
     pattern = re.compile(r'[^#]include\s+/opt/lico/cloud/azure/slurm.conf')
@@ -315,15 +317,34 @@ def is_enabled_hybird_HPC(slurm_conf):
     return False
 
 
+def remote_read_hybird_hpc_slurm_conf(hostname, port):
+    with RemoteSSH(host=hostname, port=port) as conn:
+        process = conn.run(
+            cmd=[
+                'cat', HYBIRD_SLURM_CONF
+            ],
+            command_timeout=10
+        )
+    return process.return_code, process.stdout, process.stderr
+
+
 def sync_slurm_for_hybird_HPC(slurm_conf):
     with open(slurm_conf, 'r') as f:
         content = f.read()
 
-    with open(HYBIRD_SLURM_CONF, "r") as hybird_file:
-        for line in hybird_file:
-            if not line.startswith('#') and line.strip():
-                kw = line.strip().split()[0]
-                content = re.sub(r'{}.*'.format(kw), '', content)
+    if not settings.JOB.JOB_SUBMIT_NODE_HOSTNAME:
+        hybird_slurm_file = open(HYBIRD_SLURM_CONF, "r")
+        hybird_slurm_content = hybird_slurm_file.readlines()
+    else:
+        code, out, err = remote_read_hybird_hpc_slurm_conf(
+                                settings.JOB.JOB_SUBMIT_NODE_HOSTNAME,
+                                settings.JOB.JOB_SUBMIT_NODE_PORT)
+        hybird_slurm_content = out.splitlines()
+    for line in hybird_slurm_content:
+        if not line.startswith('#') and line.strip():
+            kw = line.strip().split()[0]
+            content = re.sub(r'{}.*'.format(kw), '', content)
+
     content = content + '\n' + 'include /opt/lico/cloud/azure/slurm.conf\n'
     with open(slurm_conf, 'w') as f:
         f.write(content)
