@@ -129,7 +129,7 @@ class NodeHistoryBaseView(APIView, metaclass=ABCMeta):  # pragma: no cover
                 history[-1]['value'], history[-1]['time']
         return_data = {
             "history": history if history else [],
-            'current': str(current_value),
+            'current': current_value,
             "current_time": current_time
         }
         return Response(return_data)
@@ -231,6 +231,10 @@ class GroupTendencyBaseView(APIView, metaclass=ABCMeta):  # pragma: no cover
 
     def return_success(self, history, current):
         current_value, current_time = current
+        if history and history[-1]['time'] > current_time:
+            current_value, current_time = \
+                history[-1]['value'], history[-1]['time']
+
         return_data = {"history": history if history else [],
                        # last value may be None
                        'current': current_value,
