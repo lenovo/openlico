@@ -220,10 +220,16 @@ class LatestMonitorSync:
                     has_monitor = True
                     return has_monitor
 
-        self.node_default_dict['node_active'] = node_status
         # node_active is off or node_active is on but don't have monitor_data
+        self.node_default_dict['node_active'] = node_status
+        if not node_status:
+            self.node_default_dict.pop("disk_used", "")
+            self.node_default_dict.pop("health", "")
+
         node, _ = MonitorNode.objects.update_or_create(
             hostname=hostname, defaults=self.node_default_dict)
+        if node_status:
+            node.hardware_health.all().delete()
         self._no_monitor_gpu(node)
 
         # add for node don't have monitor data
