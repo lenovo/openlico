@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import logging
+import time
 
 from django.conf import settings
 from django.template.loader import render_to_string
@@ -23,6 +24,8 @@ from lico.core.contrib.eventlog import EventLog
 from ..models import BalanceAlert, BalanceAlertSetting, BillGroup
 
 logger = logging.getLogger(__name__)
+
+MAX_RETRIES = 3
 
 
 def format_unit(number):
@@ -37,20 +40,27 @@ def send_alert_email(targets, alert_bill_groups, threshold):
     if not alert_bill_groups:
         return
     language = settings.ACCOUNTING.BILLING.LANGUAGE
-    try:
-        Client().mail_notice_client().send_message(
-            target=targets,
-            title=render_to_string(
-                f'email/{language}/balance_alert_title.html'),
-            msg=render_to_string(
-                f'email/{language}/balance_alert.html',
-                context={
-                    'bill_groups': alert_bill_groups,
-                    'threshold': format_unit(threshold)
-                })
-        )
-    except Exception as e:
-        logger.exception('Send balance alert email failed, reason is: %s', e)
+    retries = 0
+    while retries < MAX_RETRIES:
+        try:
+            Client().mail_notice_client().send_message(
+                target=targets,
+                title=render_to_string(
+                    f'email/{language}/balance_alert_title.html'),
+                msg=render_to_string(
+                    f'email/{language}/balance_alert.html',
+                    context={
+                        'bill_groups': alert_bill_groups,
+                        'threshold': format_unit(threshold)
+                    })
+            )
+            break
+        except Exception as e:
+            logger.exception(
+                'Send balance alert email failed, reason is: %s', e)
+            retries += 1
+            if retries < MAX_RETRIES:
+                time.sleep(30)
 
 
 def check_balance_and_alert():
