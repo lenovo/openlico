@@ -23,7 +23,7 @@ from lico.core.contrib.schema import json_schema_validate
 from lico.core.contrib.views import APIView
 
 from ..exceptions import UpdateBalanceAlertException
-from ..models import BalanceAlertSetting, BillGroup
+from ..models import BalanceAlert, BalanceAlertSetting, BillGroup
 
 logger = logging.getLogger(__name__)
 
@@ -62,9 +62,12 @@ class BalanceView(APIView):
         query_s = NotifyTarget.objects.filter(
             id__in=request.data.get('targets', [])
         )
+        original_balance_threshold = balance_setting.balance_threshold
         balance_setting.balance_threshold = balance
         balance_setting.targets.set(query_s)
         balance_setting.save()
+        if balance_setting.balance_threshold != original_balance_threshold:
+            BalanceAlert.objects.all().delete()
         return Response(balance_setting.as_dict())
 
 
