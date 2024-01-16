@@ -55,22 +55,21 @@ def convert_job_state(lsf_state: str) -> JobState:
 def convert_timestr_2_datetime(
         config: SchedulerConfig, timestr: str
 ) -> datetime:
+    now = datetime.now()
     try:
         timestruct = parse(
             timestr,
             dayfirst=config.dayfirst,
             yearfirst=config.yearfirst
         )
+        timestruct = timestruct.replace(year=now.year)
     except Exception:
         logger.exception("Time: %s format is not correct.", timestr)
         raise InvalidTimeFormatException
 
     if '%Y' not in config.timeformat and '%y' not in config.timeformat:
-        now = datetime.now()
-        delta = relativedelta(days=360)
-        if timestruct + delta < now:
-            timestruct = timestruct + relativedelta(years=1)
-        elif timestruct - delta > now:
+        # can only sync jobs within one year
+        if timestruct > now:
             timestruct = timestruct - relativedelta(years=1)
 
     return timestruct.replace(tzinfo=tz.tzlocal())
