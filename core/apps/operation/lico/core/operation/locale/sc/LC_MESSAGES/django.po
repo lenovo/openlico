@@ -109,3 +109,24 @@ msgstr "重新运行"
 
 msgid "operation.comment"
 msgstr "备注"
+
+msgid "operation.hold"
+msgstr "保持"
+
+msgid "operation.release"
+msgstr "释放"
+
+msgid "operation.suspend"
+msgstr "挂起"
+
+msgid "operation.resume"
+msgstr "恢复"
+
+msgid "operation.priority"
+msgstr "设置优先级"
+
+msgid "operation.requeue"
+msgstr "重新排队"
+
+msgid "operation.low_balance"
+msgstr "告警低余额"

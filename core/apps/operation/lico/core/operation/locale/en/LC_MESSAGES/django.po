@@ -110,3 +110,24 @@ msgstr "rerun"
 
 msgid "operation.comment"
 msgstr "comment"
+
+msgid "operation.hold"
+msgstr "hold"
+
+msgid "operation.release"
+msgstr "release"
+
+msgid "operation.suspend"
+msgstr "suspend"
+
+msgid "operation.resume"
+msgstr "resume"
+
+msgid "operation.priority"
+msgstr "set_priority"
+
+msgid "operation.requeue"
+msgstr "requeue"
+
+msgid "operation.low_balance"
+msgstr "alert_low_balance"
