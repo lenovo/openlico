@@ -121,6 +121,7 @@
       "input": "input",
       "minValue": "1",
       "maxValue": "9999",
+      "defaultValue": "1",
       "floatLength": 0,
       "valueTrigger": "context.distributed?2:1;",
       "must": true,
