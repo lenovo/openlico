@@ -37,8 +37,8 @@ class Job:
     running_list: List[JobRunning] = attr.ib(factory=list)
     workspace_path: str = attr.ib(default=None)
     job_filename: str = attr.ib(default=None)
-    standard_output_filename: str = attr.ib(default=None)
-    error_output_filename: str = attr.ib(default=None)
+    standard_output_filename: str = attr.ib(default='')
+    error_output_filename: str = attr.ib(default='')
     exit_code: str = attr.ib(default=None)
     queue_name: str = attr.ib(default=None)
     runtime: int = attr.ib(default=0)        # "1-00:10:00" -> seconds
