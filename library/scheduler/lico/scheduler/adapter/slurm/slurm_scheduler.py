@@ -152,7 +152,9 @@ class Scheduler(IScheduler):
         return status
 
     def hold_job(self, scheduler_ids):
-        ids = " ".join(scheduler_ids)
+        new_scheduler_ids = get_job_alter_ids(scheduler_ids,
+                                              self._config.timeout)
+        ids = " ".join(new_scheduler_ids)
         args = ['job_ids=(%s); for job_id in "${job_ids[@]}";'
                 ' do scontrol hold $job_id ;done' % ids]
         status = self.job_action(scheduler_ids, args, 'hold')
@@ -162,7 +164,9 @@ class Scheduler(IScheduler):
         return status
 
     def release_job(self, scheduler_ids):
-        ids = " ".join(scheduler_ids)
+        new_scheduler_ids = get_job_alter_ids(scheduler_ids,
+                                              self._config.timeout)
+        ids = " ".join(new_scheduler_ids)
         args = ['job_ids=(%s); for job_id in "${job_ids[@]}";'
                 ' do scontrol release $job_id ;done' % ids]
         status = self.job_action(scheduler_ids, args, 'release')
@@ -172,7 +176,9 @@ class Scheduler(IScheduler):
         return status
 
     def suspend_job(self, scheduler_ids):
-        ids = " ".join(scheduler_ids)
+        new_scheduler_ids = get_job_alter_ids(scheduler_ids,
+                                              self._config.timeout)
+        ids = " ".join(new_scheduler_ids)
         args = ['job_ids=(%s); for job_id in "${job_ids[@]}";'
                 ' do scontrol suspend $job_id ;done' % ids]
         status = self.job_action(scheduler_ids, args, 'suspend')
@@ -182,7 +188,9 @@ class Scheduler(IScheduler):
         return status
 
     def resume_job(self, scheduler_ids):
-        ids = " ".join(scheduler_ids)
+        new_scheduler_ids = get_job_alter_ids(scheduler_ids,
+                                              self._config.timeout)
+        ids = " ".join(new_scheduler_ids)
         args = ['job_ids=(%s); for job_id in "${job_ids[@]}";'
                 ' do scontrol resume $job_id ;done' % ids]
         status = self.job_action(scheduler_ids, args, 'resume')
@@ -614,7 +622,9 @@ class Scheduler(IScheduler):
     def update_job_priority(self, scheduler_ids, priority_value):
         if int(priority_value) > 4294967293 or int(priority_value) < 1:
             raise InvalidPriorityException
-        ids = " ".join(scheduler_ids)
+        new_scheduler_ids = get_job_alter_ids(scheduler_ids,
+                                              self._config.timeout)
+        ids = " ".join(new_scheduler_ids)
         args = ['job_ids=(%s); for job_id in "${job_ids[@]}";'
                 ' do scontrol update job=$job_id Priority=%s ;'
                 ' done' % (ids, priority_value)]
@@ -624,7 +634,9 @@ class Scheduler(IScheduler):
         return status
 
     def requeue_job(self, scheduler_ids):
-        ids = " ".join(scheduler_ids)
+        new_scheduler_ids = get_job_alter_ids(scheduler_ids,
+                                              self._config.timeout)
+        ids = " ".join(new_scheduler_ids)
         args = ['job_ids=(%s); for job_id in "${job_ids[@]}";'
                 ' do scontrol requeue $job_id ;done' % ids]
         status = self.job_action(scheduler_ids, args, 'requeue')
