@@ -76,7 +76,7 @@
       "type": "system"
     },
     {
-      "id": "cores",
+      "id": "cores_per_node",
       "name": {
         "en": "CPU Cores",
         "zh": "CPU核数"
