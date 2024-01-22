@@ -28,7 +28,6 @@ from lico.core.job.helpers.scheduler_helper import (
     get_admin_scheduler, parse_job_identity,
 )
 
-from .exceptions import UserBillGroupNotExistException
 from .models import (
     BillGroup, BillGroupQueuePolicy, Deposit, Gresource, JobBillingStatement,
     UserBillGroupMapping,
@@ -71,7 +70,7 @@ def charge_job(job):
                 'Job id: %d, Scheduler id: %s',
                 job['submitter'], job['id'], job['scheduler_id']
             )
-            raise UserBillGroupNotExistException
+            return
 
         billstatement = JobBillingStatement.objects.filter(job_id=job['id'])
 
