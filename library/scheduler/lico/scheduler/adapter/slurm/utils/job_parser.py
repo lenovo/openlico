@@ -623,26 +623,20 @@ def get_job_alter_ids(scheduler_ids, timeout):
     split_re = re.compile(r'(\w+)=(\S+)')
     new_scheduler_ids = []
     for job_info in jobs_info:
+        job_id = None
+        array_job_id = None
+        array_task_id = None
         result = split_re.findall(job_info)
-        if 'ArrayJobId' in job_info:
-            job_id = None
-            array_job_id = None
-            array_task_id = None
-            for key, value in result:
-                if key == 'JobId':
-                    job_id = value
-                elif key == 'ArrayJobId':
-                    array_job_id = value
-                elif key == 'ArrayTaskId':
-                    array_task_id = value
-                    break
-            if job_id == array_job_id:
-                new_scheduler_ids.append(job_id)
-            if array_job_id and array_task_id and '-' not in array_task_id:
-                new_scheduler_ids.append(f'{array_job_id}_{array_task_id}')
+        for key, value in result:
+            if key == 'JobId':
+                job_id = value
+            elif key == 'ArrayJobId':
+                array_job_id = value
+            elif key == 'ArrayTaskId':
+                array_task_id = value
+                break
+        if array_job_id and array_task_id:
+            new_scheduler_ids.append(f'{array_job_id}_[{array_task_id}]')
         else:
-            for key, value in result:
-                if key == 'JobId':
-                    new_scheduler_ids.append(value)
-                    break
+            new_scheduler_ids.append(job_id)
     return new_scheduler_ids
