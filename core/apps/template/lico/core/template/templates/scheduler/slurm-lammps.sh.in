@@ -2,7 +2,7 @@
 #SBATCH --job-name='{{ job_name|addslashes }}'
 #SBATCH --chdir={{ job_workspace }}
 #SBATCH --partition={{ job_queue }}
-#SBATCH {% if gpu_per_node %}--ntasks-per-node={{ cores_per_node|default:1 }}{% else %}--ntasks={{ cores|default:1 }}{% endif %}
+#SBATCH {% if gpu_per_node %}--ntasks-per-node={{ cores_per_node|default:1 }}{% else %}--ntasks={{ cores_per_node|default:1 }}{% endif %}
 {% if gpu_per_node %}
 #SBATCH --nodes={{ nodes|default:1 }}
 #SBATCH --gres={% if gpu_resource_name %}{{ gpu_resource_name }}{% else %}gpu{% endif %}:{{ gpu_per_node }}
