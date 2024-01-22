@@ -15,8 +15,8 @@ from django.urls import path, re_path
 
 from .views.easyconfig import EasyConfigParseView
 from .views.modules import (
-    ModuleListView, UserModuleBuildingView, UserModuleJobView,
-    UserModuleSearchView, UserModuleSubmitView,
+    ModuleListView, UserModuleBuildingView, UserModuleJobCountView,
+    UserModuleJobView, UserModuleSearchView, UserModuleSubmitView,
 )
 
 urlpatterns = [
@@ -25,5 +25,6 @@ urlpatterns = [
     re_path("search/(?P<option>alnum|name)/", UserModuleSearchView.as_view()),
     path("easyconfig/content/", EasyConfigParseView.as_view()),
     path("job/", UserModuleBuildingView.as_view()),
+    path("job_count/", UserModuleJobCountView.as_view()),
     path("job/<int:pk>/", UserModuleJobView.as_view()),
 ]

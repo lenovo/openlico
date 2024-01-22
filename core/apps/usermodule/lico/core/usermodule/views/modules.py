@@ -274,23 +274,29 @@ class UserModuleBuildingView(APIView):
     def get(self, request):
         submitter = request.user.username
 
+        # Step 1: Get unfinished jobs
         unfinished_jobs = Job.objects.filter(
             delete_flag=False, submitter=submitter,
             # job states: R, S, Q, H
             state__in=JobState.get_waiting_state_values()
         )
         unfinished_job_ids = unfinished_jobs.values_list("id", flat=True)
+
+        # Step 2: Get unfinished usermodule job objects
         unfinished_um_jobs = UserModuleJob.objects.filter(
             user=submitter, is_cleared=False, job_id__in=unfinished_job_ids
         )
         unfinished_um_map = self.get_id_um_job_mapping(unfinished_um_jobs)
-        unfinished = self.extract_values(unfinished_jobs, unfinished_um_map)
+        unfinished_objs = unfinished_jobs.filter(
+            id__in=unfinished_um_map.keys()
+        )
+        unfinished = self.extract_values(unfinished_objs, unfinished_um_map)
 
+        # Step 3: Get finished usermodule job objects
         finished_um_jobs = UserModuleJob.objects.filter(
             user=submitter, is_cleared=False
         ).exclude(job_id__in=unfinished_job_ids).order_by("-create_time")[:10]
         finished_um_map = self.get_id_um_job_mapping(finished_um_jobs)
-
         finished_um_jids = finished_um_jobs.values_list("job_id", flat=True)
         finished = []
         if finished_um_jids:
@@ -299,9 +305,20 @@ class UserModuleBuildingView(APIView):
                 id__in=list(finished_um_jids)
             ).order_by("-submit_time")
             finished = self.extract_values(finished_jobs, finished_um_map)
-
         ret = unfinished + finished
+
         return Response(ret)
+
+
+class UserModuleJobCountView(APIView):
+    def get(self, request):
+        submitter = request.user.username
+
+        eb_jobs = UserModuleJob.objects.filter(
+            user=submitter, is_cleared=False
+        )
+
+        return Response(dict(total=eb_jobs.count()))
 
 
 class UserModuleJobView(APIView):
