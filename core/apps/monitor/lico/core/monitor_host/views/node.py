@@ -15,10 +15,11 @@
 import json
 import logging
 
-from django.db.models import Count, Max, Min
+from django.db.models import Count, Max, Min, Q
 from rest_framework import status
 from rest_framework.response import Response
 
+from lico.core.cluster.models import Node
 from lico.core.contrib.permissions import AsUserRole
 from lico.core.contrib.schema import json_schema_validate
 from lico.core.contrib.views import APIView, DataTableView, InternalAPIView
@@ -131,6 +132,49 @@ class NodeHardwareView(DataTableView):
                         request,
                     ) for result in results
                 ],
+            }
+        )
+
+
+class NodeResourceView(DataTableView):
+
+    def trans_result(self, result):
+        return result.as_dict(
+            include=[
+                'id', 'hostname'
+            ],
+        )
+
+    def get_query(self, request):
+        return Node.objects
+
+    def get(self, request, resource):
+        param_args = json.loads(
+            request.query_params["args"]
+        )
+        self.check_param(param_args)
+        param_args = self.params(request, param_args)
+        query = self.get_query(request)
+        query = self.filters(query, param_args.get('filters', []))  # filter
+        group_hostnames = query.values_list("hostname", flat=True)
+        gpu_hostnames = []
+        if resource == "gpu":
+            gpu_hostnames = Gpu.objects.values_list("monitor_node", flat=True)
+        query = MonitorNode.objects.filter(
+            Q(hostname__in=group_hostnames) & Q(hostname__in=gpu_hostnames))
+        query = self.global_search(query, param_args)
+        query = self.global_sort(query, param_args)
+        filtered_total = 0 if query is None else query.count()
+        offset = param_args['offset'] \
+            if param_args['offset'] < filtered_total else 0
+        results = [] if query is None else \
+            query[offset:offset + param_args['length']]
+        offset = offset + len(results)
+        return Response(
+            {
+                'offset': offset,
+                'total': filtered_total,
+                'data': [self.trans_result(result) for result in results],
             }
         )
 

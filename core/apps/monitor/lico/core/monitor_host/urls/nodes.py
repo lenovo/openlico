@@ -16,7 +16,7 @@ from django.urls import path, re_path
 
 from ..views.node import (
     HostNameAPIView, JobRunningNodeResourceHeatView, NodeEditorFixturesView,
-    NodeHardwareView, NodeHealthView, NodesByHardwareView,
+    NodeHardwareView, NodeHealthView, NodeResourceView, NodesByHardwareView,
 )
 from ..views.tendency import (
     cpu, energy, gpu, load, memory, network, temperature,
@@ -53,6 +53,8 @@ urlpatterns = [
     re_path(r'^{0}/tendency/{1}/ib/$'.format(hostname, category),
             network.NodeHistoryIbView.as_view()),
     path('', NodeHardwareView.as_view()),
+    re_path('(?P<resource>gpu)/',
+            NodeResourceView.as_view()),
     path('health/detail/', NodeHealthView.as_view()),
     path('host/detail/', HostNameAPIView.as_view()),
     path('node-editor-fixtures/', NodeEditorFixturesView.as_view()),
