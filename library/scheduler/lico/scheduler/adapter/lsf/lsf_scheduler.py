@@ -752,7 +752,7 @@ class Scheduler(IScheduler):
         # {'feature': 'cfd_base', 'total': 4, 'used': 0}]
 
     def get_running_jobs_cmd(self, *args):
-        return 'bjobs -UF -r -u all'.split()
+        return 'bjobs -UF -sr -u all'.split()
 
     def get_job_pidlist(self, *args):
         job_pid_dict = dict()
