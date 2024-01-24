@@ -172,9 +172,8 @@ class Command(BaseCommand):
         delete_users = set()
         for user in add_users:
             for old_account in user_acc.get(user, []):
-                if old_account == 'root':
-                    continue
-                if acc_descr.get(old_account, '') == self.lico_bill_descr:
+                if acc_descr.get(old_account, '') == self.lico_bill_descr \
+                        or old_account == 'root':
                     return_code, out = self._delete_user(user, old_account)
                     if return_code:
                         delete_users.add(user)
