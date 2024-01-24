@@ -196,6 +196,48 @@ class Scheduler(IScheduler):
     def query_job(self, job_identity: JobIdentity,
                   include_history=False) -> Job:
         scheduler_id = job_identity.scheduler_id
+        if include_history:
+            events_file_path = self._config.events_file_path
+            if path.isfile(events_file_path):
+                rc, out, err = exec_oscmd_with_login(
+                    ["bhist", "-w", "-f", events_file_path, scheduler_id],
+                    timeout=self._config.timeout
+                )
+            else:
+                rc, out, err = exec_oscmd_with_login(
+                    ["bhist", "-w", "-n", "0", scheduler_id],
+                    timeout=self._config.timeout
+                )
+            if 'No such file or directory' in err.decode() or \
+                    'Bad event format' in err.decode():
+                raise LsbEventsFileException
+            if rc != 0:
+                logger.error(
+                    "Get job %s history info failed,"
+                    "Error message is: %s",
+                    scheduler_id, err.decode()
+                )
+                raise QueryJobHistoryInfoFailedException
+            try:
+                job = Job()
+                hist_raw = out.decode().split('\n')
+                for index, line in enumerate(hist_raw):
+                    if line.startswith('JOBID'):
+                        hist_key = line.split()
+                        hist_val = hist_raw[index + 1].split()
+                        hist_info = dict(zip(hist_key, hist_val))
+                        job.runtime = int(hist_info['RUN'])
+                        return [job]
+                raise Exception("Parse job runtime failed.")
+            except Exception as e:
+                logger.error(
+                    "Parse job %s history info failed."
+                    "History info is: %s "
+                    "Error message is: %s",
+                    scheduler_id, hist_raw, e
+                )
+                raise JobHistoryInfoParseException from e
+
         formatter = r"jobid job_name stat user queue job_description " \
                     r"exit_code exec_host alloc_slot run_time slots " \
                     r"avg_mem input_file output_file error_file " \
@@ -232,47 +274,6 @@ class Scheduler(IScheduler):
             {'info_uf': job_info_uf, 'info_o': info_o},
             self._config
         )
-        if include_history:
-            events_file_path = self._config.events_file_path
-            if path.isfile(events_file_path):
-                rc, out, err = exec_oscmd_with_login(
-                    ["bhist", "-w", "-f", events_file_path, scheduler_id],
-                    timeout=self._config.timeout
-                )
-            else:
-                rc, out, err = exec_oscmd_with_login(
-                    ["bhist", "-w", "-n", "0", scheduler_id],
-                    timeout=self._config.timeout
-                )
-            if 'No such file or directory' in err.decode() or \
-                    'Bad event format' in err.decode():
-                raise LsbEventsFileException
-            if rc != 0:
-                logger.error(
-                    "Get job %s history info failed,"
-                    "Error message is: %s",
-                    scheduler_id, err.decode()
-                )
-                raise QueryJobHistoryInfoFailedException
-            try:
-                hist_raw = out.decode().split('\n')
-                for index, line in enumerate(hist_raw):
-                    if line.startswith('JOBID'):
-                        hist_key = line.split()
-                        hist_val = hist_raw[index + 1].split()
-                        hist_info = dict(zip(hist_key, hist_val))
-                        job.runtime = int(hist_info['RUN'])
-                        break
-            except Exception as e:
-                logger.error(
-                    "Parse job %s history info failed."
-                    "History info is: %s "
-                    "Error message is: %s",
-                    scheduler_id, hist_raw, e
-                )
-                raise JobHistoryInfoParseException from e
-            return [job]
-
         return job
 
     def query_recent_jobs(self, query_memory=True) -> List[Job]:
