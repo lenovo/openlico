@@ -2,6 +2,34 @@
 History
 =======
 
+----------------
+7.2.0 (2024-02-06)
+----------------
+New Support
+* Support OpenHPC v2.6.2
+
+New Features
+* Support Jupyter Lab
+* New function "Software", which support building and managing softwares and libraries with Easybuild.
+* New job template:
+  - LAMMPS
+  - Tensorboard
+* Improve VNC support:
+  - Show the relationship between job and VNC session.
+  - "ANSYS Fluent" job template support VNC.
+* Provide more job actions:
+  - Adjust job priority
+  - Suspend and resume job
+  - Hold and release job
+  - Requeue job
+* Improve user management:
+  - Creating the user group with same name automatically on creating the user.
+  - The suspended user can not submit job.
+  - Support using USER ID (all digital) as username.
+* Support configuring the default value of the Wall Time.
+* Alert for low balance of the billing group.
+* Support using RedFish to monitor and controll the third-party servers.
+
 
 ----------------
 7.1.0 (2023-06-28)
