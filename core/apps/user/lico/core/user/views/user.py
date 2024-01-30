@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import grp
 import json
 import logging
+import pwd
 import re
 from datetime import datetime
 
@@ -225,6 +227,13 @@ class UserDataTableView(DataTableView):
             return Response()
         except IntegrityError as e:
             raise UserAlreadyExist from e
+
+
+class UserGroupView(APIView):
+    def get(self, request, username):
+        gid = pwd.getpwnam(username).pw_gid
+        user_group = grp.getgrgid(gid).gr_name
+        return Response({'gid': gid, 'name': user_group})
 
 
 class UserDetailView(APIView):

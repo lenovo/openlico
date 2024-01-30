@@ -24,8 +24,8 @@ from .views.group import GroupDetailView, GroupListView
 from .views.lock import FullLockView, LockView
 from .views.passwd import ChangePasswordView, ModifyPasswordView
 from .views.user import (
-    UserDataTableView, UserDetailView, UserExportView, UserImportDetailView,
-    UserImportView, UserListView,
+    UserDataTableView, UserDetailView, UserExportView, UserGroupView,
+    UserImportDetailView, UserImportView, UserListView,
 )
 
 urlpatterns = [
@@ -62,4 +62,5 @@ urlpatterns = [
         UserDetailView.as_view(),
         name="user-detail-username",
     ),
+    path('<str:username>/group/', UserGroupView.as_view()),
 ]
