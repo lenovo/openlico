@@ -79,7 +79,7 @@ def charge_job(job):
             job_list = scheduler.query_job(
                 parse_job_identity(job["identity_str"]), include_history=True
             )
-            job['runtime'] = get_job_all_runtime(job_list)
+            job['runtime'] = max(get_job_all_runtime(job_list), job['runtime'])
         except Exception as e:
             logger.exception(
                 'Failed to query the historical running time of a job.'
