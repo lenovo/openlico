@@ -194,24 +194,6 @@ def _clear_clusterinfo(configure):
     group_names = [group.name for group in configure.group]
     room_names = [room.name for room in configure.room]
 
-    # Remain vGPU compute node
-    for vgpu_node in Node.objects.filter(provider='vgpu'):
-
-        # add node name
-        node_names.append(vgpu_node.hostname)
-
-        # add rack name
-        rack_names.append(vgpu_node.rack.name)
-
-        # add row name
-        row_names.append(vgpu_node.rack.row.name)
-
-        # add room name
-        room_names.append(vgpu_node.rack.row.room.name)
-
-        # add groups name
-        group_names.extend(vgpu_node.groups.values_list('name', flat=True))
-
     Node.objects.exclude(
         Q(hostname__in=node_names) | Q(on_cloud=True)
     ).delete()
