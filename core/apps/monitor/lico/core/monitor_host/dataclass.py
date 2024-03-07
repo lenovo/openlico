@@ -67,7 +67,7 @@ class ResData:
             if not utilization:
                 continue
             usage_unit = ResUnit.FIXED if name == 'mem' else ResUnit.PERCENTAGE
-            if type(utilization[0]) == list:
+            if isinstance(utilization[0], list):
                 for _index, res_util in enumerate(utilization):
                     total, usage = res_util
                     resdata.data[name].append(
