@@ -13,10 +13,10 @@
 # limitations under the License.
 
 from .summary import cluster_res_summaries, group_summaries, summaries
-from .sync_latest import sync_latest, sync_vgpu_parent_uuid
+from .sync_latest import sync_latest
 from .sync_vnc import sync_vnc
 
 __all__ = [
     'group_summaries', 'summaries', 'sync_latest', 'cluster_res_summaries',
-    'sync_vgpu_parent_uuid', 'sync_vnc'
+    'sync_vnc'
 ]

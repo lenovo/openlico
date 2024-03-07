@@ -14,8 +14,6 @@
 import subprocess  # nosec B404
 import tempfile
 
-from pkg_resources import Requirement, working_set
-
 from lico.core.contrib.client import Client
 
 
@@ -222,16 +220,6 @@ def on_config_scheduler(self, scheduler, settings):
             func=task,
             trigger='cron',
             second=cron_time,
-            max_instances=1,
-            executor=self.name,
-        )
-
-    if working_set.find(Requirement('lico-core-vgpu')) is not None:
-        from .tasks import sync_vgpu_parent_uuid
-        scheduler.add_job(
-            func=sync_vgpu_parent_uuid,
-            trigger='cron',
-            second='*/30',
             max_instances=1,
             executor=self.name,
         )
